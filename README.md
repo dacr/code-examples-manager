@@ -15,5 +15,5 @@ Manage code examples, provide gists/snippets publish mechanisms.
 Configuration examples :
 ```shell
 export CODE_EXAMPLES_SEARCH_ROOTS="/tmp/someplace,/tmp/someotherplace"
-export CODE_EXAMPLES_SEARCH_GLOB="*.sc"
+export CODE_EXAMPLES_SEARCH_GLOB="*.{sc,sh}"
 ```
