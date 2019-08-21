@@ -6,17 +6,17 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class ExamplesManagerTest extends FlatSpec with Matchers {
 
-  val cwd = pwd.path.toString
-
   implicit val parameters = Parameters(
-    searchRootDirectories = Some(s"$cwd/test-data/sample1,$cwd/test-data/sample2"),
-    filesGlob = Some("*.{sc,sh}")
+    searchRoots = List(pwd / "test-data" / "sample1" , pwd / "test-data" / "sample2"),
+    filesGlob = Some("*.{sc,sh}"),
+    githubToken = None,
+    gitlabToken = None,
   )
 
   "ExamplesManager" should "be able to list locally available examples" in {
     val examplesByFileExt =
       ExamplesManager
-        .examples
+        .getExamples
         .groupBy(_.fileExt)
         .mapValues(_.size)
     examplesByFileExt.get("sc").get should be(2)

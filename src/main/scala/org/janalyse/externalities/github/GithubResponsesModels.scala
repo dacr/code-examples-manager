@@ -1,5 +1,15 @@
 package org.janalyse.externalities.github
 
+case class GistUser(
+  login: String, // user name in APIs
+  name: String,
+  id: Int,
+  public_gists: Int,
+  private_gists: Int,
+  followers: Int,
+  following: Int,
+)
+
 case class GistFileInfo(
   filename: String,
   `type`: String,
