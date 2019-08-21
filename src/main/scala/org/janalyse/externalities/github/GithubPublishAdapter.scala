@@ -129,6 +129,18 @@ class GitHubPublishAdapter extends PublishAdapter {
 
   override def synchronize(examples: List[CodeExample], authToken: AuthToken): Int = {
     implicit val authTokenMadeImplicit = authToken
-    ???
+    val result = examples.flatMap { example =>
+      val gistFileSpec = GistFileSpec(
+        filename = example.file.name,
+        content = example.content
+      )
+      val gist = GistSpec(
+        description = example.summary.get, // TODO bad
+        public = true, // TODO to implement
+        files = Map(example.file.name -> gistFileSpec)
+      )
+      addGist(gist)
+    }
+    result.size
   }
 }

@@ -8,7 +8,7 @@ class CodeExampleTest extends FlatSpec with Matchers {
     val ex1 = CodeExample(file"test-data/sample1/fake-testing-pi.sc")
     ex1.fileExt shouldBe "sc"
     ex1.filename shouldBe "fake-testing-pi.sc"
-    ex1.content should include regex "id [:] d24d8cb3-45c0-4d88-b033-7fae2325607b"
+    ex1.content should include regex "id [:] 8f2e14ba-9856-4500-80ab-3b9ba2234ce2"
   }
 
 }

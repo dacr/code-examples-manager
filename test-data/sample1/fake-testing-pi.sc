@@ -2,7 +2,7 @@
 // keywords : scalatest, pi
 // publish : gist, snippet
 // authors : @crodav
-// id : d24d8cb3-45c0-4d88-b033-7fae2325607b
+// id : 8f2e14ba-9856-4500-80ab-3b9ba2234ce2
 
 import $ivy.`org.scalatest::scalatest:3.0.6`
 import org.scalatest._,Matchers._

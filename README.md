@@ -42,7 +42,7 @@ export CEM_SEARCH_GLOB="*.{sc,sh}"
 
 ### Github authentication token configuration
 Get an authorized access to github gist API :
-- List authorizations : curl --user "dacr" https://api.github.com/authorizations
+- List authorizations : `curl --user "dacr" https://api.github.com/authorizations`
 - Create github authentication token : 
   ```bash
   curl https://api.github.com/authorizations \
