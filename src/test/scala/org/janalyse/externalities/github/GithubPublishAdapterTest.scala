@@ -15,11 +15,11 @@ class GithubPublishAdapterTest extends FlatSpec with Matchers {
     val adapter = new GitHubPublishAdapter
 
     "GithubPublishAdapter" should "be able to get authenticated user information" in {
-      adapter.user shouldBe 'defined
+      adapter.getUser shouldBe 'defined
     }
 
     it should "be possible to list available gists" in {
-      val user = adapter.user.value
+      val user = adapter.getUser.value
       val gists = adapter.userGists(user)
       info(s"found ${gists.size} gist for user ${user.login}")
       gists.size shouldBe > (0)

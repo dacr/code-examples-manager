@@ -23,7 +23,7 @@ class GitHubPublishAdapter extends PublishAdapter {
       .header("Authorization", s"token $token")
   }
 
-  def user(implicit token:AuthToken):Option[GistUser] = {
+  def getUser()(implicit token:AuthToken):Option[GistUser] = {
     val query = uri"https://api.github.com/user"
     val response = makeGetRequest(query).response(asJson[GistUser]).send()
     response.body match {
@@ -129,18 +129,29 @@ class GitHubPublishAdapter extends PublishAdapter {
 
   override def synchronize(examples: List[CodeExample], authToken: AuthToken): Int = {
     implicit val authTokenMadeImplicit = authToken
-    val result = examples.flatMap { example =>
-      val gistFileSpec = GistFileSpec(
-        filename = example.file.name,
-        content = example.content
-      )
-      val gist = GistSpec(
-        description = example.summary.get, // TODO bad
-        public = true, // TODO to implement
-        files = Map(example.file.name -> gistFileSpec)
-      )
-      addGist(gist)
+    getUser match {
+      case None =>
+        logger.warn(s"Can't get user information, check token roles, read:user must be enabled")
+        0
+      case Some(user) =>
+        val remoteGistInfos = userGists(user)
+
+        val result = examples.flatMap { example =>
+          val gistFileSpec = GistFileSpec(
+            filename = example.file.name,
+            content = example.content
+          )
+          val gist = GistSpec(
+            description = example.summary.get, // TODO bad
+            public = true, // TODO to implement
+            files = Map(example.file.name -> gistFileSpec)
+          )
+          //addGist(gist)
+          None
+        }
+        //result.size
+        0
     }
-    result.size
+
   }
 }

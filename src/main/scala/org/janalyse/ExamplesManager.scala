@@ -20,7 +20,7 @@ object ExamplesManager {
         .glob(globPattern)
         .map(CodeExample(_))
         .toList
-        .filter(_.id.isDefined)
+        .filter(_.uuid.isDefined)
     }
     found.flatten
   }

@@ -1,6 +1,7 @@
 package org.janalyse
 
 import better.files.File
+import Hashes.sha1
 
 case class CodeExample(
   file: File,
@@ -8,9 +9,11 @@ case class CodeExample(
   keywords: List[String],
   publish: List[String],
   authors: List[String],
-  id: Option[String],
+  uuid: Option[String],
 ) {
   def content: String = file.contentAsString
+
+  lazy val checksum: String = sha1(content)
 
   def filename: String = file.name
 
@@ -35,7 +38,7 @@ object CodeExample {
       keywords = extractValueList(content)("keywords"),
       publish = extractValueList(content)("publish"),
       authors = extractValueList(content)("authors"),
-      id = extractValue(content)("id"),
+      uuid = extractValue(content)("id"),
     )
   }
 }
