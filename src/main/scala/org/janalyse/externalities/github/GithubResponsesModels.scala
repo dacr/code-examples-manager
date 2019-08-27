@@ -24,7 +24,12 @@ case class GistInfo(
   html_url: String,
   public: Boolean,
   files: Map[String, GistFileInfo],
-)
+) {
+  val uuid:String = GistInfo.MetaDataRE
+}
+object GistInfo {
+  val MetaDataRE=""".*#([-0-9a-f]+)/(\d+)$""".r
+}
 
 
 case class GistFile(
