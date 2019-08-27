@@ -25,10 +25,12 @@ case class GistInfo(
   public: Boolean,
   files: Map[String, GistFileInfo],
 ) {
-  val uuid:String = GistInfo.MetaDataRE
+  import GistInfo.metaDataRE
+  val uuid:Option[String] = Some(description) collect { case metaDataRE(id, _) => id }
+  val sha1sum:Option[String] = Some(description) collect { case metaDataRE(_, sum) => sum }
 }
 object GistInfo {
-  val MetaDataRE=""".*#([-0-9a-f]+)/(\d+)$""".r
+  val metaDataRE="""#\s*([-0-9a-f]+)\s*/\s*([0-9a-f]+)\s*$""".r.unanchored
 }
 
 

@@ -15,7 +15,7 @@ class GithubPublishAdapterTest extends FlatSpec with Matchers {
     val adapter = new GitHubPublishAdapter
 
     "GithubPublishAdapter" should "be able to get authenticated user information" in {
-      adapter.getUser shouldBe 'defined
+      adapter.getUser shouldBe defined
     }
 
     it should "be possible to list available gists" in {
@@ -25,7 +25,7 @@ class GithubPublishAdapterTest extends FlatSpec with Matchers {
       gists.size shouldBe > (0)
     }
 
-    it should "be possible to publish a code example" in {
+    it should "be possible to publish a code example" ignore {
       val example = CodeExample(pwd / "test-data" / "sample1" / "fake-testing-pi.sc" )
       adapter.synchronize(example::Nil, token)
     }
