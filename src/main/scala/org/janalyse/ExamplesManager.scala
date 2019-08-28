@@ -32,13 +32,13 @@ object ExamplesManager {
    * @param parameters code examples managers parameters
    * @return number of examples updated
    */
-  def synchronize(examples: List[CodeExample])(implicit parameters: Parameters): Int = {
+  def synchronize(examples: List[CodeExample])(implicit parameters: Parameters): List[Change] = {
     // first implementation, hard coded for github gists
     val publishAdapter: PublishAdapter = new GitHubPublishAdapter
     parameters
       .githubToken
       .map(publishAdapter.synchronize(examples, _))
-      .getOrElse(0)
+      .getOrElse(Nil)
   }
 }
 

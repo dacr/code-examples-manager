@@ -3,7 +3,7 @@ package org.janalyse.externalities.github
 import com.softwaremill.sttp.json4s.asJson
 import com.softwaremill.sttp._
 import com.softwaremill.sttp.json4s._
-import org.janalyse.CodeExample
+import org.janalyse.{AddedChange, Change, CodeExample, NoChange, UpdatedChange}
 import org.janalyse.externalities.{AuthToken, PublishAdapter}
 import org.json4s.JValue
 import org.slf4j.{Logger, LoggerFactory}
@@ -127,30 +127,44 @@ class GitHubPublishAdapter extends PublishAdapter {
     }
   }
 
-  override def synchronize(examples: List[CodeExample], authToken: AuthToken): Int = {
+  override def synchronize(examples: List[CodeExample], authToken: AuthToken): List[Change] = {
     implicit val authTokenMadeImplicit = authToken
     getUser match {
       case None =>
         logger.warn(s"Can't get user information, check token roles, read:user must be enabled")
-        0
+        List.empty
       case Some(user) =>
-        val remoteGistInfos = userGists(user)
+        val remoteGistInfosByUUID =
+          userGists(user)
+          .collect{ case gistInfo if gistInfo.uuid.isDefined => gistInfo.uuid.get -> gistInfo}
+          .toMap
 
-        val result = examples.flatMap { example =>
+        val result = for {
+          example <- examples
+          uuid <- example.uuid
+          checksum = example.checksum
+        } yield {
           val gistFileSpec = GistFileSpec(
             filename = example.file.name,
             content = example.content
           )
+          val description = GistInfo.makeDescription(example.summary.get, uuid, checksum)
           val gist = GistSpec(
-            description = example.summary.get, // TODO bad
+            description = description,
             public = true, // TODO to implement
             files = Map(example.file.name -> gistFileSpec)
           )
-          //addGist(gist)
-          None
+          remoteGistInfosByUUID.get(uuid) match {
+            case Some(remoteGist) =>
+              val rc = updateGist(remoteGist.id, gist)
+              if (rc.isDefined) UpdatedChange(example) else NoChange(example)
+            case None =>
+              val rc = addGist(gist)
+              if (rc.isDefined) AddedChange(example) else NoChange(example)
+          }
         }
-        //result.size
-        0
+        // TODO : remove not anymore UUID from remote gists
+        result
     }
 
   }

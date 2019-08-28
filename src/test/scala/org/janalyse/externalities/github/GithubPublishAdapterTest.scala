@@ -25,7 +25,7 @@ class GithubPublishAdapterTest extends FlatSpec with Matchers {
       gists.size shouldBe > (0)
     }
 
-    it should "be possible to publish a code example" ignore {
+    it should "be possible to publish a code example" in {
       val example = CodeExample(pwd / "test-data" / "sample1" / "fake-testing-pi.sc" )
       adapter.synchronize(example::Nil, token)
     }

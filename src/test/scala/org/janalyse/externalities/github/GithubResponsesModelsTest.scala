@@ -23,4 +23,9 @@ class GithubResponsesModelsTest extends FlatSpec with Matchers {
     }
   }
 
+  it should "provide a description generator encoding both uuid and checksum" in {
+    val description = GistInfo.makeDescription("truc", "aabb", "42")
+    description shouldBe "truc #aabb/42"
+  }
+
 }

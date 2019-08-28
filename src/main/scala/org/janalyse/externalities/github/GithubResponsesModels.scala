@@ -30,7 +30,13 @@ case class GistInfo(
   val sha1sum:Option[String] = Some(description) collect { case metaDataRE(_, sum) => sum }
 }
 object GistInfo {
+  // gist info meta data is stored in the description as follow :
+  //   "this is a gist #8c641170-ae1d-4f5c-8010-08f2169d4ce4/8c641170-ae1d-4f5c-8010-08f2169d4ce4"
+  //   for : "gist description #uuid/sha1"
   val metaDataRE="""#\s*([-0-9a-f]+)\s*/\s*([0-9a-f]+)\s*$""".r.unanchored
+  def makeDescription(summary:String, uuid:String, contentSHA1:String):String = {
+    s"$summary #$uuid/$contentSHA1"
+  }
 }
 
 
