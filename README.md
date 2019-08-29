@@ -1,5 +1,8 @@
 # code-examples-manager
 Manage code examples, provide gists/snippets publish mechanisms.
+All my code examples are now shared using this tool, you can see
+how it looks by taking a look to
+[my public gists on github](https://gist.github.com/dacr). 
 
 ## code examples 
 
@@ -19,11 +22,12 @@ math.Pi shouldBe 3.14d +- 0.01d
 ```
 
 request keys in description header are the following :
-- **summary** : 
-- **keywords** : 
-- **publish** : 
-- **authors** : 
-- **id** : 
+- **summary** : example one line summary.
+- **keywords** : keywords describing your code features (comma separated).
+- **publish** : publish destination keywords (`gist` for github).
+- **authors** : code example authors list (comma separated)
+- **id** : UUID for this code example.
+  Generated for example using [this ammonite scala script](https://gist.github.com/dacr/87c9636a6d25787d7c274b036d2a8aad).
 
 ## configuration
 
@@ -38,6 +42,7 @@ Configuration examples :
 ```shell
 export CEM_SEARCH_ROOTS="/tmp/someplace,/tmp/someotherplace"
 export CEM_SEARCH_GLOB="*.{sc,sh}"
+export CEM_GITHUB_TOKEN="cafecafe-cafecafe-cafecafe"
 ```
 
 ### Github authentication token configuration
