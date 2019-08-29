@@ -214,8 +214,10 @@ class GitHubPublishAdapter extends PublishAdapter {
 
           remoteGistInfosByUUID.get(uuid) match {
             case Some(remoteGist) if remoteGist.checksumOption.contains(checksum) =>
+              if (remoteGist.files.size > 1) logger.warn(s"${remoteGist.html_url} has more than one file}")
               NoChange(example)
             case Some(remoteGist) =>
+              if (remoteGist.files.size > 1) logger.warn(s"${remoteGist.html_url} has more than one file}")
               val rc = updateGist(remoteGist.id, gist)
               if (rc.isDefined) UpdatedChange(example) else ChangeIssue(example)
             case None =>
