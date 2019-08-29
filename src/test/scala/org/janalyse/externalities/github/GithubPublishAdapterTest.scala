@@ -14,18 +14,18 @@ class GithubPublishAdapterTest extends FlatSpec with Matchers {
     implicit val authTokenMadeImplicit = token
     val adapter = new GitHubPublishAdapter
 
-    "GithubPublishAdapter" should "be able to get authenticated user information" in {
+    "GithubPublishAdapter" should "be able to get authenticated user information" ignore {
       adapter.getUser shouldBe defined
     }
 
-    it should "be possible to list available gists" in {
+    it should "be possible to list available gists" ignore {
       val user = adapter.getUser.value
       val gists = adapter.userGists(user)
       info(s"found ${gists.size} gist for user ${user.login}")
       gists.size shouldBe > (0)
     }
 
-    it should "be possible to publish a code example" in {
+    it should "be possible to publish a code example" ignore {
       val example = CodeExample(pwd / "test-data" / "sample1" / "fake-testing-pi.sc" )
       adapter.synchronize(example::Nil, token)
     }

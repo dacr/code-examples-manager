@@ -40,5 +40,19 @@ object ExamplesManager {
       .map(publishAdapter.synchronize(examples, _))
       .getOrElse(Nil)
   }
+
+  /**
+   * Migrate remote gists mainly (only to be used when an older publish mechanism has been used)
+   * @param parameters code examples managers parameters
+   * @param examples
+   */
+  def migrate(examples: List[CodeExample])(implicit parameters: Parameters): List[Change] = {
+    // first implementation, hard coded for github gists
+    val publishAdapter: PublishAdapter = new GitHubPublishAdapter
+    parameters
+      .githubToken
+      .map(publishAdapter.migrateGists(examples, _))
+      .getOrElse(Nil)
+  }
 }
 

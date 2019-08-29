@@ -18,8 +18,8 @@ class GithubResponsesModelsTest extends FlatSpec with Matchers {
           id = "xx", html_url = "", public = true, files = Map.empty,
           description = description
         )
-      sample.uuid.value shouldBe "26-4c-d5"
-      sample.sha1sum.value shouldBe "42ab"
+      sample.uuidOption.value shouldBe "26-4c-d5"
+      sample.checksumOption.value shouldBe "42ab"
     }
   }
 

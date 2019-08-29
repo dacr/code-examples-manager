@@ -1,6 +1,6 @@
 // summary : Simplest scalatest test framework usage.
 // keywords : scalatest, pi
-// publish : gist, snippet
+// publish : gist
 // authors : @crodav
 // id : 8f2e14ba-9856-4500-80ab-3b9ba2234ce2
 

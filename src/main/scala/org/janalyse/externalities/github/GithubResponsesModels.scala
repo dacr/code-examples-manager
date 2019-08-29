@@ -1,5 +1,7 @@
 package org.janalyse.externalities.github
 
+import org.janalyse.CodeExample.extractValue
+
 case class GistUser(
   login: String, // user name in APIs
   name: String,
@@ -26,8 +28,8 @@ case class GistInfo(
   files: Map[String, GistFileInfo],
 ) {
   import GistInfo.metaDataRE
-  val uuid:Option[String] = Some(description) collect { case metaDataRE(id, _) => id }
-  val sha1sum:Option[String] = Some(description) collect { case metaDataRE(_, sum) => sum }
+  val uuidOption:Option[String] = Some(description) collect { case metaDataRE(id, _) => id }
+  val checksumOption:Option[String] = Some(description) collect { case metaDataRE(_, sum) => sum }
 }
 object GistInfo {
   // gist info meta data is stored in the description as follow :
@@ -48,7 +50,9 @@ case class GistFile(
   size: Int,
   truncated: Boolean,
   content: String,
-)
+) {
+  def uuidOption: Option[String] = extractValue(content)("id")
+}
 
 case class Gist(
   id: String,

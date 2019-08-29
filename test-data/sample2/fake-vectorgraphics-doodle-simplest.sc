@@ -1,6 +1,6 @@
 // summary : Smallest doodle example.
 // keywords : vector-graphics, doodle
-// publish :
+// publish : gist
 // authors : @crodav
 // id : 1e8cd65f-8531-4d34-ad4e-993f0ccf2341
 

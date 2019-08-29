@@ -1,6 +1,6 @@
 ## summary : Generates a simple timestamp.
 ## keywords : bash, date, iso8601
-## publish : github-gists
+## publish : gist
 ## authors : @crodav
 ## id : 4947ee5e-db86-494d-b2c8-3963d84490a7
 
