@@ -17,6 +17,8 @@ class GitHubPublishAdapter extends PublishAdapter {
 
   private val logger:Logger = LoggerFactory.getLogger(getClass)
 
+  val gistKeyword = "gist"
+
   private def makeGetRequest(query: Uri)(implicit token: AuthToken) = {
     sttp
       .get(query)
@@ -158,7 +160,7 @@ class GitHubPublishAdapter extends PublishAdapter {
   override def migrateGists(examples: List[CodeExample], authToken: AuthToken): List[Change] = {
     val examplesForGithub =
       examples
-        .filter(_.publish.contains("gist"))
+        .filter(_.publish.contains(gistKeyword))
         .collect{case example if example.uuid.isDefined => example.uuid.get -> example}
         .toMap
 
@@ -181,7 +183,7 @@ class GitHubPublishAdapter extends PublishAdapter {
           gist <- makeGistSpec(example)
         } yield {
           val rc = updateGist(gistInfo.id, gist)
-          if (rc.isDefined) UpdatedChange(example) else ChangeIssue(example)
+          if (rc.isDefined) UpdatedChange(example, Map(gistKeyword->gistInfo.html_url)) else ChangeIssue(example)
         }
     }
   }
@@ -193,7 +195,7 @@ class GitHubPublishAdapter extends PublishAdapter {
    * @return list of the applied changes
    */
   override def synchronize(examples: List[CodeExample], authToken: AuthToken): List[Change] = {
-    val examplesForGithub = examples.filter(_.publish.contains("gist"))
+    val examplesForGithub = examples.filter(_.publish.contains(gistKeyword))
     implicit val authTokenMadeImplicit = authToken
     getUser match {
       case None =>
@@ -211,18 +213,26 @@ class GitHubPublishAdapter extends PublishAdapter {
           gist <- makeGistSpec(example)
           checksum = example.checksum
         } yield {
-
           remoteGistInfosByUUID.get(uuid) match {
             case Some(remoteGist) if remoteGist.checksumOption.contains(checksum) =>
               if (remoteGist.files.size > 1) logger.warn(s"${remoteGist.html_url} has more than one file}")
-              NoChange(example)
+              NoChange(example, Map(gistKeyword->remoteGist.html_url))
             case Some(remoteGist) =>
               if (remoteGist.files.size > 1) logger.warn(s"${remoteGist.html_url} has more than one file}")
               val rc = updateGist(remoteGist.id, gist)
-              if (rc.isDefined) UpdatedChange(example) else ChangeIssue(example)
+              if (rc.isDefined)
+                UpdatedChange(example, Map(gistKeyword->remoteGist.html_url))
+              else
+                ChangeIssue(example)
             case None =>
               val rc = addGist(gist)
-              if (rc.isDefined) AddedChange(example) else ChangeIssue(example)
+              if (rc.isDefined) {
+                val newGist = getGist(rc.get)
+                newGist
+                  .map(g => AddedChange(example, Map(gistKeyword->g.html_url)))
+                  .getOrElse(ChangeIssue(example))
+              } else
+                ChangeIssue(example)
           }
         }
         // TODO : remove not anymore UUID from remote gists
