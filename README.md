@@ -4,6 +4,8 @@ All my code examples are now shared using this tool, you can see
 how it looks by taking a look to
 [my public gists on github](https://gist.github.com/dacr). 
 
+> Only github gists implementation is available.
+
 ## code examples 
 
 In order to be published code examples must comes with a description header
@@ -16,7 +18,7 @@ Example for languages using `//` for line comments :
 // publish : gist, snippet
 // authors : @crodav
 // id : d24d8cb3-45c0-4d88-b033-7fae2325607b
-import $ivy.`org.scalatest::scalatest:3.0.6`
+import $ivy.`org.scalatest::scalatest:3.0.8`
 import org.scalatest._,Matchers._
 math.Pi shouldBe 3.14d +- 0.01d
 ```
@@ -36,7 +38,7 @@ request keys in description header are the following :
 |CEM_SEARCH_ROOTS | examples search roots
 |CEM_SEARCH_GLOB  | example file globs
 |CEM_GITLAB_TOKEN | gitlab authentication token for snippets API access
-|CEM_GITHUB_TOKEN | github authentication token for gists API access
+|CEM_GITHUB_TOKEN | github authentication token for gists API access, see below for how to get this token
 
 Configuration examples :
 ```shell
@@ -48,7 +50,7 @@ export CEM_GITHUB_TOKEN="cafecafe-cafecafe-cafecafe"
 ### Github authentication token configuration
 Get an authorized access to github gist API :
 - List authorizations : `curl --user "dacr" https://api.github.com/authorizations`
-- Create github authentication token : 
+- **Create github authentication token with required authorization scopes** : 
   ```bash
   curl https://api.github.com/authorizations \
     --user "dacr" \
