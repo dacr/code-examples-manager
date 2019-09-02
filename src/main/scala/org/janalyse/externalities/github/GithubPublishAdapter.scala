@@ -135,7 +135,7 @@ class GitHubPublishAdapter extends PublishAdapter {
       uuid <- example.uuid
       summary <- example.summary
       checksum = example.checksum
-      filename = example.file.name
+      filename = example.filename
       content = example.content
     } yield {
       val gistFileSpec = GistFileSpec(
@@ -182,8 +182,7 @@ class GitHubPublishAdapter extends PublishAdapter {
           example <- examplesForGithub.get(uuid)
           gist <- makeGistSpec(example)
         } yield {
-          val rc = updateGist(gistInfo.id, gist)
-          if (rc.isDefined) UpdatedChange(example, Map(gistKeyword->gistInfo.html_url)) else ChangeIssue(example)
+          synchronizeUpdate(example,gist,gistInfo)
         }
     }
   }
@@ -202,10 +201,7 @@ class GitHubPublishAdapter extends PublishAdapter {
         logger.warn(s"Can't get user information, check token roles, read:user must be enabled")
         List.empty
       case Some(user) =>
-        val remoteGistInfosByUUID =
-          userGists(user)
-          .collect{ case gistInfo if gistInfo.uuidOption.isDefined => gistInfo.uuidOption.get -> gistInfo}
-          .toMap
+        val remoteGistInfosByUUID = getRemoteGistInfosByUUID(user)
 
         val result = for {
           example <- examplesForGithub
@@ -214,30 +210,68 @@ class GitHubPublishAdapter extends PublishAdapter {
           checksum = example.checksum
         } yield {
           remoteGistInfosByUUID.get(uuid) match {
-            case Some(remoteGist) if remoteGist.checksumOption.contains(checksum) =>
-              if (remoteGist.files.size > 1) logger.warn(s"${remoteGist.html_url} has more than one file}")
-              NoChange(example, Map(gistKeyword->remoteGist.html_url))
-            case Some(remoteGist) =>
-              if (remoteGist.files.size > 1) logger.warn(s"${remoteGist.html_url} has more than one file}")
-              val rc = updateGist(remoteGist.id, gist)
-              if (rc.isDefined)
-                UpdatedChange(example, Map(gistKeyword->remoteGist.html_url))
-              else
-                ChangeIssue(example)
-            case None =>
-              val rc = addGist(gist)
-              if (rc.isDefined) {
-                val newGist = getGist(rc.get)
-                newGist
-                  .map(g => AddedChange(example, Map(gistKeyword->g.html_url)))
-                  .getOrElse(ChangeIssue(example))
-              } else
-                ChangeIssue(example)
+            case Some(remoteGist) if remoteGist.checksumOption.contains(checksum) => synchronizeNoChange(example, remoteGist)
+            case Some(remoteGist) => synchronizeUpdate(example, gist, remoteGist)
+            case None => synchronizeAdd(example, gist)
           }
         }
         // TODO : remove not anymore UUID from remote gists
         result
     }
 
+  }
+
+  private def synchronizeNoChange(example: CodeExample, remoteGist: GistInfo)(implicit authToken: AuthToken) = {
+    if (remoteGist.files.size > 1) logger.warn(s"${remoteGist.html_url} has more than one file}")
+    NoChange(example, Map(gistKeyword -> remoteGist.html_url))
+  }
+
+  private def synchronizeAdd(example: CodeExample, gist: GistSpec)(implicit authToken: AuthToken): Change = {
+    val rc = addGist(gist)
+    if (rc.isDefined) {
+      val newGist = getGist(rc.get)
+      newGist
+        .map(g => AddedChange(example, Map(gistKeyword -> g.html_url)))
+        .getOrElse(ChangeIssue(example))
+    } else
+      ChangeIssue(example)
+  }
+
+  private def synchronizeUpdate(example: CodeExample, gist: GistSpec, remoteGist: GistInfo)(implicit authToken: AuthToken): Change = {
+    if (remoteGist.files.size > 1) logger.warn(s"${remoteGist.html_url} has more than one file}")
+    val rc = updateGist(remoteGist.id, gist)
+    if (rc.isDefined)
+      UpdatedChange(example, Map(gistKeyword -> remoteGist.html_url))
+    else
+      ChangeIssue(example)
+  }
+
+  private def getRemoteGistInfosByUUID(user: GistUser)(implicit authToken: AuthToken): Map[String, GistInfo] = {
+    userGists(user)
+      .collect { case gistInfo if gistInfo.uuidOption.isDefined => gistInfo.uuidOption.get -> gistInfo }
+      .toMap
+  }
+
+  override def exampleUpsert(example: CodeExample, authToken: AuthToken): Change = {
+    implicit val authTokenMadeImplicit = authToken
+    getUser match {
+      case None =>
+        logger.warn(s"Can't get user information, check token roles, read:user must be enabled")
+        NoChange(example, Map.empty)
+      case Some(user) =>
+        val remoteGistInfosByUUID = getRemoteGistInfosByUUID(user)
+        val result = for {
+          uuid <- example.uuid
+          gist <- makeGistSpec(example)
+          checksum = example.checksum
+        } yield {
+          remoteGistInfosByUUID.get(uuid) match {
+            case Some(remoteGist) if remoteGist.checksumOption.contains(checksum) => synchronizeNoChange(example, remoteGist)
+            case Some(remoteGist) => synchronizeUpdate(example, gist, remoteGist)
+            case None => synchronizeAdd(example, gist)
+          }
+        }
+        result.getOrElse(ChangeIssue(example))
+    }
   }
 }

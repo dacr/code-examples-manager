@@ -54,5 +54,19 @@ object ExamplesManager {
       .map(publishAdapter.migrateGists(examples, _))
       .getOrElse(Nil)
   }
+
+  /**
+   * Update or add an example
+   * @param parameters code examples managers parameters
+   * @param example
+   */
+  def upsert(example: CodeExample)(implicit parameters: Parameters): Change = {
+    // first implementation, hard coded for github gists
+    val publishAdapter: PublishAdapter = new GitHubPublishAdapter
+    parameters
+      .githubToken
+      .map(publishAdapter.exampleUpsert(example, _))
+      .getOrElse(ChangeIssue(example))
+  }
 }
 

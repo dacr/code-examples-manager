@@ -3,26 +3,35 @@ package org.janalyse
 import better.files.File
 import Hashes.sha1
 
-case class CodeExample(
+trait CodeExample {
+  val filename: String
+  val summary: Option[String]
+  val keywords: List[String]
+  val publish: List[String]
+  val authors: List[String]
+  val uuid: Option[String]
+  def content: String
+  def checksum: String
+  def fileExt: String = filename.split("[.]", 2).drop(1).headOption.getOrElse("")
+}
+
+case class FileCodeExample(
   file: File,
   summary: Option[String],
   keywords: List[String],
   publish: List[String],
   authors: List[String],
   uuid: Option[String],
-) {
+) extends CodeExample {
+  val filename: String = file.name
   def content: String = file.contentAsString
 
   lazy val checksum: String = sha1(content)
-
-  def filename: String = file.name
-
-  def fileExt: String = filename.split("[.]", 2).drop(1).headOption.getOrElse("")
 }
 
 object CodeExample {
   def extractValue(from: String)(key: String): Option[String] = {
-    val RE = ("""(?m)(?i)^(?:(?://)|(?:##))\s+""" + key + """\s+:\s+(.*)$""").r
+    val RE = ("""(?m)(?i)^(?:(?://)|(?:##)|(?:- )(?:--))\s+""" + key + """\s+:\s+(.*)$""").r
     RE.findFirstIn(from).collect { case RE(value) => value.trim }
   }
 
@@ -30,9 +39,9 @@ object CodeExample {
     extractValue(from)(key).map(_.split("""[ \t\r,;]+""").toList).getOrElse(Nil)
   }
 
-  def apply(file: File): CodeExample = {
+  def apply(file: File): FileCodeExample = {
     val content = file.contentAsString
-    CodeExample(
+    FileCodeExample(
       file = file,
       summary = extractValue(content)("summary"),
       keywords = extractValueList(content)("keywords"),
