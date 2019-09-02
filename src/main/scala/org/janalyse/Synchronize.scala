@@ -14,12 +14,10 @@ object Synchronize {
   def updateOverview(changes: List[Change])(implicit parameters:Parameters): Unit = {
     val exampleUUID = "cafacafe-cafecafe"
     val exampleSummary = "Example overview."
+    val examplesCount = changes.size
     val header =
       s"""# Example overview
-         |- summary : $exampleSummary
-         |- id : $exampleUUID
-         |
-         |## examples
+         |## The $examplesCount examples
          |""".stripMargin
 
     val exampleContent = for {
