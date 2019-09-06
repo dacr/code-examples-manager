@@ -11,6 +11,7 @@ class ExamplesManagerTest extends FlatSpec with Matchers {
     filesGlob = Some("*.{sc,sh}"),
     githubToken = None,
     gitlabToken = None,
+    examplesOverviewUUID = "fade-fade"
   )
 
   "ExamplesManager" should "be able to list locally available examples" in {

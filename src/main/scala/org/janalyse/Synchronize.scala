@@ -11,16 +11,8 @@ object Synchronize {
     result -> (now() - started)
   }
 
-  def updateOverview(changes: List[Change])(implicit parameters:Parameters): Unit = {
-    val exampleUUID = "cafacafe-cafecafe"
-    val exampleSummary = "Example overview."
-    val examplesCount = changes.size
-    val header =
-      s"""# Example overview
-         |## The $examplesCount examples
-         |""".stripMargin
-
-    val exampleContent = for {
+  private def formatChangesForFileExt(changes:List[Change], fileExt:String):String = {
+    val formattedExamples = for {
       change <- changes.sortBy(_.example.filename)
       filename = change.example.filename
       summary <- change.example.summary
@@ -28,6 +20,23 @@ object Synchronize {
     } yield {
       s"- [$filename]($url) : $summary"
     }
+    val count = formattedExamples.size
+    val content = formattedExamples.mkString("\n")
+    s"## $fileExt examples\n$content"
+  }
+
+  def updateOverview(changes: List[Change])(implicit parameters:Parameters):Change = {
+    val exampleUUID = parameters.examplesOverviewUUID
+    val exampleSummary = "Examples overview."
+    val examplesCount = changes.size
+    val header =
+      s"""# Code examples knowledge base
+         |$examplesCount published examples
+         |""".stripMargin
+
+    val examplesStructuredListContent = for {
+      (fileExt, changesForFileExt) <- changes.groupBy(_.example.fileExt)
+    } yield formatChangesForFileExt(changesForFileExt,fileExt)
 
     val example = new CodeExample {
       override val filename: String = "index.md"
@@ -37,7 +46,7 @@ object Synchronize {
       override val authors: List[String] = Nil
       override val uuid: Option[String] = Some(exampleUUID)
 
-      override def content: String = header++exampleContent.mkString("\n")
+      override def content: String = header++examplesStructuredListContent.mkString("\n")
       override def checksum: String = Hashes.sha1(content)
     }
     ExamplesManager.upsert(example)
@@ -55,7 +64,10 @@ object Synchronize {
       assert(duplicated.size == 0, "Found duplicated UUIDs :" + duplicated.mkString(","))
       val changes = synchronize(examples)
       LogChanges(changes)
-      updateOverview(changes)
+      val overviewChange = updateOverview(changes)
+      val overviewMessage = "Examples overview is available at "+overviewChange.publishedUrls.getOrElse("gist", "??") // TODO - Hardcoded for gist
+      logger.info(overviewMessage)
+      println(overviewMessage)
     }
     logger.info(s"Finished in ${duration/1000}s")
   }

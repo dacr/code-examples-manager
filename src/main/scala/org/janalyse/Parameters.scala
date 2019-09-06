@@ -9,8 +9,8 @@ case class Parameters(
   filesGlob: Option[String],
   gitlabToken: Option[AuthToken],
   githubToken: Option[AuthToken],
-) {
-}
+  examplesOverviewUUID: String,
+)
 
 object Parameters {
   def propOrEnvOrNone(key: String): Option[String] = envOrSome(key, propOrNone(key))
@@ -19,6 +19,9 @@ object Parameters {
   val filesGlob = propOrEnvOrNone("CEM_SEARCH_GLOB")
   val gitlabToken = propOrEnvOrNone("CEM_GITLAB_TOKEN").map(AuthToken)
   val githubToken = propOrEnvOrNone("CEM_GITHUB_TOKEN").map(AuthToken)
+  val examplesOverviewUUID =
+    propOrEnvOrNone("CEM_EXAMPLES_OVERVIEW_UUID")
+      .getOrElse("cafacafe-cafecafe")
 
   def apply(): Parameters = {
     val searchRoots =
@@ -33,6 +36,7 @@ object Parameters {
       filesGlob = filesGlob,
       gitlabToken = gitlabToken,
       githubToken = githubToken,
+      examplesOverviewUUID = examplesOverviewUUID,
     )
   }
 }

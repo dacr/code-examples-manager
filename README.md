@@ -35,16 +35,17 @@ request keys in description header are the following :
 
 |env or property name       | description
 |---------------------------|----------------
-|CEM_SEARCH_ROOTS | examples search roots
-|CEM_SEARCH_GLOB  | example file globs
-|CEM_GITLAB_TOKEN | gitlab authentication token for snippets API access
-|CEM_GITHUB_TOKEN | github authentication token for gists API access, see below for how to get this token
+|CEM_SEARCH_ROOTS           | examples search roots
+|CEM_SEARCH_GLOB            | example file globs
+|CEM_GITLAB_TOKEN           | gitlab authentication token for snippets API access
+|CEM_GITHUB_TOKEN           | github authentication token for gists API access, see below for how to get this token
+|CEM_EXAMPLES_OVERVIEW_UUID | the UUID for the overview GIST which list all examples, default value is `cafacafe-cafecafe`
 
 Configuration examples :
 ```shell
 export CEM_SEARCH_ROOTS="/tmp/someplace,/tmp/someotherplace"
 export CEM_SEARCH_GLOB="*.{sc,sh}"
-export CEM_GITHUB_TOKEN="cafecafe-cafecafe-cafecafe"
+export CEM_GITHUB_TOKEN="fada-fada-fada-fada"
 ```
 
 ### Github authentication token configuration
