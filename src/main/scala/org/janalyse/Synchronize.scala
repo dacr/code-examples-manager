@@ -22,7 +22,7 @@ object Synchronize {
     }
     val count = formattedExamples.size
     val content = formattedExamples.mkString("\n")
-    s"## $fileExt examples\n$content"
+    s"## $count $fileExt examples\n$content"
   }
 
   def updateOverview(changes: List[Change])(implicit parameters:Parameters):Change = {
