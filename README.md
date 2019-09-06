@@ -28,8 +28,12 @@ request keys in description header are the following :
 - **keywords** : keywords describing your code features (comma separated).
 - **publish** : publish destination keywords (`gist` for github).
 - **authors** : code example authors list (comma separated)
-- **id** : UUID for this code example.
-  Generated for example using [this ammonite scala script](https://gist.github.com/dacr/87c9636a6d25787d7c274b036d2a8aad).
+- **id** : UUID for this code example. Generated using such commands :
+  - [this ammonite scala script](https://gist.github.com/dacr/87c9636a6d25787d7c274b036d2a8aad).
+  - This [ammonite](https://ammonite.io/) oneliner :  
+    `amm -c 'println(java.util.UUID.randomUUID.toString)'`
+  - This python oneliner :  
+    `python -c "import uuid, sys;sys.stdout.write(str(uuid.uuid4()))"`
 
 ## configuration
 
