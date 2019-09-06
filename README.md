@@ -1,8 +1,8 @@
 # code-examples-manager
 Manage code examples, provide gists/snippets publish mechanisms.
 All my code examples are now shared using this tool, you can see
-how it looks by taking a look to
-[my public gists on github](https://gist.github.com/dacr). 
+how it looks by taking a look at
+[my public gists overview on github](https://gist.github.com/c071a7b7d3de633281cbe84a34be47f1). 
 
 > Only github gists implementation is available.
 
