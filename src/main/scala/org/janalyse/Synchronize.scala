@@ -23,7 +23,7 @@ object Synchronize {
     val count = formattedExamples.size
     val content = formattedExamples.mkString("\n")
     val exampleFileType = fileExtToExampleType(fileExt)
-    s"## $exampleFileType examples\n$content"
+    s"## $count $exampleFileType examples\n$content"
   }
 
   private def fileExtToExampleType(fileExt: String) = {
@@ -35,6 +35,10 @@ object Synchronize {
     val exampleUUID = parameters.examplesOverviewUUID
     val exampleSummary = "Examples overview."
     val examplesCount = changes.size
+    val header =
+      s"""# Code examples knowledge base
+         |$examplesCount published examples
+         |""".stripMargin
 
     val examplesStructuredListContent = for {
                 (fileExt, changesForFileExt) <- changes.groupBy(_.example.fileExt)
