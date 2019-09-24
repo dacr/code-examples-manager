@@ -1,8 +1,11 @@
-# code-examples-manager
+# Code examples manager
 Manage code examples, provide gists/snippets publish mechanisms.
 All my code examples are now shared using this tool, you can see
 how it looks by taking a look at
 [my public gists overview on github](https://gist.github.com/c071a7b7d3de633281cbe84a34be47f1). 
+
+The origin of this tool comes from [this talk](https://www.youtube.com/watch?v=61AGIBdG7YE)
+originally presented at [AlpesCraft 2019](https://www.alpescraft.fr/edition_2019/).
 
 > Only github gists implementation is available.
 
@@ -23,7 +26,7 @@ import org.scalatest._,Matchers._
 math.Pi shouldBe 3.14d +- 0.01d
 ```
 
-request keys in description header are the following :
+Request keys in description header are the following :
 - **summary** : example one line summary.
 - **keywords** : keywords describing your code features (comma separated).
 - **publish** : publish destination keywords (`gist` for github).
