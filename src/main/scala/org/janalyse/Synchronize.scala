@@ -35,10 +35,6 @@ object Synchronize {
     val exampleUUID = parameters.examplesOverviewUUID
     val exampleSummary = "Examples overview."
     val examplesCount = changes.size
-    val header =
-      s"""# Code examples knowledge base
-         |$examplesCount published examples
-         |""".stripMargin
 
     val examplesStructuredListContent = for {
                 (fileExt, changesForFileExt) <- changes.groupBy(_.example.fileExt)
