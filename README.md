@@ -15,9 +15,7 @@ originally presented at [AlpesCraft 2019](https://www.alpescraft.fr/edition_2019
 Code examples are very important, each example is most of the time designed to focus
 on a particular feature/characteristic of a programming language, a library or a framework.
 They help us to quickly test, experiment and remember how bigger project or at least some
-parts of them are working. And a lot of thanks to [Li Haoyi](https://github.com/lihaoyi)
-for his wonderful work on [ammonite](http://ammonite.io/) which is probably the best way
-for code examples and scripting.
+parts of them are working. 
 
 Managing dozens of published code example files as gists (github) and/or snippets (gitlab)
 is really not easy and time consuming, in particular if you want to keep your examples
@@ -28,6 +26,10 @@ That's why I decided to automate their management. The first iteration was scrip
 necessary, and so **code-examples-manager** was born.
 
 _Start small, make it works quickly, and then refactor !_
+
+A lot of thanks to [Li Haoyi](https://github.com/lihaoyi) for his wonderful work on
+[ammonite](http://ammonite.io/) which is probably the best solution for code examples and scripting
+in [scala](https://www.scala-lang.org/).
 
 ## What it does
 
@@ -54,6 +56,7 @@ Example for languages using `//` for line comments :
 // publish : gist, snippet
 // authors : @crodav
 // id : d24d8cb3-45c0-4d88-b033-7fae2325607b
+// execution : scala ammonite script (http://ammonite.io/) - run as follow 'amm scriptname.sc'
 import $ivy.`org.scalatest::scalatest:3.0.8`
 import org.scalatest._,Matchers._
 math.Pi shouldBe 3.14d +- 0.01d
@@ -70,6 +73,7 @@ Request keys in description header are the following :
     `amm -c 'println(java.util.UUID.randomUUID.toString)'`
   - This python oneliner :  
     `python -c "import uuid, sys;sys.stdout.write(str(uuid.uuid4()))"`
+- **execution** : 
 
 ## configuration
 
