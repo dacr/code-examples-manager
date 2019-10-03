@@ -41,13 +41,16 @@ object CodeExample {
 
   def apply(file: File): FileCodeExample = {
     val content = file.contentAsString
+    val id = extractValue(content)("id")
+    val idRE = "[-0-9a-f]+".r
+    if (id.isDefined) assert(idRE.matches(id.get), s"INVALID UUID: $id for $file")
     FileCodeExample(
       file = file,
       summary = extractValue(content)("summary"),
       keywords = extractValueList(content)("keywords"),
       publish = extractValueList(content)("publish"),
       authors = extractValueList(content)("authors"),
-      uuid = extractValue(content)("id"),
+      uuid = id,
     )
   }
 }
