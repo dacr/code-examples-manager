@@ -71,7 +71,7 @@ object Synchronize {
       logger.info(s"Found ${examples.size} available locally for synchronization purpose")
       val uuids = examples.map(_.uuid).flatten
       val duplicated = uuids.groupBy(u => u).filter { case (_, duplicated) => duplicated.size > 1 }.keys
-      assert(duplicated.size == 0, "Found duplicated UUIDs :" + duplicated.mkString(","))
+      assert(duplicated.size == 0, "Found duplicated UUIDs : " + duplicated.mkString(","))
       val changes = synchronize(examples)
       LogChanges(changes)
       val overviewChange = updateOverview(changes)

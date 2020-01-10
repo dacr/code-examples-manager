@@ -88,7 +88,7 @@ Request keys in description header are the following :
 Configuration examples :
 ```shell
 export CEM_SEARCH_ROOTS="/tmp/someplace,/tmp/someotherplace"
-export CEM_SEARCH_GLOB="*.{sc,sh}"
+export CEM_SEARCH_GLOB="**/*.{sc,sh}"
 export CEM_GITHUB_TOKEN="fada-fada-fada-fada"
 ```
 

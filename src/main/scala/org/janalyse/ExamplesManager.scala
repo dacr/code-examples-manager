@@ -1,5 +1,6 @@
 package org.janalyse
 
+import better.files.File
 import org.janalyse.externalities.github.GitHubPublishAdapter
 import org.janalyse.externalities.{AuthToken, PublishAdapter}
 
@@ -17,7 +18,7 @@ object ExamplesManager {
       globPattern <- parameters.filesGlob
     } yield {
       searchRoot
-        .glob(globPattern)
+        .glob(globPattern,includePath = false)
         .map(CodeExample(_))
         .toList
         .filter(_.uuid.isDefined)
