@@ -50,6 +50,7 @@ object Synchronize {
 
     val example = new CodeExample {
       override val filename: String = "index.md"
+      override val category: Option[String] = None
       override val summary: Option[String] = Some(exampleSummary)
       override val keywords: List[String] = Nil
       override val publish: List[String] = Nil

@@ -19,7 +19,7 @@ object ExamplesManager {
     } yield {
       searchRoot
         .glob(globPattern,includePath = false)
-        .map(CodeExample(_))
+        .map(file => CodeExample(file, searchRoot))
         .toList
         .filter(_.uuid.isDefined)
     }

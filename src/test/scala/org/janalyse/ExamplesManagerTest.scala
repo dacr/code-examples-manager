@@ -2,13 +2,13 @@ package org.janalyse
 
 import better.files._
 import better.files.Dsl._
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest._
 
-class ExamplesManagerTest extends FlatSpec with Matchers {
+class ExamplesManagerTest extends FlatSpec with matchers.should.Matchers {
 
   implicit val parameters = Parameters(
     searchRoots = List(pwd / "test-data" / "sample1" , pwd / "test-data" / "sample2"),
-    filesGlob = Some("*.{sc,sh}"),
+    filesGlob = Some("**/*.{sc,sh}"),
     githubToken = None,
     gitlabToken = None,
     examplesOverviewUUID = "fade-fade"
