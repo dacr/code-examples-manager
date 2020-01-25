@@ -12,16 +12,27 @@ object Synchronize {
   }
 
   private def formatChangesForFileExt(changes:List[Change], fileExt:String):String = {
-    val formattedExamples = for {
-      change <- changes.sortBy(_.example.filename)
-      filename = change.example.filename
-      summary <- change.example.summary
-      url <- change.publishedUrls.get("gist") // TODO - Hardcoded for gist
-    } yield {
-      s"- [$filename]($url) : $summary"
+    def formatChanges(changes: List[Change]) = {
+      for {
+        change <- changes.sortBy(_.example.filename)
+        filename = change.example.filename
+        summary <- change.example.summary
+        url <- change.publishedUrls.get("gist") // TODO - Hardcoded for gist
+      } yield {
+        s"- [$filename]($url) : $summary"
+      }
     }
-    val count = formattedExamples.size
-    val content = formattedExamples.mkString("\n")
+
+    val markdownFormattedLinesForExamples =
+      changes.groupBy(_.example.category).toList.sortBy{case(k,_)=>k}.flatMap{
+        case (None, changes) =>
+          formatChanges(changes)
+        case (Some(category), changes) =>
+          s"- $category"::(formatChanges(changes).map(line => s"  $line"))
+      }
+
+    val count = changes.size
+    val content = markdownFormattedLinesForExamples.mkString("\n")
     val exampleFileType = fileExtToExampleType(fileExt)
     s"## $count $exampleFileType examples\n$content"
   }
