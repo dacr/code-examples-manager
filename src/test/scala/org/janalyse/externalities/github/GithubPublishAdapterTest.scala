@@ -6,7 +6,7 @@ import org.scalatest.OptionValues._
 import better.files._
 import better.files.Dsl._
 
-class GithubPublishAdapterTest extends FlatSpec with matchers.should.Matchers {
+class GithubPublishAdapterTest extends FlatSpec with Matchers {
 
   // Those tests are only executed with a github token is available
 

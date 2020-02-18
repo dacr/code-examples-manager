@@ -4,7 +4,7 @@ import better.files._
 import better.files.Dsl._
 import org.scalatest._
 
-class ExamplesManagerTest extends FlatSpec with matchers.should.Matchers {
+class ExamplesManagerTest extends FlatSpec with Matchers {
 
   implicit val parameters = Parameters(
     searchRoots = List(pwd / "test-data" / "sample1" , pwd / "test-data" / "sample2"),
