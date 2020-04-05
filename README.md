@@ -1,4 +1,4 @@
-# Code examples manager
+# Code examples manager [![][CodeExamplesManagerImg]][CodeExamplesManagerLnk]
 
 Manage code examples, provide gists/snippets publish mechanisms.
 All my code examples (my programming knowledge base) are now shared using this tool,
@@ -104,3 +104,7 @@ Get an authorized access to github gist API :
 - Setup CEM_GITHUB_TOKEN environment variable with the previously generated token
   as shown within curl json response
 - **Of course, keep it carefully as it is not possible to retrieve it later.**
+
+[CodeExamplesManager]:    https://github.com/dacr/jaseries
+[CodeExamplesManagerImg]: https://img.shields.io/maven-central/v/fr.janalyse/code-examples-manager_2.13.svg
+[CodeExamplesManagerLnk]: https://search.maven.org/#search%7Cga%7C1%7Cfr.janalyse.code-examples-manager
