@@ -28,7 +28,7 @@ object Synchronize {
         case (None, changes) =>
           formatChanges(changes)
         case (Some(category), changes) =>
-          s"- $category"::(formatChanges(changes).map(line => s"  $line"))
+          s"- **$category**"::(formatChanges(changes).map(line => s"  $line"))
       }
 
     val count = changes.size
