@@ -11,18 +11,30 @@ object Synchronize {
     result -> (now() - started)
   }
 
-  private def formatChangesForFileExt(changes:List[Change], fileExt:String):String = {
-    def formatChanges(changes: List[Change]) = {
-      for {
-        change <- changes.sortBy(_.example.filename)
-        filename = change.example.filename
-        summary <- change.example.summary
-        url <- change.publishedUrls.get("gist") // TODO - Hardcoded for gist
-      } yield {
-        s"- [$filename]($url) : $summary"
-      }
+  def formatChanges(changes: List[Change]) = {
+    for {
+      change <- changes.sortBy(_.example.filename)
+      filename = change.example.filename
+      summary <- change.example.summary
+      url <- change.publishedUrls.get("gist") // TODO - Hardcoded for gist
+    } yield {
+      s"- [$filename]($url) : $summary"
     }
+  }
 
+  private def formatChangesByCategories(changes:List[Change]): String = {
+    val markdownFormattedLinesForExamples =
+      changes.groupBy(_.example.category).toList.sortBy{case(k,_)=>k}.flatMap{
+        case (None, changes) =>
+          s"## Without category"::formatChanges(changes)
+        case (Some(category), changes) =>
+          s"## $category" :: formatChanges(changes)
+      }
+    val content = markdownFormattedLinesForExamples.mkString("\n")
+    content
+  }
+
+  private def formatChangesByFileExtensions(changes:List[Change], fileExt:String):String = {
     val markdownFormattedLinesForExamples =
       changes.groupBy(_.example.category).toList.sortBy{case(k,_)=>k}.flatMap{
         case (None, changes) =>
@@ -30,7 +42,6 @@ object Synchronize {
         case (Some(category), changes) =>
           s"- **$category**"::(formatChanges(changes).map(line => s"  $line"))
       }
-
     val count = changes.size
     val content = markdownFormattedLinesForExamples.mkString("\n")
     val exampleFileType = fileExtToExampleType(fileExt)
@@ -38,7 +49,7 @@ object Synchronize {
   }
 
   private def fileExtToExampleType(fileExt: String) = {
-    Map("sc" -> "scala", "sh" -> "shell", "j" -> "java") // TODO - To configure
+    Map("sc" -> "scala", "sh" -> "shell", "j" -> "java", "md"->"markdown") // TODO - To configure
       .getOrElse(fileExt, fileExt)
   }
 
@@ -47,9 +58,10 @@ object Synchronize {
     val exampleSummary = "Examples overview."
     val examplesCount = changes.size
 
-    val examplesStructuredListContent = for {
-                (fileExt, changesForFileExt) <- changes.groupBy(_.example.fileExt)
-    } yield formatChangesForFileExt(changesForFileExt,fileExt)
+//    val examplesStructuredListContent = for {
+//                (fileExt, changesForFileExt) <- changes.groupBy(_.example.fileExt)
+//    } yield formatChangesByFileExtensions(changesForFileExt,fileExt)
+    val examplesStructuredListContent = formatChangesByCategories(changes)::Nil
 
     val header =
       s"""# Code examples knowledge base
