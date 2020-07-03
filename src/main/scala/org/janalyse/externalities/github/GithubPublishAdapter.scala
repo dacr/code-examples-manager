@@ -1,31 +1,32 @@
 package org.janalyse.externalities.github
 
-import com.softwaremill.sttp.json4s.asJson
-import com.softwaremill.sttp._
-import com.softwaremill.sttp.json4s._
+import sttp.client._
+import sttp.client.json4s.asJson
+import sttp.client.json4s._
 import org.janalyse.{AddedChange, Change, ChangeIssue, CodeExample, NoChange, UpdatedChange}
 import org.janalyse.externalities.{AuthToken, PublishAdapter}
 import org.json4s.JValue
 import org.slf4j.{Logger, LoggerFactory}
+import sttp.model.Uri
 
 import scala.util.{Left, Right}
 
-class GitHubPublishAdapter extends PublishAdapter {
+class GithubPublishAdapter extends PublishAdapter {
   implicit val serialization = org.json4s.native.Serialization
   implicit val formats = org.json4s.DefaultFormats
-  implicit val sttpBackend = com.softwaremill.sttp.okhttp.OkHttpSyncBackend()
+  implicit val sttpBackend = sttp.client.okhttp.OkHttpSyncBackend()
 
-  private val logger:Logger = LoggerFactory.getLogger(getClass)
+  private val logger: Logger = LoggerFactory.getLogger(getClass)
 
   val gistKeyword = "gist"
 
   private def makeGetRequest(query: Uri)(implicit token: AuthToken) = {
-    sttp
+    basicRequest
       .get(query)
       .header("Authorization", s"token $token")
   }
 
-  def getUser()(implicit token:AuthToken):Option[GistUser] = {
+  def getUser()(implicit token: AuthToken): Option[GistUser] = {
     val query = uri"https://api.github.com/user"
     val response = makeGetRequest(query).response(asJson[GistUser]).send()
     response.body match {
@@ -38,16 +39,16 @@ class GitHubPublishAdapter extends PublishAdapter {
 
   }
 
-  def userGists(user: GistUser)(implicit token: AuthToken): Stream[GistInfo] = {
+  def userGists(user: GistUser)(implicit token: AuthToken): LazyList[GistInfo] = {
     val nextLinkRE = """.*<([^>]+)>; rel="next".*""".r
 
-    def worker(nextQuery: Option[Uri], currentRemaining: Iterable[GistInfo]): Stream[GistInfo] = {
+    def worker(nextQuery: Option[Uri], currentRemaining: Iterable[GistInfo]): LazyList[GistInfo] = {
       (nextQuery, currentRemaining) match {
-        case (None, Nil) => Stream.empty
+        case (None, Nil) => LazyList.empty
         case (_, head :: tail) => head #:: worker(nextQuery, tail)
         case (Some(query), Nil) =>
           val response = {
-            sttp
+            basicRequest
               .get(query)
               .header("Authorization", s"token $token")
               .response(asJson[Array[GistInfo]])
@@ -56,12 +57,15 @@ class GitHubPublishAdapter extends PublishAdapter {
           response.body match {
             case Left(message) =>
               logger.error(s"List gists - Something wrong has happened : $message")
-              Stream.empty
+              LazyList.empty
             case Right(gistsArray) =>
               val next = response.header("Link") // it provides the link for the next & last page :)
               val newNextQuery = next.collect { case nextLinkRE(uri) => uri"$uri" }
               worker(newNextQuery, gistsArray.toList)
           }
+        case other =>
+          logger.warn("Not understandable response : " + other.toString())
+          LazyList.empty
       }
     }
 
@@ -75,7 +79,7 @@ class GitHubPublishAdapter extends PublishAdapter {
   def getGist(id: String)(implicit token: AuthToken): Option[Gist] = {
     val query = uri"https://api.github.com/gists/$id"
     val response = {
-      sttp
+      basicRequest
         .get(query)
         .header("Authorization", s"token $token")
         .response(asJson[Gist])
@@ -94,7 +98,7 @@ class GitHubPublishAdapter extends PublishAdapter {
   def addGist(gist: GistSpec)(implicit token: AuthToken): Option[String] = {
     val query = uri"https://api.github.com/gists"
     val response = {
-      sttp
+      basicRequest
         .body(gist)
         .post(query)
         .header("Authorization", s"token $token")
@@ -113,7 +117,7 @@ class GitHubPublishAdapter extends PublishAdapter {
   def updateGist(id: String, gist: GistSpec)(implicit token: AuthToken): Option[String] = {
     val query = uri"https://api.github.com/gists/$id"
     val response = {
-      sttp
+      basicRequest
         .body(gist)
         .patch(query)
         .header("Authorization", s"token $token")
@@ -130,7 +134,7 @@ class GitHubPublishAdapter extends PublishAdapter {
   }
 
 
-  def makeGistSpec(example:CodeExample):Option[GistSpec] = {
+  def makeGistSpec(example: CodeExample): Option[GistSpec] = {
     for {
       uuid <- example.uuid
       summary <- example.summary
@@ -153,50 +157,16 @@ class GitHubPublishAdapter extends PublishAdapter {
 
 
   /**
-   * Migrate remote gists mainly (only to be used when an older publish mechanism has been used)
-   * @param examples
-   * @param authToken
-   */
-  override def migrateGists(examples: List[CodeExample], authToken: AuthToken): List[Change] = {
-    val examplesForGithub =
-      examples
-        .filter(_.publish.contains(gistKeyword))
-        .collect{case example if example.uuid.isDefined => example.uuid.get -> example}
-        .toMap
-
-    implicit val authTokenMadeImplicit = authToken
-    getUser match {
-      case None =>
-        logger.warn(s"Can't get user information, check token roles, read:user must be enabled")
-        List.empty
-      case Some(user) =>
-        val remoteGists = userGists(user)
-        // fixing gist containing an UUID in their file and not in their description
-        for {
-          gistInfo <- remoteGists.toList
-          if gistInfo.checksumOption.isEmpty || gistInfo.uuidOption.isEmpty
-          gist <- getGist(gistInfo.id)
-          if gist.files.size == 1
-          (_, gistFile) <- gist.files.headOption
-          uuid <- gistFile.uuidOption
-          example <- examplesForGithub.get(uuid)
-          gist <- makeGistSpec(example)
-        } yield {
-          synchronizeUpdate(example,gist,gistInfo)
-        }
-    }
-  }
-
-  /**
    * Synchronize github examples
-   * @param examples examples to synchronize
+   *
+   * @param examples  examples to synchronize
    * @param authToken authentication token with gist and read:user credentials
    * @return list of the applied changes
    */
   override def synchronize(examples: List[CodeExample], authToken: AuthToken): List[Change] = {
     val examplesForGithub = examples.filter(_.publish.contains(gistKeyword))
-    implicit val authTokenMadeImplicit = authToken
-    getUser match {
+    implicit val authTokenMadeImplicit: AuthToken = authToken
+    getUser() match {
       case None =>
         logger.warn(s"Can't get user information, check token roles, read:user must be enabled")
         List.empty
@@ -208,17 +178,22 @@ class GitHubPublishAdapter extends PublishAdapter {
           uuid <- example.uuid
           gist <- makeGistSpec(example)
           checksum = example.checksum
+          remoteGistInfo = remoteGistInfosByUUID.get(uuid)
         } yield {
-          remoteGistInfosByUUID.get(uuid) match {
-            case Some(remoteGist) if remoteGist.checksumOption.contains(checksum) => synchronizeNoChange(example, remoteGist)
-            case Some(remoteGist) => synchronizeUpdate(example, gist, remoteGist)
-            case None => synchronizeAdd(example, gist)
-          }
+          synchronizeExample(example, gist, checksum, remoteGistInfo)
         }
-        // TODO : remove not anymore UUID from remote gists
+        // TODO : remove not anymore UUID from remote gists - but take care if same publish target is used multiple times
         result
     }
 
+  }
+
+  private def synchronizeExample(example: CodeExample, gist: GistSpec, checksum: String, remoteGistInfo: Option[GistInfo])(implicit token: AuthToken): Change = {
+    remoteGistInfo match {
+      case Some(remoteGist) if remoteGist.checksumOption.contains(checksum) => synchronizeNoChange(example, remoteGist)
+      case Some(remoteGist) => synchronizeUpdate(example, gist, remoteGist)
+      case None => synchronizeAdd(example, gist)
+    }
   }
 
   private def synchronizeNoChange(example: CodeExample, remoteGist: GistInfo)(implicit authToken: AuthToken) = {
@@ -253,8 +228,8 @@ class GitHubPublishAdapter extends PublishAdapter {
   }
 
   override def exampleUpsert(example: CodeExample, authToken: AuthToken): Change = {
-    implicit val authTokenMadeImplicit = authToken
-    getUser match {
+    implicit val authTokenMadeImplicit: AuthToken = authToken
+    getUser() match {
       case None =>
         logger.warn(s"Can't get user information, check token roles, read:user must be enabled")
         NoChange(example, Map.empty)
@@ -264,12 +239,9 @@ class GitHubPublishAdapter extends PublishAdapter {
           uuid <- example.uuid
           gist <- makeGistSpec(example)
           checksum = example.checksum
+          remoteGistInfo = remoteGistInfosByUUID.get(uuid)
         } yield {
-          remoteGistInfosByUUID.get(uuid) match {
-            case Some(remoteGist) if remoteGist.checksumOption.contains(checksum) => synchronizeNoChange(example, remoteGist)
-            case Some(remoteGist) => synchronizeUpdate(example, gist, remoteGist)
-            case None => synchronizeAdd(example, gist)
-          }
+          synchronizeExample(example, gist, checksum, remoteGistInfo)
         }
         result.getOrElse(ChangeIssue(example))
     }

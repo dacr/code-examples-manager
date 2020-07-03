@@ -1,9 +1,8 @@
 package org.janalyse.externalities.github
 
-import org.scalatest._
-import org.scalatest.OptionValues._
+import org.scalatest._,matchers._, OptionValues._, flatspec._
 
-class GithubResponsesModelsTest extends FlatSpec with Matchers {
+class GithubResponsesModelsTest extends AnyFlatSpec with should.Matchers {
 
   "GistInfo" should "encode UUID and checksum" in {
     List(

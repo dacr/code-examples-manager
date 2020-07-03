@@ -1,7 +1,7 @@
 package org.janalyse
 
 import better.files.File
-import org.janalyse.externalities.github.GitHubPublishAdapter
+import org.janalyse.externalities.github.GithubPublishAdapter
 import org.janalyse.externalities.{AuthToken, PublishAdapter}
 
 
@@ -35,26 +35,13 @@ object ExamplesManager {
    */
   def synchronize(examples: List[CodeExample])(implicit parameters: Parameters): List[Change] = {
     // first implementation, hard coded for github gists
-    val publishAdapter: PublishAdapter = new GitHubPublishAdapter
+    val publishAdapter: PublishAdapter = new GithubPublishAdapter
     parameters
       .githubToken
       .map(publishAdapter.synchronize(examples, _))
       .getOrElse(Nil)
   }
 
-  /**
-   * Migrate remote gists mainly (only to be used when an older publish mechanism has been used)
-   * @param parameters code examples managers parameters
-   * @param examples
-   */
-  def migrate(examples: List[CodeExample])(implicit parameters: Parameters): List[Change] = {
-    // first implementation, hard coded for github gists
-    val publishAdapter: PublishAdapter = new GitHubPublishAdapter
-    parameters
-      .githubToken
-      .map(publishAdapter.migrateGists(examples, _))
-      .getOrElse(Nil)
-  }
 
   /**
    * Update or add an example
@@ -63,7 +50,7 @@ object ExamplesManager {
    */
   def upsert(example: CodeExample)(implicit parameters: Parameters): Change = {
     // first implementation, hard coded for github gists
-    val publishAdapter: PublishAdapter = new GitHubPublishAdapter
+    val publishAdapter: PublishAdapter = new GithubPublishAdapter
     parameters
       .githubToken
       .map(publishAdapter.exampleUpsert(example, _))

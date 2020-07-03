@@ -1,13 +1,8 @@
 package org.janalyse
 
-import org.scalatest.WordSpec
+import org.scalatest._, matchers._, OptionValues._, flatspec._
 
-class SynchronizeTest extends WordSpec {
-  "Synchronize" can {
-    "Check" should {
-      "List and validate available examples" in {
-
-      }
-    }
+class SynchronizeTest extends AnyFlatSpec with should.Matchers {
+  "Synchronize" should "List and validate available examples" in {
   }
 }

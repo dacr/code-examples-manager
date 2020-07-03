@@ -11,7 +11,7 @@ object Hashes {
     val bis = new BufferedInputStream(input)
     val buf = new Array[Byte](1024)
     val md5 = java.security.MessageDigest.getInstance("MD5")
-    Stream.continually(bis.read(buf)).takeWhile(_ != -1).foreach(md5.update(buf, 0, _))
+    LazyList.continually(bis.read(buf)).takeWhile(_ != -1).foreach(md5.update(buf, 0, _))
     md5.digest().map(0xFF & _).map {
       "%02x".format(_)
     }.foldLeft("") {

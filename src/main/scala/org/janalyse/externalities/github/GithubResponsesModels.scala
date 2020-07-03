@@ -2,6 +2,8 @@ package org.janalyse.externalities.github
 
 import org.janalyse.CodeExample.extractValue
 
+import scala.util.matching.Regex
+
 case class GistUser(
   login: String, // user name in APIs
   name: String,
@@ -35,7 +37,7 @@ object GistInfo {
   // gist info meta data is stored in the description as follow :
   //   "this is a gist #8c641170-ae1d-4f5c-8010-08f2169d4ce4/8c641170-ae1d-4f5c-8010-08f2169d4ce4"
   //   for : "gist description #uuid/sha1"
-  val metaDataRE="""#\s*([-0-9a-f]+)\s*/\s*([0-9a-f]+)\s*$""".r.unanchored
+  val metaDataRE:Regex = """#\s*([-0-9a-f]+)\s*/\s*([0-9a-f]+)\s*$""".r.unanchored
   def makeDescription(summary:String, uuid:String, contentSHA1:String):String = {
     s"$summary #$uuid/$contentSHA1"
   }

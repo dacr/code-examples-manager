@@ -1,9 +1,9 @@
 package org.janalyse
 
-import org.scalatest._
+import org.scalatest._,matchers._, OptionValues._, flatspec._
 import better.files._
 
-class CodeExampleTest extends FlatSpec with Matchers {
+class CodeExampleTest extends AnyFlatSpec with should.Matchers {
   "CodeExample" can "be constructed from a local file" in {
     val ex1 = CodeExample(file"test-data/sample1/fake-testing-pi.sc", file"test-data/sample1")
     ex1.fileExt shouldBe "sc"

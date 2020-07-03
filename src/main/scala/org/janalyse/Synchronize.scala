@@ -11,7 +11,7 @@ object Synchronize {
     result -> (now() - started)
   }
 
-  def formatChanges(changes: List[Change]) = {
+  def formatChanges(changes: List[Change]): List[String] = {
     for {
       change <- changes.sortBy(_.example.filename)
       filename = change.example.filename
@@ -32,25 +32,6 @@ object Synchronize {
       }
     val content = markdownFormattedLinesForExamples.mkString("\n")
     content
-  }
-
-  private def formatChangesByFileExtensions(changes:List[Change], fileExt:String):String = {
-    val markdownFormattedLinesForExamples =
-      changes.groupBy(_.example.category).toList.sortBy{case(k,_)=>k}.flatMap{
-        case (None, changes) =>
-          formatChanges(changes)
-        case (Some(category), changes) =>
-          s"- **$category**"::(formatChanges(changes).map(line => s"  $line"))
-      }
-    val count = changes.size
-    val content = markdownFormattedLinesForExamples.mkString("\n")
-    val exampleFileType = fileExtToExampleType(fileExt)
-    s"## $count $exampleFileType examples\n$content"
-  }
-
-  private def fileExtToExampleType(fileExt: String) = {
-    Map("sc" -> "scala", "sh" -> "shell", "j" -> "java", "md"->"markdown") // TODO - To configure
-      .getOrElse(fileExt, fileExt)
   }
 
   def updateOverview(changes: List[Change])(implicit parameters:Parameters):Change = {
@@ -89,13 +70,13 @@ object Synchronize {
   def main(args: Array[String]): Unit = {
     logger.info("Started")
     val (_, duration) = howLong {
-      implicit val parameters = Parameters()
-      import ExamplesManager.{getExamples, synchronize, migrate}
+      implicit val parameters:Parameters = Parameters()
+      import ExamplesManager.{getExamples, synchronize}
       val examples = getExamples
       logger.info(s"Found ${examples.size} available locally for synchronization purpose")
-      val uuids = examples.map(_.uuid).flatten
+      val uuids = examples.flatMap(_.uuid)
       val duplicated = uuids.groupBy(u => u).filter { case (_, duplicated) => duplicated.size > 1 }.keys
-      assert(duplicated.size == 0, "Found duplicated UUIDs : " + duplicated.mkString(","))
+      assert(duplicated.isEmpty, "Found duplicated UUIDs : " + duplicated.mkString(","))
       val changes = synchronize(examples)
       LogChanges(changes)
       val overviewChange = updateOverview(changes)
@@ -106,7 +87,7 @@ object Synchronize {
     logger.info(s"Finished in ${duration/1000}s")
   }
 
-  private def LogChanges(changes: List[Change]) = {
+  private def LogChanges(changes: List[Change]): Unit = {
     changes
       .filterNot(_.isInstanceOf[NoChange])
       .map(_.toString)

@@ -1,9 +1,9 @@
 package org.janalyse
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest._,matchers._, OptionValues._, flatspec._
 import Hashes._
 
-class HashesTest extends FlatSpec with Matchers {
+class HashesTest extends AnyFlatSpec with should.Matchers {
   override def suiteName: String = "HashesTest"
 
   val example = "Please hash me !"

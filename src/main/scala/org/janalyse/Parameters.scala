@@ -15,11 +15,11 @@ case class Parameters(
 object Parameters {
   def propOrEnvOrNone(key: String): Option[String] = envOrSome(key, propOrNone(key))
 
-  val searchRootDirectories = propOrEnvOrNone("CEM_SEARCH_ROOTS")
-  val filesGlob = propOrEnvOrNone("CEM_SEARCH_GLOB")
-  val gitlabToken = propOrEnvOrNone("CEM_GITLAB_TOKEN").map(AuthToken)
-  val githubToken = propOrEnvOrNone("CEM_GITHUB_TOKEN").map(AuthToken)
-  val examplesOverviewUUID =
+  val searchRootDirectories: Option[String] = propOrEnvOrNone("CEM_SEARCH_ROOTS")
+  val filesGlob: Option[String] = propOrEnvOrNone("CEM_SEARCH_GLOB")
+  val gitlabToken: Option[AuthToken] = propOrEnvOrNone("CEM_GITLAB_TOKEN").map(AuthToken)
+  val githubToken: Option[AuthToken] = propOrEnvOrNone("CEM_GITHUB_TOKEN").map(AuthToken)
+  val examplesOverviewUUID: String =
     propOrEnvOrNone("CEM_EXAMPLES_OVERVIEW_UUID")
       .getOrElse("cafacafe-cafecafe")
 

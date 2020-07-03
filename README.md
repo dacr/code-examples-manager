@@ -18,7 +18,7 @@ They help us to quickly test, experiment and remember how bigger project or at l
 parts of them are working. 
 
 Managing dozens of published code example files as gists (github) and/or snippets (gitlab)
-is really not easy and time consuming, in particular if you want to keep your examples
+is really not easy and time-consuming, in particular if you want to keep your examples
 up to date.
 
 That's why I decided to automate their management. The first iteration was script based,
@@ -35,16 +35,16 @@ in [scala][scala].
 
 Code examples manager operations :
 - It searches for code examples from the given directories roots
-  - The search is achieved recursively
+  - Search recursively
   - Only files with given extensions are selected
-  - Code examples are taken into account if and only if they contain a unique identier (UUID)
+  - Selects code examples if and only if they contain a unique identifier (UUID)
     - See below for more details
 - It publishes or updates remote code examples
   - Using code example publish scope (`publish` keyword)
     - `gist` is for github gists
   - It adds or updates a global summary of all examples
 
-## code examples 
+## code examples
 
 In order to be published code examples must come with a description header
 inserted using line comments.
@@ -52,15 +52,16 @@ inserted using line comments.
 Example for languages using `//` for line comments :
 ```scala
 // summary : Simplest scalatest test framework usage.
-// keywords : scalatest, pi
+// keywords : scala, scalatest, pi, @testable
 // publish : gist, snippet
-// authors : @crodav
+// authors : David Crosson
 // license : Apache
 // id : d24d8cb3-45c0-4d88-b033-7fae2325607b
 // execution : scala ammonite script (http://ammonite.io/) - run as follow 'amm scriptname.sc'
-import $ivy.`org.scalatest::scalatest:3.0.8`
-import org.scalatest._,Matchers._
+import $ivy.`org.scalatest::scalatest:3.2.0`
+import org.scalatest._,matchers.should.Matchers._
 math.Pi shouldBe 3.14d +- 0.01d
+
 ```
 
 Request keys in description header are the following :
@@ -97,7 +98,7 @@ export CEM_GITHUB_TOKEN="fada-fada-fada-fada"
 ```
 
 ### Github authentication token configuration
-Get an authorized access from github gist API :
+Get authorized access from github gist API :
 - List authorizations : `curl --user "dacr" https://api.github.com/authorizations`
 - **Create github authentication token with required authorization scopes** : 
   ```bash
