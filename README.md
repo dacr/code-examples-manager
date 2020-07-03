@@ -27,9 +27,9 @@ necessary, and so **code-examples-manager** was born.
 
 _Start small, make it works quickly, and then refactor !_
 
-A lot of thanks to [Li Haoyi](https://github.com/lihaoyi) for his wonderful work on
-[ammonite](http://ammonite.io/) which is probably the best solution for code examples and scripting
-in [scala](https://www.scala-lang.org/).
+A lot of thanks to [Li Haoyi][lihaoyi] for his wonderful work on
+[ammonite][amm] which is probably the best solution for code examples and scripting
+in [scala][scala].
 
 ## What it does
 
@@ -46,7 +46,7 @@ Code examples manager operations :
 
 ## code examples 
 
-In order to be published code examples must comes with a description header
+In order to be published code examples must come with a description header
 inserted using line comments.
 
 Example for languages using `//` for line comments :
@@ -55,6 +55,7 @@ Example for languages using `//` for line comments :
 // keywords : scalatest, pi
 // publish : gist, snippet
 // authors : @crodav
+// license : Apache
 // id : d24d8cb3-45c0-4d88-b033-7fae2325607b
 // execution : scala ammonite script (http://ammonite.io/) - run as follow 'amm scriptname.sc'
 import $ivy.`org.scalatest::scalatest:3.0.8`
@@ -66,14 +67,17 @@ Request keys in description header are the following :
 - **summary** : example one line summary.
 - **keywords** : keywords describing your code features (comma separated).
 - **publish** : publish destination keywords (`gist` for github).
-- **authors** : code example authors list (comma separated)
+- **authors** : code example authors list (comma separated).
+- **license** : example license.
 - **id** : UUID for this code example. Generated using such commands :
-  - [this ammonite scala script](https://gist.github.com/dacr/87c9636a6d25787d7c274b036d2a8aad).
-  - This [ammonite](https://ammonite.io/) oneliner :  
+  - [this ammonite scala script][uuid-sc].
+  - This [ammonite][amm] oneliner :  
     `amm -c 'println(java.util.UUID.randomUUID.toString)'`
   - This python oneliner :  
     `python -c "import uuid, sys;sys.stdout.write(str(uuid.uuid4()))"`
-- **execution** : 
+  - This linux command (comes from package named uuid-runtime at least on debian based linux) :  
+    `uuidgen`
+- **execution** : how to execute the example, execution runtime release constraints, ...
 
 ## configuration
 
@@ -83,7 +87,7 @@ Request keys in description header are the following :
 |CEM_SEARCH_GLOB            | examples files globs
 |CEM_GITLAB_TOKEN           | gitlab authentication token for snippets API access
 |CEM_GITHUB_TOKEN           | github authentication token for gists API access, see below for how to get this token
-|CEM_EXAMPLES_OVERVIEW_UUID | the UUID for the overview GIST which list all examples, default value is `cafacafe-cafecafe`
+|CEM_EXAMPLES_OVERVIEW_UUID | the fixed UUID for the overview GIST which list all examples, default value is `cafacafe-cafecafe`
 
 Configuration examples :
 ```shell
@@ -93,7 +97,7 @@ export CEM_GITHUB_TOKEN="fada-fada-fada-fada"
 ```
 
 ### Github authentication token configuration
-Get an authorized access to github gist API :
+Get an authorized access from github gist API :
 - List authorizations : `curl --user "dacr" https://api.github.com/authorizations`
 - **Create github authentication token with required authorization scopes** : 
   ```bash
@@ -105,6 +109,11 @@ Get an authorized access to github gist API :
   as shown within curl json response
 - **Of course, keep it carefully as it is not possible to retrieve it later.**
 
+
 [CodeExamplesManager]:    https://github.com/dacr/jaseries
 [CodeExamplesManagerImg]: https://img.shields.io/maven-central/v/fr.janalyse/code-examples-manager_2.13.svg
 [CodeExamplesManagerLnk]: https://search.maven.org/#search%7Cga%7C1%7Cfr.janalyse.code-examples-manager
+[amm]: https://ammonite.io/
+[uuid-sc]: https://gist.github.com/dacr/87c9636a6d25787d7c274b036d2a8aad
+[scala]: https://www.scala-lang.org/
+[lihaoyi]: https://github.com/lihaoyi
