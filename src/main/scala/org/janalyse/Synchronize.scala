@@ -1,5 +1,8 @@
 package org.janalyse
 
+import org.janalyse.externalities.PublishAdapter
+import org.janalyse.externalities.github.GithubPublishAdapter
+import org.janalyse.externalities.gitlab.GitlabPublishAdapter
 import org.slf4j.{Logger, LoggerFactory}
 
 object Synchronize {
@@ -11,31 +14,31 @@ object Synchronize {
     result -> (now() - started)
   }
 
-  def formatChanges(changes: List[Change]): List[String] = {
+  def formatChanges(changes: Seq[Change]): Seq[String] = {
     for {
       change <- changes.sortBy(_.example.filename)
       filename = change.example.filename
       summary <- change.example.summary
-      url <- change.publishedUrls.get("gist") // TODO - Hardcoded for gist
+      url <- change.publishedUrl
     } yield {
       s"- [$filename]($url) : $summary"
     }
   }
 
-  private def formatChangesByCategories(changes:List[Change]): String = {
+  private def formatChangesByCategories(changes:Seq[Change]): String = {
     val markdownFormattedLinesForExamples =
       changes.groupBy(_.example.category).toList.sortBy{case(k,_)=>k}.flatMap{
         case (None, changes) =>
-          s"## Without category"::formatChanges(changes)
+          s"## Without category"+:formatChanges(changes)
         case (Some(category), changes) =>
-          s"## $category" :: formatChanges(changes)
+          s"## $category" +: formatChanges(changes)
       }
     val content = markdownFormattedLinesForExamples.mkString("\n")
     content
   }
 
-  def updateOverview(changes: List[Change])(implicit parameters:Parameters):Change = {
-    val exampleUUID = parameters.examplesOverviewUUID
+  def updateOverview(changes: Seq[Change], adapter: PublishAdapter)(implicit config:CodeExampleManagerConfig):Change = {
+    val exampleUUID = adapter.config.overviewUUID
     val exampleSummary = "Examples overview."
     val examplesCount = changes.size
 
@@ -64,30 +67,41 @@ object Synchronize {
       override def content: String = header++examplesStructuredListContent.mkString("\n")
       override def checksum: String = Hashes.sha1(content)
     }
-    ExamplesManager.upsert(example)
+    ExamplesManager.upsert(example, adapter)
   }
 
   def main(args: Array[String]): Unit = {
     logger.info("Started")
     val (_, duration) = howLong {
-      implicit val parameters:Parameters = Parameters()
-      import ExamplesManager.{getExamples, synchronize}
-      val examples = getExamples
+      implicit val config:CodeExampleManagerConfig = Configuration()
+
+      val examples = ExamplesManager.getExamples
       logger.info(s"Found ${examples.size} available locally for synchronization purpose")
       val uuids = examples.flatMap(_.uuid)
       val duplicated = uuids.groupBy(u => u).filter { case (_, duplicated) => duplicated.size > 1 }.keys
       assert(duplicated.isEmpty, "Found duplicated UUIDs : " + duplicated.mkString(","))
-      val changes = synchronize(examples)
-      LogChanges(changes)
-      val overviewChange = updateOverview(changes)
-      val overviewMessage = "Examples overview is available at "+overviewChange.publishedUrls.getOrElse("gist", "??") // TODO - Hardcoded for gist
-      logger.info(overviewMessage)
-      println(overviewMessage)
+
+      for { (adapterConfigName, adapterConfig) <- config.publishAdapters } {
+        val adapterOption = adapterConfig.kind match {
+          case "gitlab" => GitlabPublishAdapter.lookup(adapterConfig)
+          case "github" => GithubPublishAdapter.lookup(adapterConfig)
+          case _ => None
+        }
+        adapterOption.foreach { adapter =>
+          logger.info(s"$adapterConfigName : Synchronizing using ${adapter.getClass.getName}")
+          val changes = ExamplesManager.synchronize(examples, adapter)
+          LogChanges(changes)
+          val overviewChange = updateOverview(changes, adapter)
+          val overviewMessage = s"$adapterConfigName : Examples overview is available at ${overviewChange.publishedUrl.getOrElse("")}"
+          logger.info(overviewMessage)
+          println(overviewMessage)
+        }
+      }
     }
     logger.info(s"Finished in ${duration/1000}s")
   }
 
-  private def LogChanges(changes: List[Change]): Unit = {
+  private def LogChanges(changes: Seq[Change]): Unit = {
     changes
       .filterNot(_.isInstanceOf[NoChange])
       .map(_.toString)

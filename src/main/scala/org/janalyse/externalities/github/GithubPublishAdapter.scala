@@ -3,7 +3,7 @@ package org.janalyse.externalities.github
 import sttp.client._
 import sttp.client.json4s.asJson
 import sttp.client.json4s._
-import org.janalyse.{AddedChange, Change, ChangeIssue, CodeExample, NoChange, UpdatedChange}
+import org.janalyse.{AddedChange, Change, ChangeIssue, CodeExample, NoChange, PublishAdapterConfig, UpdatedChange}
 import org.janalyse.externalities.{AuthToken, PublishAdapter}
 import org.json4s.JValue
 import org.slf4j.{Logger, LoggerFactory}
@@ -11,23 +11,30 @@ import sttp.model.Uri
 
 import scala.util.{Left, Right}
 
-class GithubPublishAdapter extends PublishAdapter {
+object GithubPublishAdapter {
+  def lookup(config:PublishAdapterConfig):Option[PublishAdapter] = {
+    if (config.enabled && config.authToken.isDefined) Some(new GithubPublishAdapter(config)) else None
+  }
+}
+
+class GithubPublishAdapter(val config:PublishAdapterConfig) extends PublishAdapter {
   implicit val serialization = org.json4s.native.Serialization
   implicit val formats = org.json4s.DefaultFormats
   implicit val sttpBackend = sttp.client.okhttp.OkHttpSyncBackend()
 
   private val logger: Logger = LoggerFactory.getLogger(getClass)
 
-  val gistKeyword = "gist"
+  val token = config.authToken.getOrElse("")
+  val apiUrl = config.apiEndPoint
 
-  private def makeGetRequest(query: Uri)(implicit token: AuthToken) = {
+  private def makeGetRequest(query: Uri) = {
     basicRequest
       .get(query)
       .header("Authorization", s"token $token")
   }
 
-  def getUser()(implicit token: AuthToken): Option[GistUser] = {
-    val query = uri"https://api.github.com/user"
+  def getUser(): Option[GistUser] = {
+    val query = uri"$apiUrl/user"
     val response = makeGetRequest(query).response(asJson[GistUser]).send()
     response.body match {
       case Left(message) =>
@@ -39,7 +46,7 @@ class GithubPublishAdapter extends PublishAdapter {
 
   }
 
-  def userGists(user: GistUser)(implicit token: AuthToken): LazyList[GistInfo] = {
+  def userGists(user: GistUser): LazyList[GistInfo] = {
     val nextLinkRE = """.*<([^>]+)>; rel="next".*""".r
 
     def worker(nextQuery: Option[Uri], currentRemaining: Iterable[GistInfo]): LazyList[GistInfo] = {
@@ -71,13 +78,13 @@ class GithubPublishAdapter extends PublishAdapter {
 
     val count = 10
     val userLogin = user.login
-    val startQuery = uri"https://api.github.com/users/$userLogin/gists?page=1&per_page=$count"
+    val startQuery = uri"$apiUrl/users/$userLogin/gists?page=1&per_page=$count"
     worker(Some(startQuery), Nil)
   }
 
 
-  def getGist(id: String)(implicit token: AuthToken): Option[Gist] = {
-    val query = uri"https://api.github.com/gists/$id"
+  def getGist(id: String): Option[Gist] = {
+    val query = uri"$apiUrl/gists/$id"
     val response = {
       basicRequest
         .get(query)
@@ -95,8 +102,8 @@ class GithubPublishAdapter extends PublishAdapter {
   }
 
 
-  def addGist(gist: GistSpec)(implicit token: AuthToken): Option[String] = {
-    val query = uri"https://api.github.com/gists"
+  def addGist(gist: GistSpec): Option[String] = {
+    val query = uri"$apiUrl/gists"
     val response = {
       basicRequest
         .body(gist)
@@ -114,8 +121,8 @@ class GithubPublishAdapter extends PublishAdapter {
     }
   }
 
-  def updateGist(id: String, gist: GistSpec)(implicit token: AuthToken): Option[String] = {
-    val query = uri"https://api.github.com/gists/$id"
+  def updateGist(id: String, gist: GistSpec): Option[String] = {
+    val query = uri"$apiUrl/gists/$id"
     val response = {
       basicRequest
         .body(gist)
@@ -160,12 +167,10 @@ class GithubPublishAdapter extends PublishAdapter {
    * Synchronize github examples
    *
    * @param examples  examples to synchronize
-   * @param authToken authentication token with gist and read:user credentials
    * @return list of the applied changes
    */
-  override def synchronize(examples: List[CodeExample], authToken: AuthToken): List[Change] = {
-    val examplesForGithub = examples.filter(_.publish.contains(gistKeyword))
-    implicit val authTokenMadeImplicit: AuthToken = authToken
+  override def synchronize(examples: List[CodeExample]): List[Change] = {
+    val examplesForGithub = examples.filter(_.publish.contains(config.activationKeyword))
     getUser() match {
       case None =>
         logger.warn(s"Can't get user information, check token roles, read:user must be enabled")
@@ -188,7 +193,7 @@ class GithubPublishAdapter extends PublishAdapter {
 
   }
 
-  private def synchronizeExample(example: CodeExample, gist: GistSpec, checksum: String, remoteGistInfo: Option[GistInfo])(implicit token: AuthToken): Change = {
+  private def synchronizeExample(example: CodeExample, gist: GistSpec, checksum: String, remoteGistInfo: Option[GistInfo]): Change = {
     remoteGistInfo match {
       case Some(remoteGist) if remoteGist.checksumOption.contains(checksum) => synchronizeNoChange(example, remoteGist)
       case Some(remoteGist) => synchronizeUpdate(example, gist, remoteGist)
@@ -196,43 +201,42 @@ class GithubPublishAdapter extends PublishAdapter {
     }
   }
 
-  private def synchronizeNoChange(example: CodeExample, remoteGist: GistInfo)(implicit authToken: AuthToken) = {
+  private def synchronizeNoChange(example: CodeExample, remoteGist: GistInfo) = {
     if (remoteGist.files.size > 1) logger.warn(s"${remoteGist.html_url} has more than one file}")
-    NoChange(example, Map(gistKeyword -> remoteGist.html_url))
+    NoChange(example, Some(remoteGist.html_url))
   }
 
-  private def synchronizeAdd(example: CodeExample, gist: GistSpec)(implicit authToken: AuthToken): Change = {
+  private def synchronizeAdd(example: CodeExample, gist: GistSpec): Change = {
     val rc = addGist(gist)
     if (rc.isDefined) {
       val newGist = getGist(rc.get)
       newGist
-        .map(g => AddedChange(example, Map(gistKeyword -> g.html_url)))
+        .map(g => AddedChange(example, Some(g.html_url)))
         .getOrElse(ChangeIssue(example))
     } else
       ChangeIssue(example)
   }
 
-  private def synchronizeUpdate(example: CodeExample, gist: GistSpec, remoteGist: GistInfo)(implicit authToken: AuthToken): Change = {
+  private def synchronizeUpdate(example: CodeExample, gist: GistSpec, remoteGist: GistInfo): Change = {
     if (remoteGist.files.size > 1) logger.warn(s"${remoteGist.html_url} has more than one file}")
     val rc = updateGist(remoteGist.id, gist)
     if (rc.isDefined)
-      UpdatedChange(example, Map(gistKeyword -> remoteGist.html_url))
+      UpdatedChange(example, Some(remoteGist.html_url))
     else
       ChangeIssue(example)
   }
 
-  private def getRemoteGistInfosByUUID(user: GistUser)(implicit authToken: AuthToken): Map[String, GistInfo] = {
+  private def getRemoteGistInfosByUUID(user: GistUser): Map[String, GistInfo] = {
     userGists(user)
       .collect { case gistInfo if gistInfo.uuidOption.isDefined => gistInfo.uuidOption.get -> gistInfo }
       .toMap
   }
 
-  override def exampleUpsert(example: CodeExample, authToken: AuthToken): Change = {
-    implicit val authTokenMadeImplicit: AuthToken = authToken
+  override def exampleUpsert(example: CodeExample): Change = {
     getUser() match {
       case None =>
         logger.warn(s"Can't get user information, check token roles, read:user must be enabled")
-        NoChange(example, Map.empty)
+        NoChange(example)
       case Some(user) =>
         val remoteGistInfosByUUID = getRemoteGistInfosByUUID(user)
         val result = for {

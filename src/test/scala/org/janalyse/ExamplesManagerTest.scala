@@ -2,18 +2,32 @@ package org.janalyse
 
 import better.files._
 import better.files.Dsl._
-import org.scalatest._,matchers._, OptionValues._, flatspec._
+import org.scalatest._
+import matchers._
+import OptionValues._
+import flatspec._
+import org.janalyse.externalities.AuthToken
 
 
 class ExamplesManagerTest extends AnyFlatSpec with should.Matchers {
 
-  implicit val parameters:Parameters = Parameters(
-    searchRoots = List(pwd / "test-data" / "sample1" , pwd / "test-data" / "sample2"),
-    filesGlob = Some("**/*.{sc,sh}"),
-    githubToken = None,
-    gitlabToken = None,
-    examplesOverviewUUID = "fade-fade"
-  )
+  implicit val config: CodeExampleManagerConfig =
+    CodeExampleManagerConfig(
+      ExamplesConfig(
+        searchRootDirectories = List(pwd / "test-data" / "sample1", pwd / "test-data" / "sample2").map(_.path).mkString(","),
+        filesGlob = Some("**/*.{sc,sh}")
+      ),
+      Map(
+        "gitlab-com" -> PublishAdapterConfig(
+          enabled = false,
+          kind = "github",
+          activationKeyword = "gist",
+          apiEndPoint = "https://api.github.com",
+          overviewUUID = "fade-fade",
+          token = None,
+        )
+      )
+    )
 
   "ExamplesManager" should "be able to list locally available examples" in {
     val examplesByFileExt =

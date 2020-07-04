@@ -1,8 +1,9 @@
 package org.janalyse.externalities
 
-import org.janalyse.{Change, CodeExample}
+import org.janalyse.{Change, CodeExample, PublishAdapterConfig}
 
 trait PublishAdapter {
-  def synchronize(examples:List[CodeExample], authToken: AuthToken):List[Change]
-  def exampleUpsert(example:CodeExample, authToken: AuthToken):Change
+  val config:PublishAdapterConfig
+  def synchronize(examples:List[CodeExample]):List[Change]
+  def exampleUpsert(example:CodeExample):Change
 }
