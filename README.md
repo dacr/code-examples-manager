@@ -41,7 +41,7 @@ Code examples manager operations :
     - See below for more details
 - It publishes or updates remote code examples
   - Using code example publish scope (`publish` keyword)
-    - `gist` is for github gists
+    - which contain comma separated publish activation keyword (`activation-keyword` parameter in configuration) 
   - It adds or updates a global summary of all examples
 
 ## code examples
