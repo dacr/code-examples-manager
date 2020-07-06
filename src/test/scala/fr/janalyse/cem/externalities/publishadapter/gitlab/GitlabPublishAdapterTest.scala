@@ -23,7 +23,8 @@ class GitlabPublishAdapterTest extends AnyFlatSpec with should.Matchers {
 
     it should "be able to publish a code example" in {
       val example = CodeExample(pwd / "test-data" / "sample1" / "fake-testing-pi.sc", pwd / "test-data" / "sample1")
-      adapter.synchronize(example::Nil)
+      val result = adapter.synchronize(example::Nil)
+      result should have size 1
     }
   }
 

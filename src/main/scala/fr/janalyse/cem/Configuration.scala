@@ -13,7 +13,7 @@ case class ExamplesConfig(
 ) {
   val searchRoots =
     Option(searchRootDirectories)
-      .map(_.split("""\s*,""").toList)
+      .map(_.split("""\s*,\s*""").toList)
       .getOrElse(Nil)
       .map(dir => dir.toFile)
       .filter(_.exists)

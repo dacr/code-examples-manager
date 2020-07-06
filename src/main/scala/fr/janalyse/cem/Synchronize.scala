@@ -75,21 +75,26 @@ object Synchronize {
     val (_, duration) = howLong {
       implicit val config:CodeExampleManagerConfig = Configuration()
 
-      val examples = ExamplesManager.getExamples
-      logger.info(s"Found ${examples.size} available locally for synchronization purpose")
-      val uuids = examples.flatMap(_.uuid)
+      val availableLocalExamples = ExamplesManager.getExamples
+      logger.info(s"Found ${availableLocalExamples.size} available locally for synchronization purpose")
+      val uuids = availableLocalExamples.flatMap(_.uuid)
       val duplicated = uuids.groupBy(u => u).filter { case (_, duplicated) => duplicated.size > 1 }.keys
       assert(duplicated.isEmpty, "Found duplicated UUIDs : " + duplicated.mkString(","))
 
       for { (adapterConfigName, adapterConfig) <- config.publishAdapters } {
-        val adapterOption = adapterConfig.kind match {
-          case "gitlab" => GitlabPublishAdapter.lookup(adapterConfig)
-          case "github" => GithubPublishAdapter.lookup(adapterConfig)
-          case _ => None
+        val currentAdapterOption = adapterConfig.kind match {
+          case "gitlab" =>
+            GitlabPublishAdapter.lookup(adapterConfig)
+          case "github" =>
+            GithubPublishAdapter.lookup(adapterConfig)
+          case unrecognized =>
+            logger.warn(s"Unrecognized adapter kind $unrecognized, only [gitlab|github] are supported")
+            None
         }
-        adapterOption.foreach { adapter =>
+        val examplesForCurrentAdapter = availableLocalExamples.filter(_.publish.contains(adapterConfig.activationKeyword))
+        currentAdapterOption.foreach { adapter =>
           logger.info(s"$adapterConfigName : Synchronizing using ${adapter.getClass.getName}")
-          val changes = ExamplesManager.synchronize(examples, adapter)
+          val changes = ExamplesManager.synchronize(examplesForCurrentAdapter, adapter)
           LogChanges(changes)
           val overviewChange = updateOverview(changes, adapter)
           val overviewMessage = s"$adapterConfigName : Examples overview is available at ${overviewChange.publishedUrl.getOrElse("")}"

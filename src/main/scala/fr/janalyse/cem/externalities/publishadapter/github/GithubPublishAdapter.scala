@@ -171,7 +171,6 @@ class GithubPublishAdapter(val config:PublishAdapterConfig) extends PublishAdapt
    * @return list of the applied changes
    */
   override def synchronize(examples: List[CodeExample]): List[Change] = {
-    val examplesForGithub = examples.filter(_.publish.contains(config.activationKeyword))
     getUser() match {
       case None =>
         logger.warn(s"Can't get user information, check token roles, read:user must be enabled")
@@ -180,7 +179,7 @@ class GithubPublishAdapter(val config:PublishAdapterConfig) extends PublishAdapt
         val remoteGistInfosByUUID = getRemoteGistInfosByUUID(user)
 
         val result = for {
-          example <- examplesForGithub
+          example <- examples
           uuid <- example.uuid
           gist <- makeGistSpec(example)
           checksum = example.checksum
