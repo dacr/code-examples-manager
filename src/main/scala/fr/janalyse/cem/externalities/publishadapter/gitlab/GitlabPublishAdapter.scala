@@ -30,7 +30,7 @@ class GitlabPublishAdapter(val config: PublishAdapterConfig) extends PublishAdap
 
   val token = config.authToken.getOrElse("")
   val apiUrl = config.apiEndPoint
-  val defaultVisibility = "public"
+  val defaultVisibility = config.defaultVisibility.getOrElse("public")
 
   def listSnippets(): Seq[SnippetInfo] = {
     val query = uri"$apiUrl/snippets"
@@ -196,6 +196,14 @@ class GitlabPublishAdapter(val config: PublishAdapterConfig) extends PublishAdap
   }
 
   override def exampleUpsert(example: CodeExample): Change = {
-    ???
+    val remoteSnippetsInfosByUUID = getRemoteSnippetsInfosByUUID() // TODO : RELOADED !
+    val result = for {
+      uuid <- example.uuid
+      checksum = example.checksum
+      remoteGistInfo = remoteSnippetsInfosByUUID.get(uuid)
+    } yield {
+      synchronizeExample(example, checksum, remoteGistInfo)
+    }
+    result.getOrElse(NoChange(example))
   }
 }

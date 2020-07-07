@@ -238,7 +238,7 @@ class GithubPublishAdapter(val config:PublishAdapterConfig) extends PublishAdapt
         logger.warn(s"Can't get user information, check token roles, read:user must be enabled")
         NoChange(example)
       case Some(user) =>
-        val remoteGistInfosByUUID = getRemoteGistInfosByUUID(user)
+        val remoteGistInfosByUUID = getRemoteGistInfosByUUID(user) // TODO : RELOADED !
         val result = for {
           uuid <- example.uuid
           gist <- makeGistSpec(example)

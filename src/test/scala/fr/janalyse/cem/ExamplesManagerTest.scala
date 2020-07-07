@@ -25,6 +25,7 @@ class ExamplesManagerTest extends AnyFlatSpec with should.Matchers {
           apiEndPoint = "https://api.github.com",
           overviewUUID = "fade-fade",
           token = None,
+          defaultVisibility = None,
         )
       )
     )

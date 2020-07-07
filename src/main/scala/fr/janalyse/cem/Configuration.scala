@@ -26,7 +26,8 @@ case class PublishAdapterConfig(
   activationKeyword: String,
   apiEndPoint: String,
   overviewUUID: String,
-  token: Option[String]
+  token: Option[String],
+  defaultVisibility: Option[String],
 ) {
   val authToken = token.map(AuthToken)
 }

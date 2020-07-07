@@ -16,3 +16,5 @@ project/target
 
 tmp-*.gif
 tmp-*.png
+
+private-application.conf
