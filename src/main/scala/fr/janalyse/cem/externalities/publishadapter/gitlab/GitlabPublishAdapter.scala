@@ -156,12 +156,13 @@ class GitlabPublishAdapter(val config: PublishAdapterConfig) extends PublishAdap
     NoChange(example, Some(remoteSnippetInfo.webUrl))
   }
 
+
   def synchronizeUpdate(example: CodeExample, remoteSnippetInfo: SnippetInfo): Change = {
     val snippetInfoOption = for {
       uuid <- example.uuid
       summary <- example.summary
+      filename = fileRename(example.filename, config)
       checksum = example.checksum
-      filename = example.filename
       content = example.content
       description = Snippet.makeDescription(summary, uuid, checksum)
       id = remoteSnippetInfo.id
@@ -179,8 +180,8 @@ class GitlabPublishAdapter(val config: PublishAdapterConfig) extends PublishAdap
     val snippetInfoOption = for {
       uuid <- example.uuid
       summary <- example.summary
+      filename = fileRename(example.filename, config)
       checksum = example.checksum
-      filename = example.filename
       content = example.content
       description = Snippet.makeDescription(summary, uuid, checksum)
       snippet = Snippet(title = summary, content = content, fileName = filename, description = description, visibility = defaultVisibility)

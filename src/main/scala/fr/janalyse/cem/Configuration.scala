@@ -20,6 +20,17 @@ case class ExamplesConfig(
       .filter(_.isDirectory)
 }
 
+case class RenameRuleConfig(
+  from:String,
+  to:String,
+) {
+  def rename(input:String):String = {
+    if (input.matches(from)) {
+      input.replaceAll(from, to)
+    } else input
+  }
+}
+
 case class PublishAdapterConfig(
   enabled: Boolean,
   kind: String,
@@ -28,6 +39,7 @@ case class PublishAdapterConfig(
   overviewUUID: String,
   token: Option[String],
   defaultVisibility: Option[String],
+  filenameRenameRules: Map[String, RenameRuleConfig],
 ) {
   val authToken = token.map(AuthToken)
 }

@@ -26,6 +26,7 @@ class ExamplesManagerTest extends AnyFlatSpec with should.Matchers {
           overviewUUID = "fade-fade",
           token = None,
           defaultVisibility = None,
+          filenameRenameRules = Map.empty,
         )
       )
     )
