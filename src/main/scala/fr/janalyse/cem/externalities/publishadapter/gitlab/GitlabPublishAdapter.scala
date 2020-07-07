@@ -32,21 +32,40 @@ class GitlabPublishAdapter(val config: PublishAdapterConfig) extends PublishAdap
   val apiUrl = config.apiEndPoint
   val defaultVisibility = config.defaultVisibility.getOrElse("public")
 
-  def listSnippets(): Seq[SnippetInfo] = {
-    val query = uri"$apiUrl/snippets"
-    val response =
-      basicRequest
-        .get(query)
-        .header("PRIVATE-TOKEN", s"$token")
-        .response(asJson[JValue])
-        .send()
-    response.body match {
-      case Left(responseException) =>
-        logger.error(s"List snippets - Something wrong has happened", responseException)
-        Seq.empty
-      case Right(snippets) =>
-        snippets.camelizeKeys.extract[List[SnippetInfo]]
+
+  def listSnippets(): LazyList[SnippetInfo] = {
+    val nextLinkRE = """.*<([^>]+)>; rel="next".*""".r
+
+    def worker(nextQuery: Option[Uri], currentRemaining: Iterable[SnippetInfo]): LazyList[SnippetInfo] = {
+      (nextQuery, currentRemaining) match {
+        case (None, Nil) => LazyList.empty
+        case (_, head :: tail) => head #:: worker(nextQuery, tail)
+        case (Some(query), Nil) =>
+          val response = {
+            basicRequest
+              .get(query)
+              .header("PRIVATE-TOKEN", s"$token")
+              .response(asJson[JValue])
+              .send()
+          }
+          response.body match {
+            case Left(responseException) =>
+              logger.error(s"List gists - Something wrong has happened", responseException)
+              throw responseException
+            case Right(snippets) =>
+              val next = response.header("link") // it provides the link for the next & last page :)
+              val newNextQuery = next.collect { case nextLinkRE(uri) => uri"$uri" }
+              worker(newNextQuery, snippets.camelizeKeys.extract[List[SnippetInfo]])
+          }
+        case other =>
+          logger.warn("Not understandable response : " + other.toString())
+          LazyList.empty
+      }
     }
+
+    val count = 20
+    val startQuery = uri"$apiUrl/snippets?page=1&per_page=$count"
+    worker(Some(startQuery), Nil)
   }
 
   def getSnippet(id: Int): Option[SnippetInfo] = {
@@ -60,7 +79,7 @@ class GitlabPublishAdapter(val config: PublishAdapterConfig) extends PublishAdap
     response.body match {
       case Left(responseException) =>
         logger.error(s"Get snippet $id - Something wrong has happened", responseException)
-        None
+        throw responseException
       case Right(snippet) =>
         snippet.camelizeKeys.extractOpt[SnippetInfo]
     }
@@ -79,7 +98,7 @@ class GitlabPublishAdapter(val config: PublishAdapterConfig) extends PublishAdap
     response.body match {
       case Left(responseException) =>
         logger.error(s"List snippets - Something wrong has happened", responseException)
-        None
+        throw responseException
       case Right(snippet) =>
         snippet.camelizeKeys.extractOpt[SnippetInfo]
     }
@@ -100,34 +119,37 @@ class GitlabPublishAdapter(val config: PublishAdapterConfig) extends PublishAdap
     response.body match {
       case Left(responseException) =>
         logger.error(s"Update snippet $id - Something wrong has happened", responseException)
-        None
+        throw responseException
       case Right(snippet) =>
         snippet.camelizeKeys.extractOpt[SnippetInfo]
     }
   }
 
-  def deleteSnippet(id: Int): Boolean = {
-    val query = uri"$apiUrl/snippets/$id"
-    val response =
-      basicRequest
-        .delete(query)
-        .header("PRIVATE-TOKEN", s"$token")
-        .send()
-    response.body match {
-      case Left(responseException) =>
-        logger.error(s"Delete snippet $id - Something wrong has happened", responseException)
-        false
-      case Right(_) =>
-        response.code.isSuccess
-    }
-  }
+//  def deleteSnippet(id: Int): Boolean = {
+//    val query = uri"$apiUrl/snippets/$id"
+//    val response =
+//      basicRequest
+//        .delete(query)
+//        .header("PRIVATE-TOKEN", s"$token")
+//        .send()
+//    response.body match {
+//      case Left(responseException) =>
+//        logger.error(s"Delete snippet $id - Something wrong has happened", responseException)
+//        throw responseException
+//      case Right(_) =>
+//        response.code.isSuccess
+//    }
+//  }
 
   def getRemoteSnippetsInfosByUUID(): Map[String, SnippetInfo] = {
     val snippets = listSnippets()
-    snippets
-      .toList
-      .groupBy(_.uuidOption)
-      .collect { case (Some(uuid), example :: Nil) => uuid -> example }
+    val groupedSnippets =
+      snippets
+        .toList
+        .groupBy(_.uuidOption)
+    val remoteDuplicates = groupedSnippets.collect {case (key,snippets) if snippets.size > 1 => snippets}
+    assert(remoteDuplicates.size == 0, "FOUND REMOTE DUPLICATES !\n"+remoteDuplicates.mkString("\n"))
+    groupedSnippets.collect { case (Some(uuid), example :: Nil) => uuid -> example }
   }
 
   def synchronizeNoChange(example: CodeExample, remoteSnippetInfo: SnippetInfo): Change = {

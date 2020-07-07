@@ -40,9 +40,9 @@ class GithubPublishAdapter(val config:PublishAdapterConfig) extends PublishAdapt
     response.body match {
       case Left(responseException) =>
         logger.error(s"Get authenticated user information - Something wrong has happened ", responseException)
-        None
-      case Right(gist) =>
-        Some(gist)
+        throw responseException
+      case Right(user) =>
+        Some(user)
     }
 
   }
@@ -63,9 +63,9 @@ class GithubPublishAdapter(val config:PublishAdapterConfig) extends PublishAdapt
               .send()
           }
           response.body match {
-            case Left(message) =>
-              logger.error(s"List gists - Something wrong has happened : $message")
-              LazyList.empty
+            case Left(responseException) =>
+              logger.error(s"List gists - Something wrong has happened", responseException)
+              throw responseException
             case Right(gistsArray) =>
               val next = response.header("Link") // it provides the link for the next & last page :)
               val newNextQuery = next.collect { case nextLinkRE(uri) => uri"$uri" }
@@ -94,9 +94,9 @@ class GithubPublishAdapter(val config:PublishAdapterConfig) extends PublishAdapt
         .send()
     }
     response.body match {
-      case Left(message) =>
-        logger.error(s"Get gist - Something wrong has happened : $message")
-        None
+      case Left(responseException) =>
+        logger.error(s"Get gist - Something wrong has happened", responseException)
+        throw responseException
       case Right(gist) =>
         Some(gist)
     }
@@ -114,9 +114,9 @@ class GithubPublishAdapter(val config:PublishAdapterConfig) extends PublishAdapt
         .send()
     }
     response.body match {
-      case Left(message) =>
-        logger.error(s"Add gist - Something wrong has happened : $message")
-        None
+      case Left(responseException) =>
+        logger.error(s"Add gist - Something wrong has happened", responseException)
+        throw responseException
       case Right(jvalue) =>
         (jvalue \ "id").extractOpt[String]
     }
@@ -133,9 +133,9 @@ class GithubPublishAdapter(val config:PublishAdapterConfig) extends PublishAdapt
         .send()
     }
     response.body match {
-      case Left(message) =>
-        logger.error(s"Update gist - Something wrong has happened : $message")
-        None
+      case Left(responseException) =>
+        logger.error(s"Update gist - Something wrong has happened", responseException)
+        throw responseException
       case Right(jvalue) =>
         (jvalue \ "id").extractOpt[String]
     }
