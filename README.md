@@ -8,7 +8,7 @@ you can see how it looks by taking a look at
 The origin of this tool comes from [this talk](https://www.youtube.com/watch?v=61AGIBdG7YE)
 originally presented at [AlpesCraft 2019](https://www.alpescraft.fr/edition_2019/).
 
-> Only github gists implementation is available.
+> github gists and gitlab snippets implementations are available.
 
 ## Why ?
 
@@ -38,16 +38,15 @@ Code examples manager operations :
   - Search recursively
   - Only files with given extensions are selected
   - Selects code examples if and only if they contain a unique identifier (UUID)
-    - See below for more details
 - It publishes or updates remote code examples
-  - Using code example publish scope (`publish` keyword)
-    - which contain comma separated publish activation keyword (`activation-keyword` parameter in configuration) 
+  - the code example publish scope (`publish` keyword) select target destinations
+    - comma separated publish activation keyword (`activation-keyword` parameter in configuration) 
   - It adds or updates a global summary of all examples
 
 ## code examples
 
 In order to be published code examples must come with a description header
-inserted using line comments.
+inserted using single line comments.
 
 Example for languages using `//` for line comments :
 ```scala
@@ -69,7 +68,7 @@ Request keys in description header are the following :
 - **keywords** : keywords describing your code features (comma separated).
 - **publish** : publish destination keywords (`gist` for github).
 - **authors** : code example authors list (comma separated).
-- **license** : example license.
+- **license** : the example license.
 - **id** : UUID for this code example. Generated using such commands :
   - [this ammonite scala script][uuid-sc].
   - This [ammonite][amm] oneliner :  
@@ -80,7 +79,7 @@ Request keys in description header are the following :
     `uuidgen`
 - **execution** : how to execute the example, execution runtime release constraints, ...
 
-## configuration
+## simple configuration
 
 |env or property name       | description
 |---------------------------|----------------
@@ -97,6 +96,9 @@ export CEM_SEARCH_GLOB="**/*.{sc,sh}"
 export CEM_GITHUB_TOKEN="fada-fada-fada-fada"
 ```
 
+### Gitlab authentication token configuration
+
+
 ### Github authentication token configuration
 Get authorized access from github gist API :
 - List authorizations : `curl --user "dacr" https://api.github.com/authorizations`
@@ -109,6 +111,8 @@ Get authorized access from github gist API :
 - Setup CEM_GITHUB_TOKEN environment variable with the previously generated token
   as shown within curl json response
 - **Of course, keep it carefully as it is not possible to retrieve it later.**
+
+
 
 
 [CodeExamplesManager]:    https://github.com/dacr/jaseries
