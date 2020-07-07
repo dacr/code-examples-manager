@@ -52,8 +52,8 @@ object CodeExample {
         .getParent
         .toString
         .replace(searchRoot.toString, "")
-        .replaceAll("^/", "")
-        .replaceAll("/$", "")
+        .replaceAll("""^[/\\]""", "")
+        .replaceAll("""[/\\]$""", "")
         .trim match {
         case "" => None
         case thing => Some(thing)
