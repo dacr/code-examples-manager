@@ -13,7 +13,7 @@ object ExamplesManager {
   def getExamples(implicit config: CodeExampleManagerConfig): List[CodeExample] = {
     val found = for {
       searchRoot <- config.examples.searchRoots
-      globPattern <- config.examples.filesGlob
+      globPattern <- config.examples.searchGlob
     } yield {
       searchRoot
         .glob(globPattern,includePath = false)

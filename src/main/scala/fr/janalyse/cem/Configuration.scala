@@ -9,7 +9,7 @@ import pureconfig.generic.auto._
 
 case class ExamplesConfig(
   searchRootDirectories: String,
-  filesGlob: Option[String],
+  searchGlob: Option[String],
 ) {
   val searchRoots =
     Option(searchRootDirectories)

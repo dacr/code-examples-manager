@@ -93,7 +93,7 @@ object Synchronize {
         }
         val examplesForCurrentAdapter = availableLocalExamples.filter(_.publish.contains(adapterConfig.activationKeyword))
         currentAdapterOption.foreach { adapter =>
-          logger.info(s"$adapterConfigName : Synchronizing using ${adapter.getClass.getName}")
+          logger.info(s"$adapterConfigName : Synchronizing ${examplesForCurrentAdapter.size} examples using ${adapter.getClass.getName}")
           val changes = ExamplesManager.synchronize(examplesForCurrentAdapter, adapter)
           LogChanges(changes)
           val overviewChange = updateOverview(changes, adapter)

@@ -15,7 +15,7 @@ class ExamplesManagerTest extends AnyFlatSpec with should.Matchers {
     CodeExampleManagerConfig(
       ExamplesConfig(
         searchRootDirectories = List(pwd / "test-data" / "sample1", pwd / "test-data" / "sample2").map(_.path).mkString(","),
-        filesGlob = Some("**/*.{sc,sh}")
+        searchGlob = Some("**/*.{sc,sh}")
       ),
       Map(
         "gitlab-com" -> PublishAdapterConfig(
