@@ -8,7 +8,7 @@ you can see how it looks by taking a look at
 The origin of this tool comes from [this talk](https://www.youtube.com/watch?v=61AGIBdG7YE)
 originally presented at [AlpesCraft 2019](https://www.alpescraft.fr/edition_2019/).
 
-> github gists and gitlab snippets implementations are available.
+> github gists and gitlab snippets implementations are now available.
 
 ## Why ?
 
@@ -17,13 +17,14 @@ on a particular feature/characteristic of a programming language, a library or a
 They help us to quickly test, experiment and remember how bigger project or at least some
 parts of them are working. 
 
-Managing dozens of published code example files as gists (github) and/or snippets (gitlab)
-is really not easy and time-consuming, in particular if you want to keep your examples
-up to date.
+Managing hundreds of published code example files as gists (github) and/or snippets (gitlab)
+is really not easy and time-consuming, in particular if you want to keep them up to date.
 
-That's why I decided to automate their management. The first iteration was script based,
+That's why I've decided to automate their management. The first iteration was script based,
 (and so shared as a gist) but with complexity increase, a dedicated project became 
-necessary, and so **code-examples-manager** was born.
+necessary, and so **code-examples-manager** was born. After a huge refactoring, which has
+introduced mustache templating, better configuration management, multiple publishing targets,
+gitlab snippets support, **code-examples-manager** is now mature.
 
 _Start small, make it works quickly, and then refactor !_
 
@@ -41,7 +42,7 @@ Code examples manager operations :
 - It publishes or updates remote code examples
   - the code example publish scope (`publish` keyword) select target destinations
     - comma separated publish activation keyword (`activation-keyword` parameter in configuration) 
-  - It adds or updates a global summary of all examples
+  - It adds or updates a global summary of all published examples
 
 ## code examples
 
@@ -92,9 +93,11 @@ Request keys in description header are the following :
 Configuration examples :
 ```shell
 export CEM_SEARCH_ROOTS="/tmp/someplace,/tmp/someotherplace"
-export CEM_SEARCH_GLOB="**/*.{sc,sh}"
+export CEM_SEARCH_GLOB="**/*.{sc,sh,*.md,*.jsh}"
 export CEM_GITHUB_TOKEN="fada-fada-fada-fada"
 ```
+
+## advanced configuration
 
 ### Gitlab authentication token configuration
 
