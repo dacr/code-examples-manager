@@ -32,6 +32,9 @@ probably the best solution for code examples and scripting in [scala][scala].
 
 ## Quick start
 
+No particular prerequisites, just a Java >=8 JVM available, and
+it will run on your Linux, Windows or MacOSX
+
 - Download latest archive `code-examples-manager-*.tgz` from
   + https://github.com/dacr/code-examples-manager/releases/latest
 - Install somewhere
