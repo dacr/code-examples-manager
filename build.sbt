@@ -7,6 +7,8 @@ scmInfo := Some(ScmInfo(url(s"https://github.com/dacr/code-examples-manager.git"
 scalaVersion := "2.13.3"
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-Xmacro-settings:materialize-derivations")
 
+mainClass := Some("fr.janalyse.cem.Synchronize")
+
 lazy val versions = new {
   val scalatest = "3.2.0"
   val logback = "1.2.3"
@@ -28,5 +30,4 @@ libraryDependencies ++= Seq(
   "com.github.pathikrit" %% "better-files" % versions.betterfiles,
   "com.github.eikek" %% "yamusca-core" % versions.yamusca,
   "com.github.pureconfig" %% "pureconfig" % versions.pureConfig,
-
 )
