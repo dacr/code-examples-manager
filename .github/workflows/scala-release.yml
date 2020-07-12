@@ -18,7 +18,11 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    
+
+    - name: Get the version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/v}
+
     - name: Run tests
       run: sbt test
     
@@ -26,16 +30,16 @@ jobs:
       run: sbt universal:packageZipTarball
 
     - name: Copy artifact
-      run: cp target/universal/*.tgz code-examples-manager.tgz
+      run: cp target/universal/*.tgz code-examples-manager-${{steps.get_version.outputs.VERSION}}.tgz
 
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: code-examples-manager.tgz
-        path: code-examples-manager.tgz
+        name: code-examples-manager-${{steps.get_version.outputs.VERSION}}.tgz
+        path: code-examples-manager-${{steps.get_version.outputs.VERSION}}.tgz
 
     - name: GitHub Releases
       uses: fnkr/github-action-ghr@v1.3
       env:
-        GHR_PATH: code-examples-manager.tgz
+        GHR_PATH: code-examples-manager-${{steps.get_version.outputs.VERSION}}.tgz
         GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
