@@ -4,7 +4,7 @@ Code example manager (CEM) is a software tool which manage your code examples an
 publish mechanisms to github.com (gists) or gitlab.com (snippets).
 
 All my code examples (my programming knowledge base) are now shared using this tool,
-you take look to [my public gists overview on github][mygists] to illustrate the 
+you can take a look to [my public gists overview on github][mygists] to illustrate the 
 publishing work achieved by CEM. 
 
 The origin of this tool comes from [this talk][ac2019talk] originally presented at [AlpesCraft 2019][ac2019].
@@ -88,9 +88,9 @@ Code examples manager operations :
 
 The configuration relies on configuration files, a default one named `reference.conf` is provided.
 This [default configuration file][referenceconf] defines default values and default behaviors and
-allow a simple configuration way based on environment variables.
+allow a simple configuration way based on environment variables which override default values.
 
-### simplified configuration
+### Simplified configuration
 
 |env or property name       | description
 |---------------------------|----------------
@@ -107,7 +107,7 @@ export CEM_SEARCH_GLOB="**/*.{sc,sh,*.md,*.jsh}"
 export CEM_GITHUB_TOKEN="fada-fada-fada-fada"
 ```
 
-### advanced configuration
+### Advanced configuration
 
 Take a look to the [configuration file][referenceconf] for more information about advanced configuration.
 
