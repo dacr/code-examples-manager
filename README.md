@@ -1,4 +1,4 @@
-# CEM - Code Examples Manager [![][CodeExamplesManagerImg]][CodeExamplesManagerLnk]
+# CEM - Code Examples Manager [![][CodeExamplesManagerImg]][CodeExamplesManagerLnk] ![Scala CI][scalaci-master]
 
 Code example manager (CEM) is a software tool which manage your code examples and provide
 publish mechanisms to github.com (gists) or gitlab.com (snippets).
@@ -147,6 +147,7 @@ Get an access token from gitlab.com :
 [CodeExamplesManager]:    https://github.com/dacr/jaseries
 [CodeExamplesManagerImg]: https://img.shields.io/maven-central/v/fr.janalyse/code-examples-manager_2.13.svg
 [CodeExamplesManagerLnk]: https://search.maven.org/#search%7Cga%7C1%7Cfr.janalyse.code-examples-manager
+[scalaci-master]: https://github.com/dacr/code-examples-manager/workflows/Scala%20CI/badge.svg
 [amm]: https://ammonite.io/
 [uuid-sc]: https://gist.github.com/dacr/87c9636a6d25787d7c274b036d2a8aad
 [scala]: https://www.scala-lang.org/

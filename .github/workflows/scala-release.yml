@@ -24,11 +24,18 @@ jobs:
     
     - name: Package
       run: sbt universal:packageZipTarball
-    
+
+    - name: Copy artifact
+      run: cp target/universal/*.tgz code-examples-manager.tgz
+
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2
       with:
-        path: target/universal/*.tgz
+        name: code-examples-manager.tgz
+        path: code-examples-manager.tgz
 
     - name: GitHub Releases
       uses: fnkr/github-action-ghr@v1.3
+      env:
+        GHR_PATH: code-examples-manager.tgz
+        GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
