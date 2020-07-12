@@ -37,7 +37,7 @@ probably the best solution for code examples and scripting in [scala][scala].
 - Install somewhere
   + `tar xvfz code-examples-manager-*.tgz`
   + Add the bin directory to your PATH
-- Customize your configuration (see belon for token configuration)
+- Customize your configuration (see below for token configuration)
   ```
   export CEM_SEARCH_ROOTS="/home/myuser/myexamples"
   export CEM_SEARCH_GLOB="**/*.{sc,sh,*.md,*.jsh}"
