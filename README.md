@@ -30,6 +30,38 @@ _Start small, make it works quickly, and then refactor !_
 A lot of thanks to [Li Haoyi][lihaoyi] for his wonderful work on [ammonite][amm] which is
 probably the best solution for code examples and scripting in [scala][scala].
 
+## Quick start
+
+- Download latest archive `code-examples-manager-*.tgz` from
+  + https://github.com/dacr/code-examples-manager/releases/latest
+- Install somewhere
+  + `tar xvfz code-examples-manager-*.tgz`
+  + Add the bin directory to your PATH
+- Customize your configuration (see belon for token configuration)
+  ```
+  export CEM_SEARCH_ROOTS="/home/myuser/myexamples"
+  export CEM_SEARCH_GLOB="**/*.{sc,sh,*.md,*.jsh}"
+  export CEM_GITHUB_TOKEN="xxxxx"
+  ```
+- Create an example file in `/home/myuser/myexamples` such as `hello.md`
+  ```
+  <!--
+  // summary : my markdown cheat sheet
+  // keywords : markdown, hello, example 
+  // publish : gist
+  // authors : someone, someonelse
+  // id : d27245fc-22fb-4c9e-9809-feb0826400e7
+  -->
+  # Hello world !
+  this is just an example
+  ```
+- Run the following command from your terminal :
+  ```
+  code-examples-manager
+  ```
+- Check the command output to get the overview URL
+
+
 ## Code examples
 
 In order to be published your code examples must come with a description header
@@ -156,3 +188,4 @@ Get an access token from gitlab.com :
 [ac2019talk]: https://www.youtube.com/watch?v=61AGIBdG7YE
 [mygists]: https://gist.github.com/c071a7b7d3de633281cbe84a34be47f1
 [referenceconf]: https://github.com/dacr/code-examples-manager/blob/master/src/main/resources/reference.conf
+[latest]: https://github.com/dacr/code-examples-manager/releases/latest
