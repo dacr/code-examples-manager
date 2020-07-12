@@ -19,6 +19,9 @@ pomExtra in Global := {
   </developers>
 }
 
+releaseTagComment        := s"Releasing ${(version in ThisBuild).value}"
+releaseCommitMessage     := s"[ci skip] Setting version to ${(version in ThisBuild).value}"
+releaseNextCommitMessage := s"[ci skip] Setting version to ${(version in ThisBuild).value}"
 
 import ReleaseTransformations._
 releaseProcess := Seq[ReleaseStep](
