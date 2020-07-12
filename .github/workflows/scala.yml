@@ -22,11 +22,3 @@ jobs:
     
     - name: Run tests
       run: sbt test
-    
-    - name: Package
-      run: sbt universal:packageZipTarball
-    
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        path: target/universal/*.tgz
