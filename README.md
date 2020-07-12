@@ -1,7 +1,12 @@
 # CEM - Code Examples Manager [![][CodeExamplesManagerImg]][CodeExamplesManagerLnk] ![Scala CI][scalaci-master]
 
-Code example manager (CEM) is a software tool which manage your code examples and provide
-publish mechanisms to github.com (gists) or gitlab.com (snippets).
+Code example manager (CEM) is a software tool which manage your code examples
+and provide publish mechanisms to [github.com][githubcom] ([gists][gists]) or
+[gitlab.com][gitlabcom] ([snippets][snippets]).
+
+Current [Code example manager (CEM)][cem] implementation is just a command line tool
+which compare locally available examples with already published ones in order to find
+what it should do (add, update, do nothing). 
 
 All my code examples (my programming knowledge base) are now shared using this tool,
 you can take a look to [my public gists overview on github][mygists] to illustrate the 
@@ -35,6 +40,7 @@ probably the best solution for code examples and scripting in [scala][scala].
 No particular prerequisites, just a Java >=8 JVM available, and
 it will run on your Linux, Windows or MacOSX
 
+Instructions example with github.com publishing configuration :
 - Download latest archive `code-examples-manager-*.tgz` from
   + https://github.com/dacr/code-examples-manager/releases/latest
 - Install somewhere
@@ -183,12 +189,17 @@ Get an access token from gitlab.com :
 [CodeExamplesManagerImg]: https://img.shields.io/maven-central/v/fr.janalyse/code-examples-manager_2.13.svg
 [CodeExamplesManagerLnk]: https://search.maven.org/#search%7Cga%7C1%7Cfr.janalyse.code-examples-manager
 [scalaci-master]: https://github.com/dacr/code-examples-manager/workflows/Scala%20CI/badge.svg
+[mygists]: https://gist.github.com/c071a7b7d3de633281cbe84a34be47f1
+[cem]: https://github.com/dacr/code-examples-manager
 [amm]: https://ammonite.io/
+[githubcom]: https://github.com/
+[gitlabcom]: https://gitlab.com/
+[snippets]: https://docs.gitlab.com/ce/user/snippets.html
+[gists]: https://docs.github.com/en/github/writing-on-github/creating-gists
 [uuid-sc]: https://gist.github.com/dacr/87c9636a6d25787d7c274b036d2a8aad
 [scala]: https://www.scala-lang.org/
 [lihaoyi]: https://github.com/lihaoyi
 [ac2019]: https://www.alpescraft.fr/edition_2019/
 [ac2019talk]: https://www.youtube.com/watch?v=61AGIBdG7YE
-[mygists]: https://gist.github.com/c071a7b7d3de633281cbe84a34be47f1
 [referenceconf]: https://github.com/dacr/code-examples-manager/blob/master/src/main/resources/reference.conf
 [latest]: https://github.com/dacr/code-examples-manager/releases/latest
