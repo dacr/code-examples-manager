@@ -7,7 +7,7 @@ sealed trait Change {
   val publishedUrl:Option[String]
   val kind:String
   override def toString: String =
-    s"""$kind ${example.uuid.getOrElse("?")} - ${example.summary.getOrElse("?")}"""
+    s"""$kind ${example.uuid.getOrElse("?")} - ${example.summary.getOrElse("?")} - ${publishedUrl.getOrElse("?")}"""
 }
 
 case class NoChange(example:CodeExample,publishedUrl:Option[String]=None) extends Change {
