@@ -37,7 +37,12 @@ object Synchronize {
         adapter <- searchForAdapter(adapterConfig)
         examplesForCurrentAdapter = availableLocalExamples.filter(_.publish.contains(adapterConfig.activationKeyword))
       } {
-        publish(adapterConfigName, examplesForCurrentAdapter, adapter)
+        try {
+          publish(adapterConfigName, examplesForCurrentAdapter, adapter)
+        } catch {
+          case ex:Exception =>
+            logger.error(s"Can't publish with $adapterConfigName", ex)
+        }
       }
     }
     logger.info(s"Code examples manager publishing operations took ${duration / 1000}s")
