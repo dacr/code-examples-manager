@@ -33,6 +33,7 @@ class GitlabPublishAdapter(val config: PublishAdapterConfig) extends PublishAdap
   val defaultVisibility = config.defaultVisibility.getOrElse("public")
 
 
+  // Using Web Linking to get large amount of results : https://tools.ietf.org/html/rfc5988
   def listSnippets(): LazyList[SnippetInfo] = {
     val nextLinkRE = """.*<([^>]+)>; rel="next".*""".r
 

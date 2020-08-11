@@ -47,6 +47,7 @@ class GithubPublishAdapter(val config:PublishAdapterConfig) extends PublishAdapt
 
   }
 
+  // Using Web Linking to get large amount of results : https://tools.ietf.org/html/rfc5988
   def userGists(user: GistUser): LazyList[GistInfo] = {
     val nextLinkRE = """.*<([^>]+)>; rel="next".*""".r
 
