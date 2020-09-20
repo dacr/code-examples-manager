@@ -13,12 +13,12 @@ import sttp.model.Uri
 import scala.util.{Left, Right}
 
 object GithubPublishAdapter {
-  def lookup(config:PublishAdapterConfig):Option[PublishAdapter] = {
+  def lookup(config: PublishAdapterConfig): Option[PublishAdapter] = {
     if (config.enabled && config.authToken.isDefined) Some(new GithubPublishAdapter(config)) else None
   }
 }
 
-class GithubPublishAdapter(val config:PublishAdapterConfig) extends PublishAdapter {
+class GithubPublishAdapter(val config: PublishAdapterConfig) extends PublishAdapter {
   implicit val serialization = org.json4s.native.Serialization
   implicit val formats = org.json4s.DefaultFormats
   implicit val sttpBackend = sttp.client.okhttp.OkHttpSyncBackend()
@@ -168,7 +168,7 @@ class GithubPublishAdapter(val config:PublishAdapterConfig) extends PublishAdapt
   /**
    * Synchronize github examples
    *
-   * @param examples  examples to synchronize
+   * @param examples examples to synchronize
    * @return list of the applied changes
    */
   override def synchronize(examples: List[CodeExample]): List[Change] = {
@@ -218,9 +218,26 @@ class GithubPublishAdapter(val config:PublishAdapterConfig) extends PublishAdapt
       ChangeIssue(example)
   }
 
+  /*
+    adjust gist spec instruction to manage updated file names, required to deal with renaming
+    => just have to use the old filename as the key
+   */
+  private def adjustGistSpec(spec: GistSpec, previous: GistInfo): GistSpec = {
+    val newSpec = {
+      val updatedFiles =
+        spec.files.map { case (newFileName, gistFileSpec) =>
+          val previousFileName = previous.files.keys.headOption
+          previousFileName.getOrElse(newFileName) -> gistFileSpec
+        }
+      GistSpec(description = spec.description, public = spec.public, files = updatedFiles)
+    }
+    newSpec
+  }
+
   private def synchronizeUpdate(example: CodeExample, gist: GistSpec, remoteGist: GistInfo): Change = {
     if (remoteGist.files.size > 1) logger.warn(s"${remoteGist.html_url} has more than one file}")
-    val rc = updateGist(remoteGist.id, gist)
+    val adjustedGist = adjustGistSpec(gist, remoteGist)
+    val rc = updateGist(remoteGist.id, adjustedGist)
     if (rc.isDefined)
       UpdatedChange(example, Some(remoteGist.html_url))
     else
