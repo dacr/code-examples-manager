@@ -147,6 +147,7 @@ class GitlabPublishAdapter(val config: PublishAdapterConfig) extends PublishAdap
     val groupedSnippets =
       snippets
         .toList
+        .filter(_.uuidOption.isDefined)
         .groupBy(_.uuidOption)
     val remoteDuplicates = groupedSnippets.collect {case (key,snippets) if snippets.size > 1 => snippets}
     assert(remoteDuplicates.size == 0, "FOUND REMOTE DUPLICATES !\n"+remoteDuplicates.mkString("\n"))
