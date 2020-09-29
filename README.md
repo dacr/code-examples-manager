@@ -156,6 +156,8 @@ Once CEM installed you can modify the provided `conf/application.conf` file (who
 the same as the default [reference.conf][referenceconf] file), remember that any unset parameter in `application.conf`
 will default to the value defined in `reference.conf`.
 
+Note : It is also possible to provide a custom configuration file through the `config.file` java property.
+
 ## Authentication tokens
 
 ### Gitlab authentication token configuration
