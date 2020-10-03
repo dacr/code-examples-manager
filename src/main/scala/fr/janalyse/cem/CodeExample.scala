@@ -32,7 +32,7 @@ case class FileCodeExample(
 
   def content: String = file.contentAsString
 
-  lazy val checksum: String = sha1(content)
+  lazy val checksum: String = sha1(content+file.name+category.getOrElse("")) // only file and category is defined outside from example content
 }
 
 object CodeExample {
