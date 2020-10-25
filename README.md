@@ -187,7 +187,7 @@ Get an access token from gitlab.com :
 
 
 
-[CodeExamplesManager]:    https://github.com/dacr/jaseries
+[CodeExamplesManager]:    https://github.com/dacr/code-examples-manager
 [CodeExamplesManagerImg]: https://img.shields.io/maven-central/v/fr.janalyse/code-examples-manager_2.13.svg
 [CodeExamplesManagerLnk]: https://search.maven.org/#search%7Cga%7C1%7Cfr.janalyse.code-examples-manager
 [scalaci-master]: https://github.com/dacr/code-examples-manager/workflows/Scala%20CI/badge.svg
