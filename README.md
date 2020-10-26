@@ -19,7 +19,7 @@ The origin of this tool comes from [this talk][ac2019talk] originally presented 
 Code examples are very important, each example is most of the time designed to focus
 on a particular feature/characteristic of a programming language, a library or a framework.
 They help us to quickly test, experiment and remember how bigger project or at least some
-parts of them are working. 
+parts of them are working. **[See the rules for good code examples][rules] for more information.**
 
 Managing hundreds of published code example files as gists (github) and/or snippets (gitlab)
 is really not easy and time-consuming, in particular if you want to keep them up to date.
@@ -205,3 +205,4 @@ Get an access token from gitlab.com :
 [ac2019talk]: https://www.youtube.com/watch?v=61AGIBdG7YE
 [referenceconf]: https://github.com/dacr/code-examples-manager/blob/master/src/main/resources/reference.conf
 [latest]: https://github.com/dacr/code-examples-manager/releases/latest
+[rules]: https://github.com/dacr/the-rules-for-good-code-examples
