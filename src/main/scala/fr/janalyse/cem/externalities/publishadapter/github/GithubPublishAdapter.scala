@@ -19,7 +19,7 @@ object GithubPublishAdapter {
 }
 
 class GithubPublishAdapter(val config: PublishAdapterConfig) extends PublishAdapter {
-  implicit val serialization = org.json4s.native.Serialization
+  implicit val serialization = org.json4s.jackson.Serialization
   implicit val formats = org.json4s.DefaultFormats
   implicit val sttpBackend = sttp.client.okhttp.OkHttpSyncBackend()
 

@@ -6,7 +6,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import sttp.client._
 import org.json4s.JValue
 import org.json4s.Extraction.decompose
-import org.json4s.native.Serialization.write
+import org.json4s.jackson.Serialization.write
 import org.json4s.ext.JavaTimeSerializers
 import sttp.client.json4s.asJson
 import sttp.client.json4s._
@@ -22,7 +22,7 @@ object GitlabPublishAdapter {
 }
 
 class GitlabPublishAdapter(val config: PublishAdapterConfig) extends PublishAdapter {
-  implicit val serialization = org.json4s.native.Serialization
+  implicit val serialization = org.json4s.jackson.Serialization
   implicit val formats = org.json4s.DefaultFormats.lossless ++ JavaTimeSerializers.all
   implicit val sttpBackend = sttp.client.okhttp.OkHttpSyncBackend()
 
