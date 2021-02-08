@@ -10,12 +10,12 @@ scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-Xmacro-setting
 mainClass := Some("fr.janalyse.cem.Synchronize")
 
 lazy val versions = new {
-  val scalatest = "3.2.2"
+  val scalatest = "3.2.3"
   val logback = "1.2.3"
   val sttp = "2.2.9"
   val json4s = "3.6.10"
   val betterfiles = "3.9.1"
-  val yamusca = "0.7.0"
+  val yamusca = "0.8.0"
   val pureConfig = "0.14.0"
 }
 

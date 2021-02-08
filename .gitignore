@@ -1,18 +1,19 @@
-.DS_Store
+.DS_Store/
 *~
 .~*
-.idea
+.idea/
+.bsp/
 nohup.out
 *.swp
 *.iml
-target
+target/
 plot*.html
 test*.log
 *.tmp
 null
 
 project/target
-.metals
+.metals/
 
 tmp-*.gif
 tmp-*.png
