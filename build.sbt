@@ -4,13 +4,13 @@ homepage := Some(new URL("https://github.com/dacr/code-examples-manager"))
 licenses += "Apache 2" -> url(s"http://www.apache.org/licenses/LICENSE-2.0.txt")
 scmInfo := Some(ScmInfo(url(s"https://github.com/dacr/code-examples-manager.git"), s"git@github.com:dacr/code-examples-manager.git"))
 
-scalaVersion := "2.13.4"
+scalaVersion := "2.13.5"
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-Xmacro-settings:materialize-derivations")
 
 mainClass := Some("fr.janalyse.cem.Synchronize")
 
 lazy val versions = new {
-  val scalatest = "3.2.3"
+  val scalatest = "3.2.5"
   val logback = "1.2.3"
   val sttp = "2.2.9"
   val json4s = "3.6.10"
