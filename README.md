@@ -25,10 +25,11 @@ Managing hundreds of published code example files as gists (github) and/or snipp
 is really not easy and time-consuming, in particular if you want to keep them up to date.
 
 That's why I've decided to automate their management. The first iteration was script based,
-(and so shared as a gist) but with complexity increase, a dedicated project became 
+(and so shared as a gist) but with the increase of complexity , a dedicated project became 
 necessary, and so **code-examples-manager** was born. After a huge refactoring, which has
 introduced mustache templating, better configuration management, multiple publishing targets,
-gitlab snippets support, **code-examples-manager** is now mature.
+gitlab snippets support, **code-examples-manager** is now mature. I'm using it at least once 
+each week.
 
 _Start small, make it works quickly, and then refactor !_
 
@@ -41,11 +42,9 @@ No particular prerequisites, just a Java >=8 JVM available, and
 it will run on your Linux, Windows or MacOSX
 
 Instructions example with github.com publishing configuration :
-- Download latest archive `code-examples-manager-*.tgz` from
-  + https://github.com/dacr/code-examples-manager/releases/latest
-- Install somewhere
-  + `tar xvfz code-examples-manager-*.tgz`
-  + Add the bin directory to your PATH
+- Install the [coursier][csget] from @alxarchambault to automate
+  the download/update/start of code-examples-manager directly from
+  maven repositories
 - Customize your configuration (see below for token configuration)
   ```
   export CEM_SEARCH_ROOTS="/home/myuser/myexamples"
@@ -64,9 +63,9 @@ Instructions example with github.com publishing configuration :
   # Hello world !
   this is just an example
   ```
-- Run the following command from your terminal :
+- Run the following command from your terminal (`cs` is the [coursier][cs] CLI command):
   ```
-  code-examples-manager
+  cs launch fr.janalyse::code-examples-manager:1.0.4
   ```
 - Check the command output to get the overview URL
 
@@ -206,3 +205,5 @@ Get an access token from gitlab.com :
 [referenceconf]: https://github.com/dacr/code-examples-manager/blob/master/src/main/resources/reference.conf
 [latest]: https://github.com/dacr/code-examples-manager/releases/latest
 [rules]: https://github.com/dacr/the-rules-for-good-code-examples
+[cs]: https://get-coursier.io/
+[csget]: https://get-coursier.io/docs/cli-installation

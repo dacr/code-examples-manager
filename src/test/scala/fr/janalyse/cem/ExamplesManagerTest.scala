@@ -15,7 +15,8 @@ class ExamplesManagerTest extends AnyFlatSpec with should.Matchers {
     CodeExampleManagerConfig(
       ExamplesConfig(
         searchRootDirectories = List(pwd / "test-data" / "sample1", pwd / "test-data" / "sample2").map(_.path).mkString(","),
-        searchGlob = Some("**/*.{sc,sh}")
+        searchGlob = Some("**/*.{sc,sh}",
+        )
       ),
       Map(
         "gitlab-com" -> PublishAdapterConfig(
@@ -28,7 +29,8 @@ class ExamplesManagerTest extends AnyFlatSpec with should.Matchers {
           defaultVisibility = None,
           filenameRenameRules = Map.empty,
         )
-      )
+      ),
+      MetaConfig(None,None,None,None,None,None,None)
     )
 
   "ExamplesManager" should "be able to list locally available examples" in {

@@ -44,9 +44,28 @@ case class PublishAdapterConfig(
   val authToken = token.map(AuthToken)
 }
 
+// Automatically populated by the build process from a generated config file
+case class MetaConfig(
+  projectName: Option[String],
+  projectGroup: Option[String],
+  projectPage: Option[String],
+  projectCode: Option[String],
+  buildVersion: Option[String],
+  buildDateTime: Option[String],
+  buildUUID: Option[String],
+) {
+  def name: String = projectName.getOrElse("project-name")
+  def code: String = projectName.getOrElse("project-code")
+  def version = buildVersion.getOrElse("x.y.z")
+  def dateTime = buildDateTime.getOrElse("?")
+  def uuid = buildUUID.getOrElse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
+  def projectURL = projectPage.getOrElse("https://github.com/dacr")
+}
+
 case class CodeExampleManagerConfig(
   examples: ExamplesConfig,
   publishAdapters: Map[String, PublishAdapterConfig],
+  metaInfo: MetaConfig
 )
 
 case class Configuration(
@@ -56,7 +75,11 @@ case class Configuration(
 object Configuration {
   def apply(): CodeExampleManagerConfig = {
     val logger = LoggerFactory.getLogger("Configuration")
-    ConfigSource.default.load[Configuration] match {
+    val configSource = {
+      val metaConfig = ConfigSource.resources("cem-meta.conf")
+      ConfigSource.default.withFallback(metaConfig.optional)
+    }
+    configSource.load[Configuration] match {
       case Left(issues) =>
         issues.toList.foreach { issue => logger.error(issue.toString) }
         throw new RuntimeException("Invalid application configuration\n" + issues.toList.map(_.toString).mkString("\n"))

@@ -13,10 +13,10 @@ lazy val versions = new {
   val scalatest = "3.2.5"
   val logback = "1.2.3"
   val sttp = "2.2.9"
-  val json4s = "3.6.10"
+  val json4s = "3.6.11"
   val betterfiles = "3.9.1"
   val yamusca = "0.8.0"
-  val pureConfig = "0.14.0"
+  val pureConfig = "0.14.1"
 }
 
 libraryDependencies ++= Seq(

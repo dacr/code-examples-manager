@@ -25,7 +25,14 @@ object Synchronize {
 
 
   def main(args: Array[String]): Unit = {
-    logger.info("Code examples manager started")
+    val version = config.metaInfo.version
+    val appName = config.metaInfo.name
+    val appCode = config.metaInfo.code
+    val projectURL = config.metaInfo.projectURL
+    logger.info(s"$appName application is starting")
+    logger.info(s"$appCode version $version")
+    logger.info(s"$appCode project page $projectURL (with configuration documentation) ")
+
     val (_, duration) = howLong {
       val availableLocalExamples = ExamplesManager.getExamples(config)
       logger.info(s"Found ${availableLocalExamples.size} available locally for synchronization purpose")
