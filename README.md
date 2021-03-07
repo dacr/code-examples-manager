@@ -65,7 +65,7 @@ Instructions example with github.com publishing configuration :
   ```
 - Run the following command from your terminal (`cs` is the [coursier][cs] CLI command):
   ```
-  cs launch fr.janalyse::code-examples-manager:1.0.4
+  cs launch fr.janalyse::code-examples-manager:1.0.6
   ```
   - you can even use `cs launch fr.janalyse::code-examples-manager:1.+` to always use the latest release in the 1.x series
 - Check the command output to get the overview URL
