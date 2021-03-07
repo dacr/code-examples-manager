@@ -29,7 +29,7 @@ class GitlabResponsesModelsTest extends AnyFlatSpec with should.Matchers {
 
   it should "provide a description generator encoding both uuid and checksum" in {
     val description = Snippet.makeDescription("truc", "aabb", "42")
-    description shouldBe "truc #aabb/42"
+    description should fullyMatch regex "truc / .+ #aabb/42"
   }
 
 }
