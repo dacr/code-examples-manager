@@ -53,7 +53,7 @@ case class Snippet(
 
 object Snippet {
   def makeDescription(summary: String, uuid: String, contentSHA1: String): String = {
-    s"$summary #$uuid/$contentSHA1"
+    s"$summary / published by https://github.com/dacr/code-examples-manager #$uuid/$contentSHA1"
   }
 }
 

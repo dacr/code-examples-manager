@@ -41,7 +41,7 @@ object Overview {
     val overview = new CodeExample {
       override val filename: String = "index.md"
       override val category: Option[String] = None
-      override val summary: Option[String] = Some("Examples overview.")
+      override val summary: Option[String] = Some("Programming knowledge base examples overview")
       override val keywords: List[String] = Nil
       override val publish: List[String] = Nil
       override val authors: List[String] = Nil

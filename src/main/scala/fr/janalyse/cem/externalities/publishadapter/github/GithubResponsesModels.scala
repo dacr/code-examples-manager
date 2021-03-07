@@ -39,7 +39,7 @@ object GistInfo {
   //   for : "gist description #uuid/sha1"
   val metaDataRE:Regex = """#\s*([-0-9a-f]+)\s*/\s*([0-9a-f]+)\s*$""".r.unanchored
   def makeDescription(summary:String, uuid:String, contentSHA1:String):String = {
-    s"$summary #$uuid/$contentSHA1"
+    s"$summary / published by https://github.com/dacr/code-examples-manager #$uuid/$contentSHA1"
   }
 }
 
