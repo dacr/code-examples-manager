@@ -58,7 +58,7 @@ object CodeExample {
         case "" => None
         case thing => Some(thing)
       }
-    val content = file.contentAsString
+    val content = file.contentAsString.replaceAll("\r", "")
     val id = extractValue(content)("id")
     val idRE = "[-0-9a-f]+".r
     if (id.isDefined) assert(idRE.matches(id.get), s"INVALID UUID: $id for $file")
