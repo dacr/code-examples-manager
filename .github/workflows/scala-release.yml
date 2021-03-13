@@ -2,6 +2,8 @@ name: Scala CI Release
 
 on:
   push:
+    branches:
+      - "!*"
     tags:
       - 'v*'
 
