@@ -76,8 +76,12 @@ object Configuration {
   def apply(): CodeExampleManagerConfig = {
     val logger = LoggerFactory.getLogger("Configuration")
     val configSource = {
+      val customConfigFileOption = envOrNone("CEM_CONFIG_FILE").orElse(propOrNone("CEM_CONFIG_FILE"))
       val metaConfig = ConfigSource.resources("cem-meta.conf")
-      ConfigSource.default.withFallback(metaConfig.optional)
+      customConfigFileOption
+        .map(customConfigFile => ConfigSource.file(customConfigFile).withFallback(ConfigSource.default))
+        .getOrElse(ConfigSource.default)
+        .withFallback(metaConfig.optional)
     }
     configSource.load[Configuration] match {
       case Left(issues) =>

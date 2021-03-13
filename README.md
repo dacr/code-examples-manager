@@ -143,6 +143,7 @@ allow a simple configuration way based on environment variables which override d
 |CEM_GITLAB_TOKEN           | gitlab authentication token for snippets API access
 |CEM_GITHUB_TOKEN           | github authentication token for gists API access, see below for how to get this token
 |CEM_EXAMPLES_OVERVIEW_UUID | the fixed UUID for the overview GIST which list all examples, default value is `cafacafe-cafecafe`
+|CEM_CONFIG_FILE            | your custom advanced configuration file (optional, see next section for more information)
 
 Configuration examples :
 ```shell
@@ -159,7 +160,8 @@ Once CEM installed you can modify the provided `conf/application.conf` file (who
 the same as the default [reference.conf][referenceconf] file), remember that any unset parameter in `application.conf`
 will default to the value defined in `reference.conf`.
 
-Note : It is also possible to provide a custom configuration file through the `config.file` java property.
+Note : It is also possible to provide a custom configuration file through the `config.file` java property or the
+`CEM_CONFIG_FILE` environment variable.
 
 ## Authentication tokens
 
