@@ -1,8 +1,8 @@
 # CEM - Code Examples Manager [![][CodeExamplesManagerImg]][CodeExamplesManagerLnk] ![Scala CI][scalaci-master]
 
 Code example manager (CEM) is a software tool which manage your code examples
-and provide publish mechanisms to [github.com][githubcom] ([gists][gists]) or
-[gitlab.com][gitlabcom] ([snippets][snippets]).
+and provide publish mechanisms to [github.com][githubcom] (as [gists][gists]) or
+[gitlab.com][gitlabcom] (as [snippets][snippets]).
 
 Current [Code example manager (CEM)][cem] implementation is just a command line tool
 which compare locally available examples with already published ones in order to find
@@ -19,7 +19,9 @@ The origin of this tool comes from [this talk][ac2019talk] originally presented 
 Code examples are very important, each example is most of the time designed to focus
 on a particular feature/characteristic of a programming language, a library or a framework.
 They help us to quickly test, experiment and remember how bigger project or at least some
-parts of them are working. **[See the rules for good code examples][rules] for more information.**
+parts of them are working.
+
+**[See the rules for good code examples][rules] for more information.**
 
 Managing hundreds of published code example files as gists (github) and/or snippets (gitlab)
 is really not easy and time-consuming, in particular if you want to keep them up to date.
@@ -68,6 +70,7 @@ Instructions example with github.com publishing configuration :
   cs launch fr.janalyse::code-examples-manager:1.0.6
   ```
   - you can even use `cs launch fr.janalyse::code-examples-manager:1.+` to always use the latest release in the 1.x series
+  - current release is : [![][CodeExamplesManagerImg]][CodeExamplesManagerLnk]
 - Check the command output to get the overview URL
 
 
@@ -104,12 +107,12 @@ Request keys in description header are the following :
 - **`license`** : the example license.
 - **`id`** : UUID for this code example. Generated using such commands :
   - [this ammonite scala script][uuid-sc].
+  - This linux command (comes from package named uuid-runtime at least on debian based linux) :  
+    `uuidgen`
   - This [ammonite][amm] oneliner :  
     `amm -c 'println(java.util.UUID.randomUUID.toString)'`
   - This python oneliner :  
     `python -c "import uuid, sys;sys.stdout.write(str(uuid.uuid4()))"`
-  - This linux command (comes from package named uuid-runtime at least on debian based linux) :  
-    `uuidgen`
 - **execution** : how to execute the example, execution runtime release constraints, ...
 
 ## CEM operations
