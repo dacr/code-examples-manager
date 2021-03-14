@@ -69,7 +69,7 @@ Instructions example with github.com publishing configuration :
   ```
   cs launch fr.janalyse::code-examples-manager:1.0.9
   ```
-  - you can even use `cs launch fr.janalyse::code-examples-manager:1.+` to always use the latest release in the 1.x series
+  - you can even use `cs launch fr.janalyse::code-examples-manager:latest.release` to always use the latest release
   - current release is : [![][CodeExamplesManagerImg]][CodeExamplesManagerLnk]
 - Check the command output to get the overview URL
 
