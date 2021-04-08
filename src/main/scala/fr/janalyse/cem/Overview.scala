@@ -15,6 +15,7 @@ case class ExamplesForCategoryContext(category: String, categoryExamples: Seq[Ex
 object Overview {
 
   def updateOverview(changes: Seq[Change], adapter: PublishAdapter, config: CodeExampleManagerConfig): Change = {
+    import fr.janalyse.tools.NaturalSort.ord
     val exampleContexts = for {
       change <- changes
       category = change.example.category.getOrElse("Without category")

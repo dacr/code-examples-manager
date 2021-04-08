@@ -10,13 +10,14 @@ scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-Xmacro-setting
 mainClass := Some("fr.janalyse.cem.Synchronize")
 
 lazy val versions = new {
-  val scalatest = "3.2.5"
+  val scalatest = "3.2.7"
   val logback = "1.2.3"
   val sttp = "2.2.9"
   val json4s = "3.6.11"
   val betterfiles = "3.9.1"
   val yamusca = "0.8.0"
   val pureConfig = "0.14.1"
+  val naturalsort = "0.2.3"
 }
 
 libraryDependencies ++= Seq(
@@ -30,4 +31,5 @@ libraryDependencies ++= Seq(
   "com.github.pathikrit" %% "better-files" % versions.betterfiles,
   "com.github.eikek" %% "yamusca-core" % versions.yamusca,
   "com.github.pureconfig" %% "pureconfig" % versions.pureConfig,
+  "fr.janalyse" %% "naturalsort" % versions.naturalsort
 )

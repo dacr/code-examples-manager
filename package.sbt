@@ -1,6 +1,6 @@
 enablePlugins(JavaAppPackaging)
 
-mappings in Universal += {
+Universal / mappings += {
     // we are using the reference.conf as default application.conf
     // the user can override settings here
     val conf = (resourceDirectory in Compile).value / "reference.conf"
