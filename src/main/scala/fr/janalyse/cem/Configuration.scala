@@ -54,8 +54,8 @@ case class MetaConfig(
   buildDateTime: Option[String],
   buildUUID: Option[String],
 ) {
-  def name: String = projectName.getOrElse("project-name")
-  def code: String = projectName.getOrElse("project-code")
+  def name: String = projectName.getOrElse("code-examples-manager")
+  def code: String = projectName.getOrElse("cem")
   def version = buildVersion.getOrElse("x.y.z")
   def dateTime = buildDateTime.getOrElse("?")
   def uuid = buildUUID.getOrElse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")

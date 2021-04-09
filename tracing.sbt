@@ -1,6 +1,6 @@
 
 Compile / resourceGenerators +=  Def.task {
-  val dir = (sourceManaged in Compile).value
+  val dir = (Compile / sourceManaged).value
   val projectName = name.value
   val projectGroup = organization.value
   val projectPage=homepage.value.map(_.toString).getOrElse("https://github.com/dacr")

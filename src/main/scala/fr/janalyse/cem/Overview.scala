@@ -6,7 +6,10 @@ import fr.janalyse.cem.externalities.publishadapter.PublishAdapter
 case class OverviewContext(
   examplesCount:Int,
   examples: List[ExampleContext],
-  examplesByCategory: List[ExamplesForCategoryContext]
+  examplesByCategory: List[ExamplesForCategoryContext],
+  projectName: String,
+  projectURL: String,
+  version: String
 )
 case class ExampleContext(category:String, filename:String, summary:String, url:String)
 case class ExamplesForCategoryContext(category: String, categoryExamples: Seq[ExampleContext])
@@ -35,7 +38,10 @@ object Overview {
     val overviewContext = OverviewContext(
       examplesCount = exampleContexts.size,
       examples = exampleContexts.sortBy(_.summary).toList,
-      examplesByCategory = examplesContextByCategory
+      examplesByCategory = examplesContextByCategory,
+      projectName = config.metaInfo.name,
+      projectURL = config.metaInfo.projectURL,
+      version = config.metaInfo.version
     )
     val overviewContent = YamuscaTemplating(config).layout("templates/examples-overview.mustache", overviewContext)
 
