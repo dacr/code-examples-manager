@@ -4,8 +4,7 @@ homepage := Some(new URL("https://github.com/dacr/code-examples-manager"))
 licenses += "Apache 2" -> url(s"https://www.apache.org/licenses/LICENSE-2.0.txt")
 scmInfo := Some(ScmInfo(url(s"https://github.com/dacr/code-examples-manager.git"), s"git@github.com:dacr/code-examples-manager.git"))
 
-//scalaVersion := "3.0.0-RC2"
-scalaVersion := "2.13.5"
+scalaVersion := "3.0.0-RC2"
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-Xmacro-settings:materialize-derivations")
 
 mainClass := Some("fr.janalyse.cem.Synchronize")
@@ -35,4 +34,4 @@ libraryDependencies ++= Seq(
   "com.github.eikek" %% "yamusca-core" % versions.yamusca,
   "com.github.pureconfig" %% "pureconfig" % versions.pureConfig,
   "fr.janalyse" %% "naturalsort" % versions.naturalsort
-)//.map(_ cross CrossVersion.for3Use2_13)
+).map(_ cross CrossVersion.for3Use2_13)
