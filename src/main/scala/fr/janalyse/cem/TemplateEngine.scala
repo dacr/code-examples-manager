@@ -20,14 +20,14 @@ import yamusca.implicits._
 
 
 // TODO - first implementation waiting for refactoring
-case class YamuscaTemplating(config: CodeExampleManagerConfig) {
+case class TemplateEngine(config: CodeExampleManagerConfig) {
   def layout(templateName: String, context: OverviewContext): String = {
     import yamusca.imports._
     import yamusca.implicits._
-    implicit val exampleConverter = ValueConverter.deriveConverter[ExampleContext]
-    implicit val examplesForCategoryConverter = ValueConverter.deriveConverter[ExamplesForCategoryContext]
-    implicit val overviewConverter = ValueConverter.deriveConverter[OverviewContext]
-    val templateInput = YamuscaTemplating.getClass().getClassLoader().getResourceAsStream(templateName)
+    implicit val exampleConverter: ValueConverter[ExampleContext] = ValueConverter.deriveConverter[ExampleContext]
+    implicit val examplesForCategoryConverter: ValueConverter[ExamplesForCategoryContext] = ValueConverter.deriveConverter[ExamplesForCategoryContext]
+    implicit val overviewConverter: ValueConverter[OverviewContext] = ValueConverter.deriveConverter[OverviewContext]
+    val templateInput = TemplateEngine.getClass().getClassLoader().getResourceAsStream(templateName)
     val templateString = scala.io.Source.fromInputStream(templateInput).iterator.mkString
     context.unsafeRender(templateString)
   }

@@ -6,8 +6,9 @@ import sttp.client.json4s.asJson
 import sttp.client.json4s._
 import fr.janalyse.cem.CodeExample
 import fr.janalyse.cem.externalities.publishadapter.{AuthToken, PublishAdapter}
-import org.json4s.JValue
+import org.json4s.{Formats, JValue, Serialization}
 import org.slf4j.{Logger, LoggerFactory}
+import sttp.client.okhttp.WebSocketHandler
 import sttp.model.Uri
 
 import scala.util.{Left, Right}
@@ -19,14 +20,14 @@ object GithubPublishAdapter {
 }
 
 class GithubPublishAdapter(val config: PublishAdapterConfig) extends PublishAdapter {
-  implicit val serialization = org.json4s.jackson.Serialization
-  implicit val formats = org.json4s.DefaultFormats
-  implicit val sttpBackend = sttp.client.okhttp.OkHttpSyncBackend()
+  implicit val serialization:Serialization = org.json4s.jackson.Serialization
+  implicit val formats:Formats = org.json4s.DefaultFormats
+  implicit val sttpBackend: SttpBackend[Identity, Nothing, WebSocketHandler] = sttp.client.okhttp.OkHttpSyncBackend()
 
   private val logger: Logger = LoggerFactory.getLogger(getClass)
 
-  val token = config.authToken.getOrElse("")
-  val apiUrl = config.apiEndPoint
+  val token: String = config.authToken.map(_.value).getOrElse("")
+  val apiUrl: String = config.apiEndPoint
 
   private def makeGetRequest(query: Uri) = {
     basicRequest

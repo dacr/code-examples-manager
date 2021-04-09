@@ -43,7 +43,7 @@ object Overview {
       projectURL = config.metaInfo.projectURL,
       version = config.metaInfo.version
     )
-    val overviewContent = YamuscaTemplating(config).layout("templates/examples-overview.mustache", overviewContext)
+    val overviewContent = TemplateEngine(config).layout("templates/examples-overview.mustache", overviewContext)
 
     val overview = new CodeExample {
       override val filename: String = "index.md"

@@ -4,12 +4,13 @@ import fr.janalyse.cem.{AddedChange, Change, CodeExample, NoChange, PublishAdapt
 import fr.janalyse.cem.externalities.publishadapter.{AuthToken, PublishAdapter}
 import org.slf4j.{Logger, LoggerFactory}
 import sttp.client._
-import org.json4s.JValue
+import org.json4s.{Formats, JValue, Serialization}
 import org.json4s.Extraction.decompose
 import org.json4s.jackson.Serialization.write
 import org.json4s.ext.JavaTimeSerializers
 import sttp.client.json4s.asJson
 import sttp.client.json4s._
+import sttp.client.okhttp.WebSocketHandler
 import sttp.model.Uri
 
 import scala.util.{Left, Right}
@@ -22,15 +23,15 @@ object GitlabPublishAdapter {
 }
 
 class GitlabPublishAdapter(val config: PublishAdapterConfig) extends PublishAdapter {
-  implicit val serialization = org.json4s.jackson.Serialization
-  implicit val formats = org.json4s.DefaultFormats.lossless ++ JavaTimeSerializers.all
-  implicit val sttpBackend = sttp.client.okhttp.OkHttpSyncBackend()
+  implicit val serialization:Serialization = org.json4s.jackson.Serialization
+  implicit val formats: Formats = org.json4s.DefaultFormats.lossless ++ JavaTimeSerializers.all
+  implicit val sttpBackend: SttpBackend[Identity, Nothing, WebSocketHandler] = sttp.client.okhttp.OkHttpSyncBackend()
 
   private val logger: Logger = LoggerFactory.getLogger(getClass)
 
-  val token = config.authToken.getOrElse("")
-  val apiUrl = config.apiEndPoint
-  val defaultVisibility = config.defaultVisibility.getOrElse("public")
+  val token: String = config.authToken.map(_.value).getOrElse("")
+  val apiUrl: String = config.apiEndPoint
+  val defaultVisibility: String = config.defaultVisibility.getOrElse("public")
 
 
   // Using Web Linking to get large amount of results : https://tools.ietf.org/html/rfc5988
@@ -149,8 +150,8 @@ class GitlabPublishAdapter(val config: PublishAdapterConfig) extends PublishAdap
         .toList
         .filter(_.uuidOption.isDefined)
         .groupBy(_.uuidOption)
-    val remoteDuplicates = groupedSnippets.collect {case (key,snippets) if snippets.size > 1 => snippets}
-    assert(remoteDuplicates.size == 0, "FOUND REMOTE DUPLICATES !\n"+remoteDuplicates.mkString("\n"))
+    val remoteDuplicates = groupedSnippets.collect {case (_,snippets) if snippets.size > 1 => snippets}
+    assert(remoteDuplicates.isEmpty, "FOUND REMOTE DUPLICATES !\n"+remoteDuplicates.mkString("\n"))
     groupedSnippets.collect { case (Some(uuid), example :: Nil) => uuid -> example }
   }
 

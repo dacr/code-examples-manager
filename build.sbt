@@ -1,9 +1,10 @@
 organization := "fr.janalyse"
 name := "code-examples-manager"
 homepage := Some(new URL("https://github.com/dacr/code-examples-manager"))
-licenses += "Apache 2" -> url(s"http://www.apache.org/licenses/LICENSE-2.0.txt")
+licenses += "Apache 2" -> url(s"https://www.apache.org/licenses/LICENSE-2.0.txt")
 scmInfo := Some(ScmInfo(url(s"https://github.com/dacr/code-examples-manager.git"), s"git@github.com:dacr/code-examples-manager.git"))
 
+//scalaVersion := "3.0.0-RC2"
 scalaVersion := "2.13.5"
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-Xmacro-settings:materialize-derivations")
 
@@ -21,8 +22,10 @@ lazy val versions = new {
 }
 
 libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % versions.scalatest % Test,
   "ch.qos.logback" % "logback-classic" % versions.logback,
+)
+libraryDependencies ++= Seq(
+  "org.scalatest" %% "scalatest" % versions.scalatest % Test,
   "com.softwaremill.sttp.client" %% "core" % versions.sttp,
   "com.softwaremill.sttp.client" %% "json4s" % versions.sttp,
   "com.softwaremill.sttp.client" %% "okhttp-backend" % versions.sttp,
@@ -32,4 +35,4 @@ libraryDependencies ++= Seq(
   "com.github.eikek" %% "yamusca-core" % versions.yamusca,
   "com.github.pureconfig" %% "pureconfig" % versions.pureConfig,
   "fr.janalyse" %% "naturalsort" % versions.naturalsort
-)
+)//.map(_ cross CrossVersion.for3Use2_13)

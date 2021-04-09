@@ -11,7 +11,7 @@ case class ExamplesConfig(
   searchRootDirectories: String,
   searchGlob: Option[String],
 ) {
-  val searchRoots =
+  val searchRoots: List[File] =
     Option(searchRootDirectories)
       .map(_.split("""\s*,\s*""").toList)
       .getOrElse(Nil)
@@ -41,7 +41,7 @@ case class PublishAdapterConfig(
   defaultVisibility: Option[String],
   filenameRenameRules: Map[String, RenameRuleConfig],
 ) {
-  val authToken = token.map(AuthToken)
+  val authToken: Option[AuthToken] = token.map(AuthToken)
 }
 
 // Automatically populated by the build process from a generated config file
@@ -56,10 +56,10 @@ case class MetaConfig(
 ) {
   def name: String = projectName.getOrElse("code-examples-manager")
   def code: String = projectName.getOrElse("cem")
-  def version = buildVersion.getOrElse("x.y.z")
-  def dateTime = buildDateTime.getOrElse("?")
-  def uuid = buildUUID.getOrElse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
-  def projectURL = projectPage.getOrElse("https://github.com/dacr")
+  def version: String = buildVersion.getOrElse("x.y.z")
+  def dateTime: String = buildDateTime.getOrElse("?")
+  def uuid: String = buildUUID.getOrElse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
+  def projectURL: String = projectPage.getOrElse("https://github.com/dacr")
 }
 
 case class CodeExampleManagerConfig(

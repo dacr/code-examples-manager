@@ -67,7 +67,7 @@ object Synchronize {
     }
   }
 
-  private def publish(adapterConfigName: String, examplesForCurrentAdapter: List[CodeExample], adapter: PublishAdapter) = {
+  private def publish(adapterConfigName: String, examplesForCurrentAdapter: List[CodeExample], adapter: PublishAdapter): Unit = {
     logger.info(s"$adapterConfigName : Synchronizing ${examplesForCurrentAdapter.size} examples using ${adapter.getClass.getName}")
     val changes = ExamplesManager.synchronize(examplesForCurrentAdapter, adapter)
     LogChanges(changes)

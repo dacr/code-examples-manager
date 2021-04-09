@@ -89,7 +89,7 @@ Example for languages using `//` for line comments :
 // authors : David Crosson
 // license : Apache
 // id : d24d8cb3-45c0-4d88-b033-7fae2325607b
-// execution : scala ammonite script (http://ammonite.io/) - run as follow 'amm scriptname.sc'
+// execution : scala ammonite script (https://ammonite.io/) - run as follow 'amm scriptname.sc'
 import $ivy.`org.scalatest::scalatest:3.2.0`
 import org.scalatest._,matchers.should.Matchers._
 math.Pi shouldBe 3.14d +- 0.01d

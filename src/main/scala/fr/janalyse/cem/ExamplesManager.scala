@@ -7,7 +7,7 @@ object ExamplesManager {
   /**
    * Search for local code examples.
    *
-   * @param config
+   * @param config application configuration
    * @return found code examples
    */
   def getExamples(implicit config: CodeExampleManagerConfig): List[CodeExample] = {
@@ -39,7 +39,7 @@ object ExamplesManager {
 
   /**
    * Update or add an example
-   * @param example
+   * @param example code example instance
    * @param adapter publish adapter to use
    * @return update state
    */
