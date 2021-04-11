@@ -2,29 +2,22 @@ package fr.janalyse.cem
 
 import scala.util.Properties._
 import better.files._
-import fr.janalyse.cem.externalities.publishadapter.AuthToken
-import org.slf4j.LoggerFactory
-import pureconfig.ConfigSource
-import pureconfig.generic.auto._
+import com.typesafe.config.{Config, ConfigFactory}
+import zio.IO
+import zio.config._
+import zio.config.typesafe._
+import zio.config.magnolia.DeriveConfigDescriptor._
 
 case class ExamplesConfig(
   searchRootDirectories: String,
-  searchGlob: Option[String],
-) {
-  val searchRoots: List[File] =
-    Option(searchRootDirectories)
-      .map(_.split("""\s*,\s*""").toList)
-      .getOrElse(Nil)
-      .map(dir => dir.toFile)
-      .filter(_.exists)
-      .filter(_.isDirectory)
-}
+  searchGlob: String,
+)
 
 case class RenameRuleConfig(
-  from:String,
-  to:String,
+  from: String,
+  to: String,
 ) {
-  def rename(input:String):String = {
+  def rename(input: String): String = {
     if (input.matches(from)) {
       input.replaceAll(from, to)
     } else input
@@ -40,9 +33,7 @@ case class PublishAdapterConfig(
   token: Option[String],
   defaultVisibility: Option[String],
   filenameRenameRules: Map[String, RenameRuleConfig],
-) {
-  val authToken: Option[AuthToken] = token.map(AuthToken)
-}
+)
 
 // Automatically populated by the build process from a generated config file
 case class MetaConfig(
@@ -55,10 +46,15 @@ case class MetaConfig(
   buildUUID: Option[String],
 ) {
   def name: String = projectName.getOrElse("code-examples-manager")
+
   def code: String = projectName.getOrElse("cem")
+
   def version: String = buildVersion.getOrElse("x.y.z")
+
   def dateTime: String = buildDateTime.getOrElse("?")
+
   def uuid: String = buildUUID.getOrElse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
+
   def projectURL: String = projectPage.getOrElse("https://github.com/dacr")
 }
 
@@ -68,27 +64,30 @@ case class CodeExampleManagerConfig(
   metaInfo: MetaConfig
 )
 
-case class Configuration(
+case class ApplicationConfig(
   codeExamplesManagerConfig: CodeExampleManagerConfig
 )
 
-object Configuration {
-  def apply(): CodeExampleManagerConfig = {
-    val logger = LoggerFactory.getLogger("Configuration")
-    val configSource = {
+object ApplicationConfig {
+  def apply(): IO[Throwable, ApplicationConfig] = {
+    val metaConfigResourceName = "cem-meta.conf"
+    val automaticConfigDescriptor = descriptor[ApplicationConfig].mapKey(toKebabCase)
+
+    def buildTypeSafeConfig: Config = {
       val customConfigFileOption = envOrNone("CEM_CONFIG_FILE").orElse(propOrNone("CEM_CONFIG_FILE"))
-      val metaConfig = ConfigSource.resources("cem-meta.conf")
-      customConfigFileOption
-        .map(customConfigFile => ConfigSource.file(customConfigFile).withFallback(ConfigSource.default))
-        .getOrElse(ConfigSource.default)
-        .withFallback(metaConfig.optional)
+      ConfigFactory
+        .empty()
+        .withFallback(
+          customConfigFileOption
+            .map(f => ConfigFactory.parseFile(new java.io.File(f)))
+            .getOrElse(ConfigFactory.load()))
+        .withFallback(ConfigFactory.load(metaConfigResourceName))
     }
-    configSource.load[Configuration] match {
-      case Left(issues) =>
-        issues.toList.foreach { issue => logger.error(issue.toString) }
-        throw new RuntimeException("Invalid application configuration\n" + issues.toList.map(_.toString).mkString("\n"))
-      case Right(config) =>
-        config.codeExamplesManagerConfig
-    }
+
+    for {
+      typesafeConfig <- IO(buildTypeSafeConfig)
+      configSource <- IO.fromEither(TypesafeConfigSource.fromTypesafeConfig(typesafeConfig))
+      config <- IO.fromEither(zio.config.read(automaticConfigDescriptor from configSource))
+    } yield config
   }
 }

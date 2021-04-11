@@ -1,22 +1,28 @@
 package fr.janalyse.cem
 
-import org.scalatest._,matchers._, OptionValues._, flatspec._
 import Hashes._
+import zio.test.junit.JUnitRunnableSpec
+import zio.test.Assertion._
+import zio.test.assert
 
-class HashesTest extends AnyFlatSpec with should.Matchers {
-  override def suiteName: String = "HashesTest"
 
-  val example = "Please hash me !"
+class HashesTest extends JUnitRunnableSpec {
 
-  "murmurHash3" should "return the right hash" in {
-    murmurHash3(example) shouldBe 370020140
+
+  // ----------------------------------------------------------------------------------------------
+  val t1 = test("sha1 compute the right hash value") {
+    val example = "Please hash me !"
+    assert(sha1(example))(equalTo("4031d74d6a72919da236a388bdf3b966126b80f2"))
   }
 
-  "md5sum" should "return the right hash" in {
-    md5sum(example) shouldBe "55340948b4b044ad6d1632908c86e765"
+  // ----------------------------------------------------------------------------------------------
+  val t2 = test("sha1 should not fail") {
+    assert(sha1(""))(equalTo("da39a3ee5e6b4b0d3255bfef95601890afd80709"))
+    assert(sha1(null))(equalTo("da39a3ee5e6b4b0d3255bfef95601890afd80709"))
   }
 
-  "sha1" should "return the right hash" in {
-    sha1(example) shouldBe "4031d74d6a72919da236a388bdf3b966126b80f2"
+  // ----------------------------------------------------------------------------------------------
+  override def spec = {
+    suite("Hash function tests")(t1, t2)
   }
 }
