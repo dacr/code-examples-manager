@@ -16,6 +16,7 @@ lazy val versions = new {
   val betterfiles = "3.9.1"
   val yamusca = "0.8.0"
   val naturalsort = "1.0.0"
+  val caliban = "0.9.5"
 }
 
 libraryDependencies ++= Seq(
@@ -28,6 +29,8 @@ libraryDependencies ++= Seq(
   "dev.zio" %% "zio-config-typesafe" % "1.0.4" cross CrossVersion.for3Use2_13,
   "dev.zio" %% "zio-json" % "0.1.4" cross CrossVersion.for3Use2_13,
   "dev.zio" %% "zio-nio" % "1.0.0-RC10" cross CrossVersion.for3Use2_13,
+
+  "com.github.ghostdogpr" %% "caliban-client" % "0.9.5" cross CrossVersion.for3Use2_13,
 
   "com.softwaremill.sttp.client3" %% "async-http-client-backend-zio" % versions.sttp cross CrossVersion.for3Use2_13,
   "com.softwaremill.sttp.client3" %% "json4s" % versions.sttp cross CrossVersion.for3Use2_13,
