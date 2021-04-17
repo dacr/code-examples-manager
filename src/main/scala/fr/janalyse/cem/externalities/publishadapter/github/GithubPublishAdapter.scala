@@ -4,7 +4,7 @@
 //import sttp.client._
 //import sttp.client.json4s.asJson
 //import sttp.client.json4s._
-//import fr.janalyse.cem.CodeExample
+//import fr.janalyse.cem.model.CodeExample
 //import fr.janalyse.cem.externalities.publishadapter.{AuthToken, PublishAdapter}
 //import org.json4s.{Formats, JValue, Serialization}
 //import org.slf4j.{Logger, LoggerFactory}

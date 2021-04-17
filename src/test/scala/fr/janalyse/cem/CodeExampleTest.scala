@@ -1,5 +1,6 @@
 package fr.janalyse.cem
 
+import fr.janalyse.cem.model.CodeExample
 import zio.Task
 import zio.test.Assertion._
 import zio.test.assert

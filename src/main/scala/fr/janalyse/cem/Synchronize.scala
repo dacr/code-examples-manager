@@ -4,6 +4,8 @@ import zio.config.getConfig
 import zio.{Has, IO, RIO, Runtime, Task, ZIO, ZLayer, clock}
 import zio.logging._
 import better.files._
+import fr.janalyse.cem.model.{CodeExample, RemoteExampleState}
+import sttp.client3.asynchttpclient.zio.{AsyncHttpClientZioBackend, SttpClient}
 import zio.clock.Clock
 
 object Synchronize {
@@ -21,7 +23,7 @@ object Synchronize {
     Task(File(fromRootFilename).glob(globPattern, includePath = false).map(_.pathAsString))
   }
 
-  def findCodeExamplesFromGivenRoot(
+  def examplesFromGivenRoot(
     searchRoot: SearchRoot,
     globPattern: SearchGlob,
     filesFetcher: (SearchRoot, SearchGlob) => Task[Iterator[ExampleFilename]],
@@ -35,18 +37,18 @@ object Synchronize {
 
   }
 
-  def validSearchRoots(searchRootDirectories: String): Task[List[SearchRoot]] = {
+  def examplesValidSearchRoots(searchRootDirectories: String): Task[List[SearchRoot]] = {
     val roots = searchRootDirectories.split("""\s*,\s*""").toList.map(_.trim)
     IO(roots.map(f => File(f)).tapEach(f => assert(f.isDirectory)).map(_.pathAsString))
   }
 
 
-  def findCodeExamples(searchRoots: List[SearchRoot], usingGlobPattern: SearchGlob): Task[Vector[CodeExample]] = {
-    val examplesFromRoots = searchRoots.map(fromRoot => findCodeExamplesFromGivenRoot(fromRoot, usingGlobPattern, findFiles, readFileContent))
+  def examplesCollectFor(searchRoots: List[SearchRoot], usingGlobPattern: SearchGlob): Task[Vector[CodeExample]] = {
+    val examplesFromRoots = searchRoots.map(fromRoot => examplesFromGivenRoot(fromRoot, usingGlobPattern, findFiles, readFileContent))
     Task.mergeAll(examplesFromRoots)(Vector.empty[CodeExample])((accu, newRoot) => accu.appendedAll(newRoot))
   }
 
-  def checkExamplesCoherency(examples: Iterable[CodeExample]): Task[Unit] = {
+  def examplesCheckCoherency(examples: Iterable[CodeExample]): Task[Unit] = {
     val uuids = examples.flatMap(_.uuid)
     val duplicated = uuids.groupBy(u => u).filter { case (_, duplicated) => duplicated.size > 1 }.keys
     if (duplicated.nonEmpty)
@@ -54,34 +56,44 @@ object Synchronize {
     else Task.succeed(())
   }
 
-
-  def publishExamplesToGitLab(examples: Iterable[CodeExample], adapterConfig: PublishAdapterConfig):RIO[Logging,Unit] = {
-    RIO.succeed()
-  }
-  def publishExamplesToGitHub(examples: Iterable[CodeExample], adapterConfig: PublishAdapterConfig):RIO[Logging,Unit] = {
-    RIO.succeed()
-  }
-
-  def publishExamples(examples: Vector[CodeExample], adaptersConfig: Map[String,PublishAdapterConfig]):RIO[Logging, Unit] = {
-    val adaptersKeys = adaptersConfig.keySet
-    val results = for {
-      adapterKey <- adaptersKeys
-      adapterConfig <- adaptersConfig.get(adapterKey)
-      adapterExamplesToSynchronize = examples.filter(_.publish.contains(adapterKey))
-    } yield {
-      adapterConfig.kind match {
-        case "gitlab" => publishExamplesToGitLab(adapterExamplesToSynchronize, adapterConfig)
-        case "github" => publishExamplesToGitHub(adapterExamplesToSynchronize, adapterConfig)
-      }
-    }
-    RIO.mergeAll(results)(())( (accu,next) => next)
-  }
-
-  def synchronize: RIO[Logging with Clock with Has[ApplicationConfig], Unit] = for {
-    startTime <- clock.nanoTime
+  val examplesCollect: RIO[Has[ApplicationConfig], Vector[CodeExample]] = for {
     config <- getConfig[ApplicationConfig]
     examplesConfig = config.codeExamplesManagerConfig.examples
-    publishConfig = config.codeExamplesManagerConfig.publishAdapters
+    searchRoots <- examplesValidSearchRoots(examplesConfig.searchRootDirectories)
+    localExamples <- examplesCollectFor(searchRoots, examplesConfig.searchGlob)
+    _ <- examplesCheckCoherency(localExamples)
+  } yield localExamples
+
+
+  def examplesPublishToGivenAdapter(
+    examples: Iterable[CodeExample],
+    adapterConfig: PublishAdapterConfig,
+    remoteExampleStatesFetcher: PublishAdapterConfig => RIO[Logging with SttpClient, Iterable[RemoteExampleState]]
+  ): RIO[Logging with SttpClient, Unit] = {
+    val examplesToSynchronize = examples.filter(_.publish.contains(adapterConfig.activationKeyword))
+    if (!adapterConfig.enabled || examplesToSynchronize.isEmpty) RIO.succeed()
+    else {
+      for {
+        remoteStates <- remoteExampleStatesFetcher(adapterConfig)
+      } yield ()
+    }
+  }
+
+
+  def examplesPublish(examples: Vector[CodeExample], adaptersConfig: Map[String, PublishAdapterConfig]): RIO[Logging with SttpClient, Unit] = {
+    val results = for {
+      adapterConfig <- adaptersConfig.values
+    } yield {
+      examplesPublishToGivenAdapter(examples, adapterConfig, RemoteOperations.remoteExampleStatesFetch)
+    }
+    RIO.mergeAll(results)(())((accu, next) => next)
+  }
+
+
+  def synchronizeEffect: RIO[Logging with Clock with SttpClient with Has[ApplicationConfig], Unit] = for {
+    startTime <- clock.nanoTime
+    config <- getConfig[ApplicationConfig]
+    adaptersConfig = config.codeExamplesManagerConfig.publishAdapters
     metaInfo = config.codeExamplesManagerConfig.metaInfo
     version = metaInfo.version
     appName = metaInfo.name
@@ -90,11 +102,9 @@ object Synchronize {
     _ <- log.info(s"$appName application is starting")
     _ <- log.info(s"$appCode version $version")
     _ <- log.info(s"$appCode project page $projectURL (with configuration documentation) ")
-    searchRoots <- validSearchRoots(examplesConfig.searchRootDirectories)
-    localExamples <- findCodeExamples(searchRoots, examplesConfig.searchGlob)
-    _ <- checkExamplesCoherency(localExamples)
-    _ <- log.info(s"Found ${localExamples.size} available locally for synchronization purpose")
-    _ <- publishExamples(localExamples, publishConfig)
+    examples <- examplesCollect
+    _ <- log.info(s"Found ${examples.size} available locally for synchronization purpose")
+    _ <- examplesPublish(examples, adaptersConfig)
     endTime <- clock.nanoTime
     _ <- log.info(s"Code examples manager publishing operations took ${(endTime - startTime) / 1000000}ms")
   } yield ()
@@ -103,6 +113,8 @@ object Synchronize {
   //@main
   def main(args: Array[String]): Unit = {
     val configLayer = ZLayer.fromEffect(ApplicationConfig())
+    val httpClientLayer = AsyncHttpClientZioBackend.layer()
+    val clockLayer = Clock.live
 
     val loggingLayer =
       Logging.console(
@@ -110,63 +122,12 @@ object Synchronize {
         format = LogFormat.ColoredLogFormat()
       ) >>> Logging.withRootLoggerName("Synchronize")
 
-    Runtime.default.unsafeRun(synchronize.provideLayer(configLayer ++ loggingLayer ++ Clock.live))
+    val layers = configLayer ++ httpClientLayer ++ clockLayer ++ loggingLayer
+    Runtime.default.unsafeRun(synchronizeEffect.provideLayer(layers))
   }
 }
 
-//
-//import fr.janalyse.cem.externalities.publishadapter.PublishAdapter
-//import fr.janalyse.cem.externalities.publishadapter.github.GithubPublishAdapter
-//import fr.janalyse.cem.externalities.publishadapter.gitlab.GitlabPublishAdapter
-//import org.slf4j.{Logger, LoggerFactory}
-//
-//object Synchronize {
-//
 
-//
-//  def main(args: Array[String]): Unit = {
-//    val version = config.metaInfo.version
-//    val appName = config.metaInfo.name
-//    val appCode = config.metaInfo.code
-//    val projectURL = config.metaInfo.projectURL
-//    logger.info(s"$appName application is starting")
-//    logger.info(s"$appCode version $version")
-//    logger.info(s"$appCode project page $projectURL (with configuration documentation) ")
-//
-//    val (_, duration) = howLong {
-//      val availableLocalExamples = ExamplesManager.getExamples(config)
-//      logger.info(s"Found ${availableLocalExamples.size} available locally for synchronization purpose")
-//      localExamplesCoherency(availableLocalExamples)
-//
-//      for {
-//        (adapterConfigName, adapterConfig) <- config.publishAdapters
-//        if adapterConfig.enabled
-//        adapter <- searchForAdapter(adapterConfig)
-//        examplesForCurrentAdapter = availableLocalExamples.filter(_.publish.contains(adapterConfig.activationKeyword))
-//      } {
-//        try {
-//          publish(adapterConfigName, examplesForCurrentAdapter, adapter)
-//        } catch {
-//          case ex:Exception =>
-//            logger.error(s"Can't publish with $adapterConfigName", ex)
-//        }
-//      }
-//    }
-//    logger.info(s"Code examples manager publishing operations took ${duration / 1000}s")
-//  }
-//
-//  private def searchForAdapter(adapterConfig: PublishAdapterConfig) = {
-//    adapterConfig.kind match {
-//      case "gitlab" =>
-//        GitlabPublishAdapter.lookup(adapterConfig)
-//      case "github" =>
-//        GithubPublishAdapter.lookup(adapterConfig)
-//      case unrecognized =>
-//        logger.warn(s"Unrecognized adapter kind $unrecognized, only [gitlab|github] are supported")
-//        None
-//    }
-//  }
-//
 //  private def publish(adapterConfigName: String, examplesForCurrentAdapter: List[CodeExample], adapter: PublishAdapter): Unit = {
 //    logger.info(s"$adapterConfigName : Synchronizing ${examplesForCurrentAdapter.size} examples using ${adapter.getClass.getName}")
 //    val changes = ExamplesManager.synchronize(examplesForCurrentAdapter, adapter)

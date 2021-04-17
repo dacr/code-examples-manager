@@ -1,6 +1,6 @@
 //package fr.janalyse.cem.externalities.publishadapter.github
 //
-//import fr.janalyse.cem.CodeExample
+//import fr.janalyse.cem.model.CodeExample
 //import org.scalatest._
 //import matchers._
 //import OptionValues._

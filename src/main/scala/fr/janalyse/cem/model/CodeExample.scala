@@ -1,6 +1,6 @@
-package fr.janalyse.cem
+package fr.janalyse.cem.model
 
-import Hashes.sha1
+import fr.janalyse.cem.tools.Hashes.sha1
 import zio.Task
 
 import java.io.File

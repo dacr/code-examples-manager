@@ -3,7 +3,7 @@ package fr.janalyse.cem
 import scala.util.Properties._
 import better.files._
 import com.typesafe.config.{Config, ConfigFactory}
-import zio.IO
+import zio.{IO, RIO, ZIO, system}
 import zio.config._
 import zio.config.typesafe._
 import zio.config.magnolia.DeriveConfigDescriptor._
@@ -69,25 +69,26 @@ case class ApplicationConfig(
 )
 
 object ApplicationConfig {
-  def apply(): IO[Throwable, ApplicationConfig] = {
+  def apply(): RIO[system.System, ApplicationConfig] = {
     val metaConfigResourceName = "cem-meta.conf"
     val automaticConfigDescriptor = descriptor[ApplicationConfig].mapKey(toKebabCase)
 
-    def buildTypeSafeConfig: Config = {
-      val customConfigFileOption = envOrNone("CEM_CONFIG_FILE").orElse(propOrNone("CEM_CONFIG_FILE"))
-      ConfigFactory
-        .empty()
-        .withFallback(
-          customConfigFileOption
-            .map(f => ConfigFactory.parseFile(new java.io.File(f)))
-            .getOrElse(ConfigFactory.load()))
-        .withFallback(ConfigFactory.load(metaConfigResourceName))
-    }
-
     for {
-      typesafeConfig <- IO(buildTypeSafeConfig)
+      customConfigFileEnvOption <- zio.system.env("CEM_CONFIG_FILE")
+      customConfigFilePropOption <- zio.system.property("CEM_CONFIG_FILE")
+      customConfigFileOption = customConfigFileEnvOption.orElse(customConfigFilePropOption)
+      typesafeConfig <- IO(
+        ConfigFactory
+          .empty()
+          .withFallback(
+            customConfigFileOption
+              .map(f => ConfigFactory.parseFile(new java.io.File(f)))
+              .getOrElse(ConfigFactory.load()))
+          .withFallback(ConfigFactory.load(metaConfigResourceName))
+      )
       configSource <- IO.fromEither(TypesafeConfigSource.fromTypesafeConfig(typesafeConfig))
       config <- IO.fromEither(zio.config.read(automaticConfigDescriptor from configSource))
     } yield config
   }
+
 }

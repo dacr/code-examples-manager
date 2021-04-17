@@ -1,6 +1,6 @@
 //package fr.janalyse.cem.externalities.publishadapter.github
 //
-//import fr.janalyse.cem.CodeExample.extractValue
+//import fr.janalyse.cem.model.CodeExample.extractValue
 //
 //import scala.util.matching.Regex
 //

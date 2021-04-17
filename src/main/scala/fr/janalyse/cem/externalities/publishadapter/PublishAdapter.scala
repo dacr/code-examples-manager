@@ -1,7 +1,7 @@
 //package fr.janalyse.cem.externalities.publishadapter
 //
 //import fr.janalyse.cem.{Change, CodeExample, PublishAdapterConfig}
-//import fr.janalyse.cem.CodeExample
+//import fr.janalyse.cem.model.CodeExample
 //
 //trait PublishAdapter {
 //  val config:PublishAdapterConfig

@@ -1,18 +1,20 @@
-//package fr.janalyse.cem
+package fr.janalyse.cem.model
+
 //
 //import fr.janalyse.cem.externalities.publishadapter.PublishAdapter
 //
 //
-//case class OverviewContext(
-//  examplesCount:Int,
-//  examples: List[ExampleContext],
-//  examplesByCategory: List[ExamplesForCategoryContext],
-//  projectName: String,
-//  projectURL: String,
-//  version: String
-//)
-//case class ExampleContext(category:String, filename:String, summary:String, url:String)
-//case class ExamplesForCategoryContext(category: String, categoryExamples: Seq[ExampleContext])
+case class OverviewContext(
+  examplesCount:Int,
+  examples: List[ExampleContext],
+  examplesByCategory: List[ExamplesForCategoryContext],
+  projectName: String,
+  projectURL: String,
+  version: String
+)
+case class ExampleContext(category:String, filename:String, summary:String, url:String)
+case class ExamplesForCategoryContext(category: String, categoryExamples: Seq[ExampleContext])
+
 //
 //
 //object Overview {

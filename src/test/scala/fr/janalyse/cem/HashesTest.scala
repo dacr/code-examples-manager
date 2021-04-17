@@ -1,6 +1,6 @@
 package fr.janalyse.cem
 
-import Hashes._
+import fr.janalyse.cem.tools.Hashes._
 import zio.test.junit.JUnitRunnableSpec
 import zio.test.Assertion._
 import zio.test.assert
