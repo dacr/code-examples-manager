@@ -2,13 +2,11 @@ package fr.janalyse.cem
 
 import fr.janalyse.cem.model.RemoteExampleState
 import sttp.client3.asynchttpclient.zio.SttpClient
-import sttp.model.Uri
 import zio.RIO
 import zio.logging._
 import sttp.client3._
 import sttp.client3.asynchttpclient.zio._
-import sttp.client3.asynchttpclient.zio.stubbing._
-import sttp.client3.json4s._
+
 
 object RemoteOperations {
 
@@ -23,33 +21,48 @@ object RemoteOperations {
   }
 
   case class RemoteGist(id: String, description: Option[String])
-
-  case class RemoteGistConnection(/*gists: Option[List[RemoteGist]],*/ totalCount: Int)
+  case class RemoteGistConnection(gists: List[RemoteGist], totalCount: Int, pagination: RemoteGistPagination)
+  case class RemoteGistPagination(endCursor:Option[String], hasNextPage:Boolean)
 
   val gistQuery = {
-    import fr.janalyse.cem.graphql.github.GitHubClient.Gist
-    import fr.janalyse.cem.graphql.github.GitHubClient.GistConnection
+    import fr.janalyse.cem.graphql.github.GitHubClient._
+    import fr.janalyse.cem.graphql.github.GitHubClient.PageInfo._
     import fr.janalyse.cem.graphql.github.GitHubClient.User.gists
     import fr.janalyse.cem.graphql.github.GitHubClient.Query.viewer
+    import fr.janalyse.cem.graphql.github.GitHubClient.GistConnection._
+
     viewer(
-      gists()(
+      gists(first=Some(100), orderBy=Some(GistOrder(direction=OrderDirection.DESC, field=GistOrderField.CREATED_AT)))(
         (
-            //GistConnection.nodes((Gist.id ~ Gist.description).mapN(RemoteGist)) ~
-            GistConnection.totalCount
-          )
-          .map(RemoteGistConnection)
+            nodes((Gist.id ~ Gist.description).mapN(RemoteGist)) ~
+            totalCount ~
+            pageInfo((endCursor ~ hasNextPage).mapN(RemoteGistPagination))
+        ).map{case ((Some(a),b),c) => RemoteGistConnection(a.flatten,b,c)}
       )
     )
   }
 
+  private val metaDataRE = """#\s*([-0-9a-f]+)\s*/\s*([0-9a-f]+)\s*$""".r.unanchored
+  def extractMetaDataFromDescription(description: String):Option[(String,String)] = {
+    metaDataRE
+      .findFirstMatchIn(description)
+      .filter(_.groupCount == 2)
+      .map(m => (m.group(1), m.group(2)))
+  }
+
   def remoteExampleStatesFetch(adapterConfig: PublishAdapterConfig): RIO[Logging with SttpClient, Iterable[RemoteExampleState]] = {
     for {
-      _ <- log.info("Using " + adapterConfig.kind)
+      _ <- log.info(s"checking ${adapterConfig.kind}/${adapterConfig.activationKeyword}")
       if adapterConfig.kind == "github"
       graphqlAPI = uri"https://api.github.com/graphql"
       query = gistQuery.toRequest(graphqlAPI, useVariables = true)
       response <- send(injectAuthToken(query, adapterConfig.token)).map(_.body).absolve
       _ <- log.info("Gists count "+response.totalCount)
-    } yield Nil
+      // TODO manage pagination using gists(after=Some("xx")) && pagination.endCursor
+    } yield for {
+      gist <- response.gists
+      desc <- gist.description
+      (uuid,checksum) <- extractMetaDataFromDescription(desc)
+    }  yield RemoteExampleState(remoteId = gist.id, description = desc, uuid=uuid, checksum = checksum)
   }
 }
