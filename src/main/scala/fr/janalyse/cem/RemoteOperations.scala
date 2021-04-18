@@ -24,8 +24,12 @@ object RemoteOperationsTools {
 
 object GitlabRemoteOperations {
   private def gitlabInjectAuthToken[A,B](request:Request[A,B], tokenOption: Option[String]) = {
-    val base = request
-    tokenOption.fold(base)(token => base.header("PRIVATE-TOKEN", s"$token"))
+    val base = request.header("Content-Type","application/json")
+    tokenOption.fold(base)(token => base.header("Authorization", s"Bearer $token"))
+  }
+
+  val snippetQuery = {
+
   }
 
   def gitlabRemoteExamplesStatesFetch(adapterConfig: PublishAdapterConfig): RIO[Logging with SttpClient, List[RemoteExampleState]] = {
@@ -74,8 +78,10 @@ object GithubRemoteOperations {
   }
 
   def githubRemoteExamplesStatesFetch(adapterConfig: PublishAdapterConfig, after: Option[String] = None): RIO[Logging with SttpClient, List[RemoteExampleState]] = {
-    val query = gistQuery(after).toRequest(Uri(adapterConfig.apiEndPoint), useVariables = true)
+    val uriEither = Uri.parse(adapterConfig.apiEndPoint).swap.map(msg => new Error(msg)).swap
     for {
+      apiURI <- RIO.fromEither(uriEither)
+      query = gistQuery(after).toRequest(apiURI, useVariables = true)
       response <- send(githubInjectAuthToken(query, adapterConfig.token)).map(_.body).absolve
       nextResults <-
         if (response.pagination.hasNextPage) githubRemoteExamplesStatesFetch(adapterConfig, response.pagination.endCursor)
