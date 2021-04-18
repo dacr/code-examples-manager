@@ -75,7 +75,7 @@ object Synchronize {
     else {
       for {
         remoteStates <- remoteExampleStatesFetcher(adapterConfig)
-        _ <- log.info(s"found ${remoteStates.size} already published examples on ${adapterConfig.activationKeyword}")
+        _ <- log.info(s"Found ${remoteStates.size} examples already published examples on ${adapterConfig.kind}/${adapterConfig.activationKeyword}")
       } yield ()
     }
   }
