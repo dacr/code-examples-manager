@@ -65,7 +65,7 @@ class GitlabPublishAdapter(val config: PublishAdapterConfig) extends PublishAdap
       }
     }
 
-    val count = 20
+    val count = 100
     val startQuery = uri"$apiUrl/snippets?page=1&per_page=$count"
     worker(Some(startQuery), Nil)
   }

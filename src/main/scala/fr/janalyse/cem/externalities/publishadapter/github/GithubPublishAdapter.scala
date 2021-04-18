@@ -79,7 +79,7 @@ class GithubPublishAdapter(val config: PublishAdapterConfig) extends PublishAdap
       }
     }
 
-    val count = 10
+    val count = 100
     val userLogin = user.login
     val startQuery = uri"$apiUrl/users/$userLogin/gists?page=1&per_page=$count"
     worker(Some(startQuery), Nil)
