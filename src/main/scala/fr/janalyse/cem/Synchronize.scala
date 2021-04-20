@@ -67,6 +67,7 @@ object Synchronize {
 
   def examplesPublishToGivenAdapter(
     examples: Iterable[CodeExample],
+    adapterName:String,
     adapterConfig: PublishAdapterConfig,
     remoteExampleStatesFetcher: PublishAdapterConfig => RIO[Logging with SttpClient, Iterable[RemoteExampleState]]
   ): RIO[Logging with SttpClient, Unit] = {
@@ -75,7 +76,7 @@ object Synchronize {
     else {
       for {
         remoteStates <- remoteExampleStatesFetcher(adapterConfig)
-        _ <- log.info(s"Found ${remoteStates.size} examples already published examples on ${adapterConfig.kind}/${adapterConfig.activationKeyword}")
+        _ <- log.info(s"Found ${remoteStates.size} examples already published examples on $adapterName (${adapterConfig.kind}/${adapterConfig.activationKeyword})")
       } yield ()
     }
   }
@@ -83,11 +84,11 @@ object Synchronize {
 
   def examplesPublish(examples: Vector[CodeExample], adaptersConfig: Map[String, PublishAdapterConfig]): RIO[Logging with SttpClient, Unit] = {
     val results = for {
-      adapterConfig <- adaptersConfig.values
+      (adapterName, adapterConfig) <- adaptersConfig
     } yield {
-      examplesPublishToGivenAdapter(examples, adapterConfig, RemoteOperations.remoteExampleStatesFetch)
+      examplesPublishToGivenAdapter(examples, adapterName, adapterConfig, RemoteOperations.remoteExampleStatesFetch)
     }
-    RIO.mergeAll(results)(())((accu, next) => next)
+    RIO.mergeAllPar(results)(())((accu, next) => next)
   }
 
 

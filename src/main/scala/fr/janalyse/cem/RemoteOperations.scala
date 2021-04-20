@@ -1,5 +1,7 @@
 package fr.janalyse.cem
 
+import caliban.client.Operations.RootQuery
+import caliban.client.SelectionBuilder
 import fr.janalyse.cem.model.RemoteExampleState
 import sttp.client3.asynchttpclient.zio.SttpClient
 import zio.RIO
@@ -21,6 +23,7 @@ object RemoteOperationsTools {
 
 }
 
+// =====================================================================================================================
 
 object GitlabRemoteOperations {
   private def gitlabInjectAuthToken[A,B](request:Request[A,B], tokenOption: Option[String]) = {
@@ -28,16 +31,54 @@ object GitlabRemoteOperations {
     tokenOption.fold(base)(token => base.header("Authorization", s"Bearer $token"))
   }
 
-  val snippetQuery = {
+  case class RemoteSnippet(id: String, description: Option[String])
 
+  case class RemoteSnippetConnection(snippets: List[RemoteSnippet], pagination: RemoteSnippetPagination)
+
+  case class RemoteSnippetPagination(endCursor: Option[String], hasNextPage: Boolean)
+
+  def snippetQuery(after: Option[String] = None, first: Option[Int] = Some(100)): SelectionBuilder[RootQuery, Option[Option[RemoteSnippetConnection]]] = {
+    import fr.janalyse.cem.graphql.gitlab.Client._
+    import fr.janalyse.cem.graphql.gitlab.Client.PageInfo._
+    import fr.janalyse.cem.graphql.gitlab.Client.Query._
+    import fr.janalyse.cem.graphql.gitlab.Client.User.snippets
+    import fr.janalyse.cem.graphql.gitlab.Client.SnippetConnection._
+
+    currentUser(
+      snippets(first=first, after = after)(
+        (
+          nodes((Snippet.id ~ Snippet.description).mapN(RemoteSnippet)) ~
+            pageInfo((endCursor ~ hasNextPage).mapN(RemoteSnippetPagination))
+          ).map { case (Some(a), c) => RemoteSnippetConnection(a.flatten, c) }
+      )
+    )
   }
 
-  def gitlabRemoteExamplesStatesFetch(adapterConfig: PublishAdapterConfig): RIO[Logging with SttpClient, List[RemoteExampleState]] = {
-    RIO.succeed(Nil)
+  def githubRemoteGistsToRemoteExampleState(snippets: List[RemoteSnippet]): List[RemoteExampleState] = {
+    for {
+      snippet <- snippets
+      desc <- snippet.description
+      (uuid, checksum) <- RemoteOperationsTools.extractMetaDataFromDescription(desc)
+    } yield RemoteExampleState(remoteId = snippet.id, description = desc, uuid = uuid, checksum = checksum)
+  }
+
+  def gitlabRemoteExamplesStatesFetch(adapterConfig: PublishAdapterConfig, after: Option[String] = None): RIO[Logging with SttpClient, List[RemoteExampleState]] = {
+    val uriEither = Uri.parse(adapterConfig.apiEndPoint).swap.map(msg => new Error(msg)).swap
+    for {
+      apiURI <- RIO.fromEither(uriEither)
+      query = snippetQuery(after).toRequest(apiURI, useVariables = true)
+      responseOptionOption <- send(gitlabInjectAuthToken(query, adapterConfig.token)).map(_.body).absolve
+      responseOption <- RIO.getOrFail(responseOptionOption) // TODO refactor
+      response <- RIO.getOrFail(responseOption) // TODO refactor
+      nextResults <-
+        if (response.pagination.hasNextPage) gitlabRemoteExamplesStatesFetch(adapterConfig, response.pagination.endCursor)
+        else RIO.succeed(List.empty[RemoteExampleState])
+    } yield githubRemoteGistsToRemoteExampleState(response.snippets) ::: nextResults
   }
 
 }
 
+// =====================================================================================================================
 
 object GithubRemoteOperations {
   private def githubInjectAuthToken[A, B](request: Request[A, B], tokenOption: Option[String]) = {
@@ -51,7 +92,7 @@ object GithubRemoteOperations {
 
   case class RemoteGistPagination(endCursor: Option[String], hasNextPage: Boolean)
 
-  def gistQuery(after: Option[String] = None, first: Option[Int] = Some(100)) = {
+  def gistQuery(after: Option[String] = None, first: Option[Int] = Some(100)): SelectionBuilder[RootQuery, RemoteGistConnection] = {
     import fr.janalyse.cem.graphql.github.Client._
     import fr.janalyse.cem.graphql.github.Client.PageInfo._
     import fr.janalyse.cem.graphql.github.Client.User.gists

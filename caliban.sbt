@@ -1,15 +1,24 @@
 enablePlugins(CodegenPlugin)
 
-/*
+/* ---------------------------------------------------------------------------------------------------------------------
  Generated code can be quite huge and exceed intellij default limits, so add this custom property :
  `idea.max.intellisense.filesize=3500`
  */
 
-/*
-// Command to execute in order to generate the boiler plate code...
+/* ---------------------------------------------------------------------------------------------------------------------
+  SCHEMA download :
+  - curl -o project/github-schema.graphql https://docs.github.com/public/schema.docs.graphql
+  - curl -o project/gitlab-schema.graphql https://github.com/gitlabhq/gitlabhq/blob/master/doc/api/graphql/reference/gitlab_schema.graphql
+ */
 
-calibanGenClient project/github-schema.graphql src/main/scala/fr/janalyse/cem/graphql/github/GitHubClient.scala --genView false
-calibanGenClient project/github-schema.graphql target/scala-2.13/src_managed/main/fr/janalyse/cem/graphql/github/Client.scala --genView false --packageName fr.janalyse.cem.graphql.github
+/* ---------------------------------------------------------------------------------------------------------------------
+// Command to execute in order to generate the boiler plate code...
+  - mkdir -p target/scala-2.13/src_managed/main/fr/janalyse/cem/graphql/github/
+  - mkdir -p target/scala-2.13/src_managed/main/fr/janalyse/cem/graphql/gitlab/
+  - calibanGenClient project/github-schema.graphql target/scala-2.13/src_managed/main/fr/janalyse/cem/graphql/github/Client.scala --genView false --packageName fr.janalyse.cem.graphql.github
+  - calibanGenClient project/gitlab-schema.graphql target/scala-2.13/src_managed/main/fr/janalyse/cem/graphql/gitlab/Client.scala --genView false --packageName fr.janalyse.cem.graphql.gitlab
+
+(calibanGenClient project/github-schema.graphql src/main/scala/fr/janalyse/cem/graphql/github/GitHubClient.scala --genView false)
 
 */
 

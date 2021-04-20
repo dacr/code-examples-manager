@@ -85,6 +85,7 @@ object ApplicationConfig {
               .map(f => ConfigFactory.parseFile(new java.io.File(f)))
               .getOrElse(ConfigFactory.load()))
           .withFallback(ConfigFactory.load(metaConfigResourceName))
+          .resolve()
       )
       configSource <- IO.fromEither(TypesafeConfigSource.fromTypesafeConfig(typesafeConfig))
       config <- IO.fromEither(zio.config.read(automaticConfigDescriptor from configSource))
