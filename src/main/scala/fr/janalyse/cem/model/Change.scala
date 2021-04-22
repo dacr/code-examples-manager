@@ -13,7 +13,7 @@ enum WhatToDo {
 
 trait WhatToDo
 case class IgnoreExample(example:CodeExample) extends WhatToDo
-case class DeleteRemoteExample(uuid:String, state:RemoteExampleState) extends WhatToDo
+case class OrphanRemoteExample(uuid:String, state:RemoteExampleState) extends WhatToDo
 case class AddExample(uuid:String, example:CodeExample) extends WhatToDo
 case class KeepRemoteExample(uuid:String, example:CodeExample, state:RemoteExampleState) extends WhatToDo
 case class UpdateRemoteExample(uuid:String, example:CodeExample, state:RemoteExampleState) extends WhatToDo

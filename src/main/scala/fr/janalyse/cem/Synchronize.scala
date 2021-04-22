@@ -79,7 +79,7 @@ object Synchronize {
     examplesTriple.toSet.toList.map { tripple:(Option[String],Option[CodeExample],Option[RemoteExampleState]) =>
       tripple match {
         case (None, Some(example), None) => IgnoreExample(example)
-        case (Some(uuid), None, Some(state)) => DeleteRemoteExample(uuid, state)
+        case (Some(uuid), None, Some(state)) => OrphanRemoteExample(uuid, state)
         case (Some(uuid), Some(example), None) => AddExample(uuid, example)
         case (Some(uuid), Some(example), Some(state)) if example.checksum == state.checksum => KeepRemoteExample(uuid, example, state)
         case (Some(uuid), Some(example), Some(state)) if example.checksum != state.checksum => UpdateRemoteExample(uuid, example, state)
@@ -88,9 +88,28 @@ object Synchronize {
     }
   }
 
+  def checkRemote(adapterConfig: PublishAdapterConfig)(todo:WhatToDo):RIO[Logging, Unit] = {
+    val targetName = s"${adapterConfig.kind}/${adapterConfig.activationKeyword}"
+    todo match {
+      case UnsupportedOperation(uuidOption, exampleOption, stateOption) =>
+          log.info(s"$targetName : Invalid input $uuidOption - $exampleOption - $stateOption")
+      case OrphanRemoteExample(uuid, state) if uuid == adapterConfig.overviewUUID => RIO.unit
+      case OrphanRemoteExample(uuid, state) =>
+          log.info(s"$targetName : Found orphan example $uuid - ${state.description} - ${state.url}")
+      case _:IgnoreExample => RIO.unit
+      case _:KeepRemoteExample => RIO.unit
+      case _:UpdateRemoteExample => RIO.unit
+      case _:AddExample => RIO.unit
+    }
+  }
+  def checkCoherency(adapterConfig: PublishAdapterConfig, todos:Iterable[WhatToDo]): RIO[Logging, Unit] = {
+    for {
+      _ <- RIO.foreach(todos)(checkRemote(adapterConfig))
+    } yield ()
+  }
+
   def examplesPublishToGivenAdapter(
     examples: Iterable[CodeExample],
-    adapterName:String,
     adapterConfig: PublishAdapterConfig,
     remoteExampleStatesFetcher: PublishAdapterConfig => RIO[Logging with SttpClient, Iterable[RemoteExampleState]],
     remoteExamplesChangesApplier: (PublishAdapterConfig, Iterable[WhatToDo]) => RIO[Logging with SttpClient, Iterable[RemoteExample]]
@@ -100,9 +119,11 @@ object Synchronize {
     else {
       for {
         remoteStates <- remoteExampleStatesFetcher(adapterConfig)
-        _ <- log.info(s"Found ${remoteStates.size} examples already published examples on $adapterName (${adapterConfig.kind}/${adapterConfig.activationKeyword})")
-        _ <- log.info(s"Found ${examplesToSynchronize.size} examples synchronizable on $adapterName (${adapterConfig.kind}/${adapterConfig.activationKeyword})")
+        targetName = s"${adapterConfig.kind}/${adapterConfig.activationKeyword}"
+        _ <- log.info(s"$targetName : Found ${remoteStates.size}  already published artifacts")
+        _ <- log.info(s"$targetName : Found ${examplesToSynchronize.size} synchronisable examples")
         todos = computeWorkToDo(examplesToSynchronize, remoteStates)
+        _ <- checkCoherency(adapterConfig, todos)
         remoteExamples <- remoteExamplesChangesApplier(adapterConfig, todos)
       } yield ()
     }
@@ -115,7 +136,6 @@ object Synchronize {
     } yield {
       examplesPublishToGivenAdapter(
         examples,
-        adapterName,
         adapterConfig,
         RemoteOperations.remoteExampleStatesFetch,
         RemoteOperations.remoteExamplesChangesApply

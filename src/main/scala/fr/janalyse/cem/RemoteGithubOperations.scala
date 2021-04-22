@@ -2,7 +2,7 @@ package fr.janalyse.cem
 
 import caliban.client.Operations.RootQuery
 import caliban.client.SelectionBuilder
-import fr.janalyse.cem.model.{AddExample, CodeExample, DeleteRemoteExample, IgnoreExample, KeepRemoteExample, RemoteExample, RemoteExampleState, UnsupportedOperation, UpdateRemoteExample, WhatToDo}
+import fr.janalyse.cem.model.{AddExample, CodeExample, OrphanRemoteExample, IgnoreExample, KeepRemoteExample, RemoteExample, RemoteExampleState, UnsupportedOperation, UpdateRemoteExample, WhatToDo}
 import fr.janalyse.cem.tools.DescriptionTools
 import org.json4s.JValue
 import sttp.client3.asynchttpclient.zio.SttpClient
@@ -176,16 +176,11 @@ object RemoteGithubOperations {
 
   def githubRemoteExampleChangesApply(adapterConfig: PublishAdapterConfig)(todo: WhatToDo) : ZIO[Logging with SttpClient, Option[Throwable],Option[RemoteExample]] = {
     todo match {
-      case IgnoreExample(example) => ZIO.succeed(None)
-      case UnsupportedOperation(uuidOption, exampleOption, stateOption) => ZIO.succeed(None)
-      case DeleteRemoteExample(uuid, state) =>
-        for {
-          _ <- log.info(s"Found orphan example : $uuid - ${state.description} - ${state.url}")
-        } yield None
+      case _:IgnoreExample => ZIO.succeed(None)
+      case _:UnsupportedOperation => ZIO.succeed(None)
+      case _:OrphanRemoteExample => ZIO.succeed(None)
       case KeepRemoteExample(uuid, example, state) => ZIO.succeed(Some(RemoteExample(example, state)))
-      //case UpdateRemoteExample(uuid, example, state) => ZIO.succeed(Some(RemoteExample(example, state)))
       case exampleTODO:UpdateRemoteExample => githubRemoteExampleUpdate(adapterConfig, exampleTODO).asSome
-      //case AddExample(uuid, example) => ZIO.succeed(None)
       case exampleTODO:AddExample => githubRemoteExampleAdd(adapterConfig, exampleTODO).asSome
     }
   }
