@@ -108,7 +108,7 @@ object RemoteGithubOperations {
       response <- send(githubInjectAuthToken(query, adapterConfig.token)).map(_.body).absolve.asSomeError
       id <- ZIO.getOrFail( (response \ "id").extractOpt[String] ).asSomeError
       url <- ZIO.getOrFail( (response \ "html_url").extractOpt[String] ).asSomeError
-      _ <- log.info(s"""ADDED $id - ${example.summary.getOrElse("")} - $url""")
+      _ <- log.info(s"""${adapterConfig.targetName} : ADDED $id - ${example.summary.getOrElse("")} - $url""")
     } yield RemoteExample(
       addExample.example,
       RemoteExampleState(
@@ -159,7 +159,7 @@ object RemoteGithubOperations {
       response <- send(authedQuery).map(_.body).absolve.asSomeError
       id <- ZIO.getOrFail( (response \ "id").extractOpt[String] ).asSomeError
       url <- ZIO.getOrFail( (response \ "html_url").extractOpt[String] ).asSomeError
-      _ <- log.info(s"""UPDATED $id - ${example.summary.getOrElse("")} - $url""")
+      _ <- log.info(s"""${adapterConfig.targetName} : UPDATED $id - ${example.summary.getOrElse("")} - $url""")
     } yield RemoteExample(
       update.example,
       RemoteExampleState(

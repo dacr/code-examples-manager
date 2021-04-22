@@ -89,13 +89,17 @@ object Synchronize {
   }
 
   def checkRemote(adapterConfig: PublishAdapterConfig)(todo:WhatToDo):RIO[Logging, Unit] = {
-    val targetName = s"${adapterConfig.kind}/${adapterConfig.activationKeyword}"
+    val targetName = adapterConfig.targetName
     todo match {
       case UnsupportedOperation(uuidOption, exampleOption, stateOption) =>
-          log.info(s"$targetName : Invalid input $uuidOption - $exampleOption - $stateOption")
-      case OrphanRemoteExample(uuid, state) if uuid == adapterConfig.overviewUUID => RIO.unit
-      case OrphanRemoteExample(uuid, state) =>
-          log.info(s"$targetName : Found orphan example $uuid - ${state.description} - ${state.url}")
+        for {
+          _ <- log.info(s"$targetName : Invalid input $uuidOption - $exampleOption - $stateOption")
+        } yield ()
+      case OrphanRemoteExample(uuid, state) if uuid != adapterConfig.overviewUUID=>
+        for {
+          _ <- log.info(s"$targetName : Found orphan example $uuid - ${state.description} - ${state.url}")
+        } yield ()
+      case _:OrphanRemoteExample  => RIO.unit
       case _:IgnoreExample => RIO.unit
       case _:KeepRemoteExample => RIO.unit
       case _:UpdateRemoteExample => RIO.unit
@@ -119,7 +123,7 @@ object Synchronize {
     else {
       for {
         remoteStates <- remoteExampleStatesFetcher(adapterConfig)
-        targetName = s"${adapterConfig.kind}/${adapterConfig.activationKeyword}"
+        targetName = adapterConfig.targetName
         _ <- log.info(s"$targetName : Found ${remoteStates.size}  already published artifacts")
         _ <- log.info(s"$targetName : Found ${examplesToSynchronize.size} synchronisable examples")
         todos = computeWorkToDo(examplesToSynchronize, remoteStates)

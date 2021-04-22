@@ -35,7 +35,9 @@ case class PublishAdapterConfig(
   token: Option[String],
   defaultVisibility: Option[String],
   filenameRenameRules: Map[String, RenameRuleConfig],
-)
+) {
+  def targetName = s"$kind/$activationKeyword"
+}
 
 // Automatically populated by the build process from a generated config file
 case class MetaConfig(
