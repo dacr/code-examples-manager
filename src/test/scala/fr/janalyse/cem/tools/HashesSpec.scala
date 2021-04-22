@@ -1,12 +1,12 @@
-package fr.janalyse.cem
+package fr.janalyse.cem.tools
 
 import fr.janalyse.cem.tools.Hashes._
-import zio.test.junit.JUnitRunnableSpec
 import zio.test.Assertion._
 import zio.test.assert
+import zio.test.junit.JUnitRunnableSpec
 
 
-class HashesTest extends JUnitRunnableSpec {
+class HashesSpec extends JUnitRunnableSpec {
 
 
   // ----------------------------------------------------------------------------------------------

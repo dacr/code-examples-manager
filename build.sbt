@@ -4,7 +4,7 @@ homepage := Some(new URL("https://github.com/dacr/code-examples-manager"))
 licenses += "Apache 2" -> url(s"https://www.apache.org/licenses/LICENSE-2.0.txt")
 scmInfo := Some(ScmInfo(url(s"https://github.com/dacr/code-examples-manager.git"), s"git@github.com:dacr/code-examples-manager.git"))
 
-//scalaVersion := "3.0.0-RC2"
+//scalaVersion := "3.0.0-RC3"
 scalaVersion := "2.13.5"
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature")
 
@@ -39,6 +39,6 @@ libraryDependencies ++= Seq(
   "org.json4s" %% "json4s-ext" % versions.json4s cross CrossVersion.for3Use2_13,
 
   "com.github.pathikrit" %% "better-files" % versions.betterfiles cross CrossVersion.for3Use2_13,
-  "com.github.eikek" %% "yamusca-core" % versions.yamusca cross CrossVersion.for3Use2_13,
+  //"com.github.eikek" %% "yamusca-core" % versions.yamusca cross CrossVersion.for3Use2_13,
   "fr.janalyse" %% "naturalsort" % versions.naturalsort cross CrossVersion.for3Use2_13,
 )

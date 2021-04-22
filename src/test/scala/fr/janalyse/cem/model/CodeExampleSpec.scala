@@ -1,6 +1,5 @@
-package fr.janalyse.cem
+package fr.janalyse.cem.model
 
-import fr.janalyse.cem.model.CodeExample
 import zio.Task
 import zio.test.Assertion._
 import zio.test.assert
@@ -58,7 +57,7 @@ class CodeExampleSpec extends JUnitRunnableSpec {
 
   // ----------------------------------------------------------------------------------------------
   val t3 = test("meta data single value extraction") {
-    import CodeExample.{exampleContentExtractValue=>extractor}
+    import CodeExample.{exampleContentExtractValue => extractor}
     assert(extractor("// summary : hello", "summary"))(equalTo(Option("hello"))) &&
     assert(extractor("// summary :", "summary"))(isNone) &&
     assert(extractor("// summary : ", "summary"))(isNone) &&
@@ -67,7 +66,7 @@ class CodeExampleSpec extends JUnitRunnableSpec {
   }
   // ----------------------------------------------------------------------------------------------
   val t4 = test("meta data list value extraction") {
-    import CodeExample.{exampleContentExtractValueList=>extractor}
+    import CodeExample.{exampleContentExtractValueList => extractor}
     assert(extractor("// publish : toto", "publish"))(equalTo(List("toto"))) &&
     assert(extractor("// publish :", "publish"))(isEmpty) &&
     assert(extractor("// publish : ", "publish"))(isEmpty)

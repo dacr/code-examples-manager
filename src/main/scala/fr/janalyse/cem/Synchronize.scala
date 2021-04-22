@@ -4,7 +4,7 @@ import zio.config.getConfig
 import zio.{Has, IO, RIO, Runtime, Task, ZIO, ZLayer, clock}
 import zio.logging._
 import better.files._
-import fr.janalyse.cem.model.{CodeExample, RemoteExampleState}
+import fr.janalyse.cem.model._
 import sttp.client3.asynchttpclient.zio.{AsyncHttpClientZioBackend, SttpClient}
 import zio.clock.Clock
 
@@ -65,18 +65,45 @@ object Synchronize {
   } yield localExamples
 
 
+
+  def computeWorkToDo(examples: Iterable[CodeExample], states: Iterable[RemoteExampleState]):List[WhatToDo] = {
+    val statesByUUID = states.map(state => state.uuid -> state).toMap
+    val examplesByUUID = examples.flatMap(example => example.uuid.map(_ -> example)).toMap
+    val examplesUUIDs = examplesByUUID.keys.toSet
+    val examplesTriple: Iterable[(Option[String], Option[CodeExample], Option[RemoteExampleState])] =
+      examples
+        .map(example => (example.uuid, Some(example), example.uuid.flatMap(statesByUUID.get))) ++
+      states
+        .filterNot(state => examplesUUIDs.contains(state.uuid))
+        .map(state => (Some(state.uuid), examplesByUUID.get(state.uuid), Some(state)))
+    examplesTriple.toSet.toList.map { tripple:(Option[String],Option[CodeExample],Option[RemoteExampleState]) =>
+      tripple match {
+        case (None, Some(example), None) => IgnoreExample(example)
+        case (Some(uuid), None, Some(state)) => DeleteRemoteExample(uuid, state)
+        case (Some(uuid), Some(example), None) => AddExample(uuid, example)
+        case (Some(uuid), Some(example), Some(state)) if example.checksum == state.checksum => KeepRemoteExample(uuid, example, state)
+        case (Some(uuid), Some(example), Some(state)) if example.checksum != state.checksum => UpdateRemoteExample(uuid, example, state)
+        case (x, y, z) => UnsupportedOperation(x, y, z)
+      }
+    }
+  }
+
   def examplesPublishToGivenAdapter(
     examples: Iterable[CodeExample],
     adapterName:String,
     adapterConfig: PublishAdapterConfig,
-    remoteExampleStatesFetcher: PublishAdapterConfig => RIO[Logging with SttpClient, Iterable[RemoteExampleState]]
+    remoteExampleStatesFetcher: PublishAdapterConfig => RIO[Logging with SttpClient, Iterable[RemoteExampleState]],
+    remoteExamplesChangesApplier: (PublishAdapterConfig, Iterable[WhatToDo]) => RIO[Logging with SttpClient, Iterable[RemoteExample]]
   ): RIO[Logging with SttpClient, Unit] = {
     val examplesToSynchronize = examples.filter(_.publish.contains(adapterConfig.activationKeyword))
-    if (!adapterConfig.enabled || examplesToSynchronize.isEmpty) RIO.succeed(Nil)
+    if (!adapterConfig.enabled || examplesToSynchronize.isEmpty) RIO.succeed(())
     else {
       for {
         remoteStates <- remoteExampleStatesFetcher(adapterConfig)
         _ <- log.info(s"Found ${remoteStates.size} examples already published examples on $adapterName (${adapterConfig.kind}/${adapterConfig.activationKeyword})")
+        _ <- log.info(s"Found ${examplesToSynchronize.size} examples synchronizable on $adapterName (${adapterConfig.kind}/${adapterConfig.activationKeyword})")
+        todos = computeWorkToDo(examplesToSynchronize, remoteStates)
+        remoteExamples <- remoteExamplesChangesApplier(adapterConfig, todos)
       } yield ()
     }
   }
@@ -86,7 +113,13 @@ object Synchronize {
     val results = for {
       (adapterName, adapterConfig) <- adaptersConfig
     } yield {
-      examplesPublishToGivenAdapter(examples, adapterName, adapterConfig, RemoteOperations.remoteExampleStatesFetch)
+      examplesPublishToGivenAdapter(
+        examples,
+        adapterName,
+        adapterConfig,
+        RemoteOperations.remoteExampleStatesFetch,
+        RemoteOperations.remoteExamplesChangesApply
+      )
     }
     RIO.mergeAllPar(results)(())((accu, next) => next)
   }
@@ -104,7 +137,7 @@ object Synchronize {
     _ <- log.info(s"$appName application is starting")
     _ <- log.info(s"$appCode version $version")
     _ <- log.info(s"$appCode project page $projectURL (with configuration documentation) ")
-    examples <- examplesCollect
+    examples <- examplesCollect //.map(_.filter(_.category==Some("cem/tests")))
     _ <- log.info(s"Found ${examples.size} available locally for synchronization purpose")
     _ <- examplesPublish(examples, adaptersConfig)
     endTime <- clock.nanoTime
