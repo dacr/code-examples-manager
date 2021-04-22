@@ -65,19 +65,18 @@ object Synchronize {
   } yield localExamples
 
 
-
-  def computeWorkToDo(examples: Iterable[CodeExample], states: Iterable[RemoteExampleState]):List[WhatToDo] = {
+  def computeWorkToDo(examples: Iterable[CodeExample], states: Iterable[RemoteExampleState]): List[WhatToDo] = {
     val statesByUUID = states.map(state => state.uuid -> state).toMap
     val examplesByUUID = examples.flatMap(example => example.uuid.map(_ -> example)).toMap
     val examplesUUIDs = examplesByUUID.keys.toSet
     val examplesTriple: Iterable[(Option[String], Option[CodeExample], Option[RemoteExampleState])] =
       examples
         .map(example => (example.uuid, Some(example), example.uuid.flatMap(statesByUUID.get))) ++
-      states
-        .filterNot(state => examplesUUIDs.contains(state.uuid))
-        .map(state => (Some(state.uuid), examplesByUUID.get(state.uuid), Some(state)))
-    examplesTriple.toSet.toList.map { tripple:(Option[String],Option[CodeExample],Option[RemoteExampleState]) =>
-      tripple match {
+        states
+          .filterNot(state => examplesUUIDs.contains(state.uuid))
+          .map(state => (Some(state.uuid), examplesByUUID.get(state.uuid), Some(state)))
+    examplesTriple.toSet.toList.map { triple: (Option[String], Option[CodeExample], Option[RemoteExampleState]) =>
+      triple match {
         case (None, Some(example), None) => IgnoreExample(example)
         case (Some(uuid), None, Some(state)) => OrphanRemoteExample(uuid, state)
         case (Some(uuid), Some(example), None) => AddExample(uuid, example)
@@ -88,25 +87,21 @@ object Synchronize {
     }
   }
 
-  def checkRemote(adapterConfig: PublishAdapterConfig)(todo:WhatToDo):RIO[Logging, Unit] = {
-    val targetName = adapterConfig.targetName
+  def checkRemote(adapterConfig: PublishAdapterConfig)(todo: WhatToDo): RIO[Logging, Unit] = {
     todo match {
       case UnsupportedOperation(uuidOption, exampleOption, stateOption) =>
-        for {
-          _ <- log.info(s"$targetName : Invalid input $uuidOption - $exampleOption - $stateOption")
-        } yield ()
-      case OrphanRemoteExample(uuid, state) if uuid != adapterConfig.overviewUUID=>
-        for {
-          _ <- log.info(s"$targetName : Found orphan example $uuid - ${state.description} - ${state.url}")
-        } yield ()
-      case _:OrphanRemoteExample  => RIO.unit
-      case _:IgnoreExample => RIO.unit
-      case _:KeepRemoteExample => RIO.unit
-      case _:UpdateRemoteExample => RIO.unit
-      case _:AddExample => RIO.unit
+        log.info(s"${adapterConfig.targetName} : Invalid input $uuidOption - $exampleOption - $stateOption")
+      case OrphanRemoteExample(uuid, state) if uuid != adapterConfig.overviewUUID =>
+        log.info(s"${adapterConfig.targetName} : Found orphan example $uuid - ${state.description} - ${state.url}")
+      case _: OrphanRemoteExample => RIO.unit
+      case _: IgnoreExample => RIO.unit
+      case _: KeepRemoteExample => RIO.unit
+      case _: UpdateRemoteExample => RIO.unit
+      case _: AddExample => RIO.unit
     }
   }
-  def checkCoherency(adapterConfig: PublishAdapterConfig, todos:Iterable[WhatToDo]): RIO[Logging, Unit] = {
+
+  def checkCoherency(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]): RIO[Logging, Unit] = {
     for {
       _ <- RIO.foreach(todos)(checkRemote(adapterConfig))
     } yield ()
@@ -115,32 +110,41 @@ object Synchronize {
   def examplesPublishToGivenAdapter(
     examples: Iterable[CodeExample],
     adapterConfig: PublishAdapterConfig,
+    config: CodeExampleManagerConfig,
     remoteExampleStatesFetcher: PublishAdapterConfig => RIO[Logging with SttpClient, Iterable[RemoteExampleState]],
     remoteExamplesChangesApplier: (PublishAdapterConfig, Iterable[WhatToDo]) => RIO[Logging with SttpClient, Iterable[RemoteExample]]
   ): RIO[Logging with SttpClient, Unit] = {
     val examplesToSynchronize = examples.filter(_.publish.contains(adapterConfig.activationKeyword))
-    if (!adapterConfig.enabled || examplesToSynchronize.isEmpty) RIO.succeed(())
+    if (!adapterConfig.enabled || examplesToSynchronize.isEmpty) RIO.succeed(Nil)
     else {
       for {
         remoteStates <- remoteExampleStatesFetcher(adapterConfig)
-        targetName = adapterConfig.targetName
-        _ <- log.info(s"$targetName : Found ${remoteStates.size}  already published artifacts")
-        _ <- log.info(s"$targetName : Found ${examplesToSynchronize.size} synchronisable examples")
+        _ <- log.info(s"${adapterConfig.targetName} : Found ${remoteStates.size}  already published artifacts")
+        _ <- log.info(s"${adapterConfig.targetName} : Found ${examplesToSynchronize.size} synchronisable examples")
         todos = computeWorkToDo(examplesToSynchronize, remoteStates)
         _ <- checkCoherency(adapterConfig, todos)
         remoteExamples <- remoteExamplesChangesApplier(adapterConfig, todos)
+        //_ <- log.info(s"${adapterConfig.targetName} : Build examples summary")
+        overviewOption <- Overview.makeOverview(remoteExamples, adapterConfig, config)
+        //_ <- log.info(s"${adapterConfig.targetName} : Publish examples summary")
+        overviewTodo = computeWorkToDo(overviewOption, remoteStates)
+        //overviewHasChanges = overviewTodo.exists(otodo => otodo.isInstanceOf[UpdateRemoteExample] || otodo.isInstanceOf[AddExample])
+        remoteOverview <- remoteExamplesChangesApplier(adapterConfig, overviewTodo)
+        _ <- RIO.foreach(remoteOverview.headOption)(publishedOverview =>
+          log.info(s"${adapterConfig.targetName} : Summary available at ${publishedOverview.state.url}"))
       } yield ()
     }
   }
 
 
-  def examplesPublish(examples: Vector[CodeExample], adaptersConfig: Map[String, PublishAdapterConfig]): RIO[Logging with SttpClient, Unit] = {
+  def examplesPublish(examples: Vector[CodeExample], config: CodeExampleManagerConfig): RIO[Logging with SttpClient, Unit] = {
     val results = for {
-      (adapterName, adapterConfig) <- adaptersConfig
+      (adapterName, adapterConfig) <- config.publishAdapters
     } yield {
       examplesPublishToGivenAdapter(
         examples,
         adapterConfig,
+        config,
         RemoteOperations.remoteExampleStatesFetch,
         RemoteOperations.remoteExamplesChangesApply
       )
@@ -151,9 +155,8 @@ object Synchronize {
 
   def synchronizeEffect: RIO[Logging with Clock with SttpClient with Has[ApplicationConfig], Unit] = for {
     startTime <- clock.nanoTime
-    config <- getConfig[ApplicationConfig]
-    adaptersConfig = config.codeExamplesManagerConfig.publishAdapters
-    metaInfo = config.codeExamplesManagerConfig.metaInfo
+    config <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig)
+    metaInfo = config.metaInfo
     version = metaInfo.version
     appName = metaInfo.name
     appCode = metaInfo.code
@@ -163,7 +166,7 @@ object Synchronize {
     _ <- log.info(s"$appCode project page $projectURL (with configuration documentation) ")
     examples <- examplesCollect //.map(_.filter(_.category==Some("cem/tests")))
     _ <- log.info(s"Found ${examples.size} available locally for synchronization purpose")
-    _ <- examplesPublish(examples, adaptersConfig)
+    _ <- examplesPublish(examples, config)
     endTime <- clock.nanoTime
     _ <- log.info(s"Code examples manager publishing operations took ${(endTime - startTime) / 1000000}ms")
   } yield ()

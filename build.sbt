@@ -39,6 +39,7 @@ libraryDependencies ++= Seq(
   "org.json4s" %% "json4s-ext" % versions.json4s cross CrossVersion.for3Use2_13,
 
   "com.github.pathikrit" %% "better-files" % versions.betterfiles cross CrossVersion.for3Use2_13,
-  //"com.github.eikek" %% "yamusca-core" % versions.yamusca cross CrossVersion.for3Use2_13,
+  "com.github.eikek" %% "yamusca-core" % versions.yamusca cross CrossVersion.for3Use2_13,
+
   "fr.janalyse" %% "naturalsort" % versions.naturalsort cross CrossVersion.for3Use2_13,
 )

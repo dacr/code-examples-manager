@@ -21,10 +21,10 @@ object RemoteOperations {
 
   def remoteExamplesChangesApply(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]):RIO[Logging with SttpClient, Iterable[RemoteExample]] = {
     for {
-      _ <- log.info(s"${adapterConfig.targetName} : Applying changes")
-      _ <- log.info(s"${adapterConfig.targetName} : To add count ${todos.count(_.isInstanceOf[AddExample])}")
-      _ <- log.info(s"${adapterConfig.targetName} : To update count ${todos.count(_.isInstanceOf[UpdateRemoteExample])}")
-      _ <- log.info(s"${adapterConfig.targetName} : To keep count ${todos.count(_.isInstanceOf[KeepRemoteExample])}")
+      //_ <- log.info(s"${adapterConfig.targetName} : Applying changes")
+      //_ <- log.info(s"${adapterConfig.targetName} : To add count ${todos.count(_.isInstanceOf[AddExample])}")
+      //_ <- log.info(s"${adapterConfig.targetName} : To update count ${todos.count(_.isInstanceOf[UpdateRemoteExample])}")
+      //_ <- log.info(s"${adapterConfig.targetName} : To keep count ${todos.count(_.isInstanceOf[KeepRemoteExample])}")
       remoteExamples <-
         if (adapterConfig.kind == "github") RemoteGithubOperations.githubRemoteExamplesChangesApply(adapterConfig, todos)
         //else if (adapterConfig.kind == "gitlab") GitlabRemoteOperations.gitlabRemoteExamplesChangesApply(adapterConfig, todos)
