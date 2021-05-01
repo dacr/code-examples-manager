@@ -11,18 +11,18 @@ scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature")
 mainClass := Some("fr.janalyse.cem.Synchronize")
 
 lazy val versions = new {
-  val sttp = "3.2.3"
+  val sttp = "3.3.0"
   val json4s = "3.6.11"
   val betterfiles = "3.9.1"
   val yamusca = "0.8.0"
   val naturalsort = "1.0.0"
-  val caliban = "0.9.5"
+//  val caliban = "0.9.5"
 }
 
 libraryDependencies ++= Seq(
-  "dev.zio" %% "zio" % "1.0.6" cross CrossVersion.for3Use2_13,
-  "dev.zio" %% "zio-test" % "1.0.6" cross CrossVersion.for3Use2_13,
-  "dev.zio" %% "zio-test-junit" % "1.0.6" cross CrossVersion.for3Use2_13,
+  "dev.zio" %% "zio" % "1.0.7" cross CrossVersion.for3Use2_13,
+  "dev.zio" %% "zio-test" % "1.0.7" cross CrossVersion.for3Use2_13,
+  "dev.zio" %% "zio-test-junit" % "1.0.7" cross CrossVersion.for3Use2_13,
   "dev.zio" %% "zio-logging" % "0.5.8" cross CrossVersion.for3Use2_13,
   "dev.zio" %% "zio-config" % "1.0.4" cross CrossVersion.for3Use2_13,
   "dev.zio" %% "zio-config-magnolia" % "1.0.4" cross CrossVersion.for3Use2_13,
@@ -30,7 +30,7 @@ libraryDependencies ++= Seq(
   "dev.zio" %% "zio-json" % "0.1.4" cross CrossVersion.for3Use2_13,
   "dev.zio" %% "zio-nio" % "1.0.0-RC10" cross CrossVersion.for3Use2_13,
 
-  "com.github.ghostdogpr" %% "caliban-client" % "0.9.5" cross CrossVersion.for3Use2_13,
+//  "com.github.ghostdogpr" %% "caliban-client" % "0.9.5" cross CrossVersion.for3Use2_13,
 
   "com.softwaremill.sttp.client3" %% "async-http-client-backend-zio" % versions.sttp cross CrossVersion.for3Use2_13,
   "com.softwaremill.sttp.client3" %% "json4s" % versions.sttp cross CrossVersion.for3Use2_13,

@@ -54,7 +54,7 @@ object Overview {
       val templateName = "templates/examples-overview.mustache"
       val templateLogic = for {
         //_ <- log.info(s"${adapter.targetName} : Generating overview")
-        overviewContent <- Task.effect(TemplateEngine.layout(config, templateName, overviewContext))
+        overviewContent <- Task.effect(TemplateEngine.layout(templateName, overviewContext))
       } yield {
         CodeExample(
           filename = "index.md",

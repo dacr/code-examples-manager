@@ -1,4 +1,4 @@
-enablePlugins(CodegenPlugin)
+//enablePlugins(CodegenPlugin)
 
 /* ---------------------------------------------------------------------------------------------------------------------
  Generated code can be quite huge and exceed intellij default limits, so add this custom property :
@@ -22,12 +22,12 @@ enablePlugins(CodegenPlugin)
 
 */
 
-Compile / sourceGenerators += Def.task {
-  val inputFile = file("project/github-schema.graphql")
-  val outputFile = (Compile / sourceManaged).value / "fr" / "janalyse" / "cem" / "graphql" / "github" / "Client.scala"
-  outputFile.getParentFile.mkdirs()
-  if (!outputFile.exists()) outputFile.createNewFile()
-  // TODO when possible
-  println(outputFile.file.toString)
-  Seq(outputFile)
-}.taskValue
+//Compile / sourceGenerators += Def.task {
+//  val inputFile = file("project/github-schema.graphql")
+//  val outputFile = (Compile / sourceManaged).value / "fr" / "janalyse" / "cem" / "graphql" / "github" / "Client.scala"
+//  outputFile.getParentFile.mkdirs()
+//  if (!outputFile.exists()) outputFile.createNewFile()
+//  // TODO when possible
+//  println(outputFile.file.toString)
+//  Seq(outputFile)
+//}.taskValue

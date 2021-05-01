@@ -22,7 +22,7 @@ import yamusca.implicits._
 
 
 object TemplateEngine {
-  def layout(config: CodeExampleManagerConfig, templateName: String, context: OverviewContext): String = {
+  def layout(templateName: String, context: OverviewContext): String = {
     import yamusca.imports._
     import yamusca.implicits._
     implicit val exampleConverter: ValueConverter[ExampleContext] = ValueConverter.deriveConverter[ExampleContext]

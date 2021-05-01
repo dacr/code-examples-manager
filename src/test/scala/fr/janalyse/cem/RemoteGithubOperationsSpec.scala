@@ -45,7 +45,7 @@ class RemoteGithubOperationsSpec extends JUnitRunnableSpec {
       example1 <- exampleTask1
       uuid1 <- Task.getOrFail(example1.uuid)
       state1 = RemoteExampleState(
-        remoteId="MDQ6R2lzdDQ1NTk5OTQ=", // // MDQ6R2lzdDQ1NTk5OTQ= --> 04:Gist4559994 --> 4559994
+        remoteId="6e40f8239fa6828ab45a064b8131fdfc", // // MDQ6R2lzdDQ1NTk5OTQ= --> 04:Gist4559994 --> 4559994
         description="desc",
         url="https://truc/aa-bb",
         filename=Some(example1.filename),
@@ -58,7 +58,7 @@ class RemoteGithubOperationsSpec extends JUnitRunnableSpec {
 
     val stub = for {
       _ <-
-        whenRequestMatches(_.uri.toString() == "https://api.github.com/gists/4559994")
+        whenRequestMatches(_.uri.toString() == "https://api.github.com/gists/6e40f8239fa6828ab45a064b8131fdfc")
           .thenRespond("""{"id":"aa-bb", "html_url":"https://truc/aa-bb"}""")
     } yield ()
 

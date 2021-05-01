@@ -27,7 +27,7 @@ object RemoteOperations {
       //_ <- log.info(s"${adapterConfig.targetName} : To keep count ${todos.count(_.isInstanceOf[KeepRemoteExample])}")
       remoteExamples <-
         if (adapterConfig.kind == "github") RemoteGithubOperations.githubRemoteExamplesChangesApply(adapterConfig, todos)
-        //else if (adapterConfig.kind == "gitlab") GitlabRemoteOperations.gitlabRemoteExamplesChangesApply(adapterConfig, todos)
+        else if (adapterConfig.kind == "gitlab") RemoteGitlabOperations.gitlabRemoteExamplesChangesApply(adapterConfig, todos)
         else RIO.fail(new Exception(s"${adapterConfig.targetName} : Unsupported adapter kind ${adapterConfig.kind}"))
     } yield remoteExamples
   }

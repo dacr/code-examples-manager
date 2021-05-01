@@ -128,7 +128,6 @@ object Synchronize {
         overviewOption <- Overview.makeOverview(remoteExamples, adapterConfig, config)
         //_ <- log.info(s"${adapterConfig.targetName} : Publish examples summary")
         overviewTodo = computeWorkToDo(overviewOption, remoteStates)
-        //overviewHasChanges = overviewTodo.exists(otodo => otodo.isInstanceOf[UpdateRemoteExample] || otodo.isInstanceOf[AddExample])
         remoteOverview <- remoteExamplesChangesApplier(adapterConfig, overviewTodo)
         _ <- RIO.foreach(remoteOverview.headOption)(publishedOverview =>
           log.info(s"${adapterConfig.targetName} : Summary available at ${publishedOverview.state.url}"))
