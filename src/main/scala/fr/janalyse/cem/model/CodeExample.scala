@@ -26,7 +26,7 @@ case class CodeExample(
 
 object CodeExample {
   def exampleContentExtractValue(from: String, key: String): Option[String] = {
-    val RE = ("""(?m)(?i)^(?:(?:// )|(?:## )|(?:- )(?:-- )) *""" + key + """ *: *(.*)$""").r
+    val RE = ("""(?m)(?i)^(?:(?:// )|(?:## )|(?:- )|(?:-- )) *""" + key + """ *: *(.*)$""").r
     RE.findFirstIn(from).collect { case RE(value) => value.trim }.filter(_.size>0)
   }
 
