@@ -37,7 +37,6 @@ class RemoteGithubOperationsSpec extends JUnitRunnableSpec {
   val t1 = testM("") {
     val config = PublishAdapterConfig(
       enabled = true, kind = "github", activationKeyword = "gist", apiEndPoint = "https://api.github.com",
-      graphqlEndPoint = "https://api.github.com/graphql", graphqlSchema = "",
       overviewUUID = "cafacafe-cafecafe", token = Some("aaa-aa"), defaultVisibility = None, filenameRenameRules = Map.empty
     )
 

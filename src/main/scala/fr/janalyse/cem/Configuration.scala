@@ -29,8 +29,6 @@ case class PublishAdapterConfig(
   kind: String,
   activationKeyword: String,
   apiEndPoint: String,
-  graphqlEndPoint: String,
-  graphqlSchema: String,
   overviewUUID: String,
   token: Option[String],
   defaultVisibility: Option[String],
