@@ -37,7 +37,7 @@ case class FileCodeExample(
 
 object CodeExample {
   def extractValue(from: String)(key: String): Option[String] = {
-    val RE = ("""(?m)(?i)^(?:(?://)|(?:##)|(?:- )(?:--))\s+""" + key + """\s+:\s+(.*)$""").r
+    val RE = ("""(?m)(?i)^(?:(?://)|(?:##)|(?:- )|(?:--))\s+""" + key + """\s+:\s+(.*)$""").r
     RE.findFirstIn(from).collect { case RE(value) => value.trim }
   }
 
