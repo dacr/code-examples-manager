@@ -21,15 +21,15 @@ object RemoteGitlabOperations {
     ???
   }
 
-  def gitlabRemoteExampleAdd(adapterConfig:PublishAdapterConfig, addExample:AddExample):ZIO[Logging with SttpClient, Option[Throwable],RemoteExample] = {
+  def gitlabRemoteExampleAdd(adapterConfig:PublishAdapterConfig, addExample:AddExample):RIO[Logging with SttpClient, RemoteExample] = {
     ???
   }
 
-  def gitlabRemoteExampleUpdate(adapterConfig:PublishAdapterConfig, update:UpdateRemoteExample):ZIO[Logging with SttpClient, Option[Throwable],RemoteExample] = {
+  def gitlabRemoteExampleUpdate(adapterConfig:PublishAdapterConfig, update:UpdateRemoteExample):RIO[Logging with SttpClient, RemoteExample] = {
     ???
   }
 
-  def gitlabRemoteExampleChangesApply(adapterConfig: PublishAdapterConfig)(todo: WhatToDo) : ZIO[Logging with SttpClient, Option[Throwable],Option[RemoteExample]] = {
+  def gitlabRemoteExampleChangesApply(adapterConfig: PublishAdapterConfig)(todo: WhatToDo) : RIO[Logging with SttpClient, Option[RemoteExample]] = {
     todo match {
       case _:IgnoreExample => ZIO.succeed(None)
       case _:UnsupportedOperation => ZIO.succeed(None)
@@ -42,7 +42,7 @@ object RemoteGitlabOperations {
 
   def gitlabRemoteExamplesChangesApply(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]): RIO[Logging with SttpClient, Iterable[RemoteExample]] = {
     for {
-      remotes <- RIO.collect(todos)(gitlabRemoteExampleChangesApply(adapterConfig)).map(_.flatten)
+      remotes <- RIO.foreach(todos)(gitlabRemoteExampleChangesApply(adapterConfig)).map(_.flatten)
     } yield remotes
   }
 

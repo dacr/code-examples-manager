@@ -187,23 +187,3 @@ object Synchronize {
     Runtime.default.unsafeRun(synchronizeEffect.provideLayer(layers))
   }
 }
-
-
-//  private def publish(adapterConfigName: String, examplesForCurrentAdapter: List[CodeExample], adapter: PublishAdapter): Unit = {
-//    logger.info(s"$adapterConfigName : Synchronizing ${examplesForCurrentAdapter.size} examples using ${adapter.getClass.getName}")
-//    val changes = ExamplesManager.synchronize(examplesForCurrentAdapter, adapter)
-//    LogChanges(changes)
-//    val overviewChange = Overview.updateOverview(changes, adapter, config)
-//    val overviewMessage = s"$adapterConfigName : Examples overview is available at ${overviewChange.publishedUrl.getOrElse("")}"
-//    logger.info(overviewMessage)
-//    println(overviewMessage)
-//  }
-//
-//  private def LogChanges(changes: Seq[Change]): Unit = {
-//    changes
-//      .filterNot(_.isInstanceOf[NoChange])
-//      .map(_.toString)
-//      .sorted
-//      .foreach(logger.info)
-//  }
-//}

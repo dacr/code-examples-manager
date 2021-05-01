@@ -11,10 +11,6 @@ import sttp.client3._
 import sttp.client3.asynchttpclient.zio._
 import sttp.model.Uri
 
-import java.nio.ByteBuffer
-import java.nio.charset.Charset
-import java.util.Base64
-
 
 object RemoteGithubOperations {
   def githubInjectAuthToken[A, B](request: Request[A, B], tokenOption: Option[String]) = {
@@ -77,7 +73,6 @@ object RemoteGithubOperations {
     def worker(uri: Uri): RIO[Logging with SttpClient, Iterable[GistInfo]] = {
       val query = basicRequest.get(uri).response(asJson[Vector[GistInfo]])
       for {
-        _ <- log.info(s"fetching $uri")
         response <- send(githubInjectAuthToken(query, adapterConfig.token))
         gists <- RIO.fromEither(response.body)
         nextLinkOption = response.header("Link").flatMap(webLinkingExtractNext)
@@ -115,8 +110,6 @@ object RemoteGithubOperations {
   }
 
   def githubRemoteExampleAdd(adapterConfig: PublishAdapterConfig, addExample: AddExample): RIO[Logging with SttpClient, RemoteExample] = {
-    import adapterConfig.apiEndPoint
-
     def requestBody(description: String) = Map(
       "description" -> description,
       "public" -> true,
@@ -129,7 +122,7 @@ object RemoteGithubOperations {
     )
 
     for {
-      apiURI <- uriParse(s"$apiEndPoint/gists")
+      apiURI <- uriParse(s"${adapterConfig.apiEndPoint}/gists")
       example = addExample.example
       description <- ZIO.getOrFail(DescriptionTools.makeDescription(example))
       query = basicRequest.post(apiURI).body(requestBody(description)).response(asJson[JValue])
@@ -160,10 +153,9 @@ object RemoteGithubOperations {
         )
       )
     )
-    val apiEndPoint = adapterConfig.apiEndPoint
     val gistId = update.state.remoteId
     for {
-      apiURI <- uriParse(s"$apiEndPoint/gists/$gistId")
+      apiURI <- uriParse(s"${adapterConfig.apiEndPoint}/gists/$gistId")
       example = update.example
       description <- ZIO.getOrFail(DescriptionTools.makeDescription(example))
       query = basicRequest.post(apiURI).body(requestBody(description)).response(asJson[JValue])
