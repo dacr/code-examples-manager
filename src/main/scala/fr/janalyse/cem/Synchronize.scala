@@ -151,6 +151,12 @@ object Synchronize {
     RIO.mergeAllPar(results)(())((accu, next) => next)
   }
 
+  def countExamplesByPublishKeyword(examples: Vector[CodeExample]): Map[String, Int] = {
+    examples
+      .flatMap(example => example.publish.map(key => key -> example))
+      .groupMap { case (key, _) => key } { case (_, ex) => ex }
+      .map { case (key, examples) => key -> examples.size }
+  }
 
   def synchronizeEffect: RIO[Logging with Clock with SttpClient with Has[ApplicationConfig], Unit] = for {
     startTime <- clock.nanoTime
@@ -165,6 +171,7 @@ object Synchronize {
     _ <- log.info(s"$appCode project page $projectURL (with configuration documentation) ")
     examples <- examplesCollect //.map(_.filter(_.category==Some("cem/tests")))
     _ <- log.info(s"Found ${examples.size} available locally for synchronization purpose")
+    _ <- log.info("Available by publishing targets : " + countExamplesByPublishKeyword(examples).toList.sorted.map{case (k,n)=>s"$k:$n"}.mkString(", "))
     _ <- examplesPublish(examples, config)
     endTime <- clock.nanoTime
     _ <- log.info(s"Code examples manager publishing operations took ${(endTime - startTime) / 1000000}ms")
