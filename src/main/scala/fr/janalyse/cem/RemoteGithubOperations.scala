@@ -103,7 +103,7 @@ object RemoteGithubOperations {
   def githubRemoteExampleAdd(adapterConfig: PublishAdapterConfig, todo: AddExample): RIO[Logging with SttpClient, RemoteExample] = {
     def requestBody(description: String) = Map(
       "description" -> description,
-      "public" -> true,
+      "public" -> adapterConfig.defaultVisibility.map(_.trim.toLowerCase == "public").getOrElse(true),
       "files" -> Map(
         todo.example.filename -> Map(
           "filename" -> todo.example.filename,

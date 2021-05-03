@@ -95,7 +95,7 @@ object RemoteGitlabOperations {
       "file_name"->todo.example.filename,
       "content"->todo.example.content,
       "description"->description,
-      "visibility"->"public"
+      "visibility"->adapterConfig.defaultVisibility.getOrElse("public")
     )
 
     for {
