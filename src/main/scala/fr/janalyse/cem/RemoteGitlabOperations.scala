@@ -127,7 +127,7 @@ object RemoteGitlabOperations {
       "file_name"->remoteExampleFileRename(todo.example.filename, adapterConfig),
       "content"->todo.example.content,
       "description"->description,
-      "visibility"->"public"
+      "visibility"->adapterConfig.defaultVisibility.getOrElse("public")
     )
     val snippetId = todo.state.remoteId
     for {
