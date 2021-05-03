@@ -2,6 +2,7 @@ package fr.janalyse.cem
 
 import fr.janalyse.cem.model.{AddExample, CodeExample, IgnoreExample, KeepRemoteExample, OrphanRemoteExample, RemoteExample, RemoteExampleState, UnsupportedOperation, UpdateRemoteExample, WhatToDo}
 import fr.janalyse.cem.tools.DescriptionTools
+import fr.janalyse.cem.tools.DescriptionTools.remoteExampleFileRename
 import fr.janalyse.cem.tools.HttpTools.{uriParse, webLinkingExtractNext}
 import org.json4s.JValue
 import org.json4s.ext.JavaTimeSerializers
@@ -101,16 +102,19 @@ object RemoteGithubOperations {
   }
 
   def githubRemoteExampleAdd(adapterConfig: PublishAdapterConfig, todo: AddExample): RIO[Logging with SttpClient, RemoteExample] = {
-    def requestBody(description: String) = Map(
-      "description" -> description,
-      "public" -> adapterConfig.defaultVisibility.map(_.trim.toLowerCase == "public").getOrElse(true),
-      "files" -> Map(
-        todo.example.filename -> Map(
-          "filename" -> todo.example.filename,
-          "content" -> todo.example.content
+    def requestBody(description: String) = {
+      val filename = remoteExampleFileRename(todo.example.filename, adapterConfig)
+      Map(
+        "description" -> description,
+        "public" -> adapterConfig.defaultVisibility.map(_.trim.toLowerCase == "public").getOrElse(true),
+        "files" -> Map(
+          filename -> Map(
+            "filename" -> filename,
+            "content" -> todo.example.content
+          )
         )
       )
-    )
+    }
 
     for {
       apiURI <- uriParse(s"${adapterConfig.apiEndPoint}/gists")
@@ -135,15 +139,18 @@ object RemoteGithubOperations {
 
 
   def githubRemoteExampleUpdate(adapterConfig: PublishAdapterConfig, todo: UpdateRemoteExample): RIO[Logging with SttpClient, RemoteExample] = {
-    def requestBody(description: String) = Map(
-      "description" -> description,
-      "files" -> Map(
-        todo.state.filename.getOrElse(todo.example.filename) -> Map(
-          "filename" -> todo.example.filename,
-          "content" -> todo.example.content
+    def requestBody(description: String) = {
+      val filename = remoteExampleFileRename(todo.example.filename, adapterConfig)
+      Map(
+        "description" -> description,
+        "files" -> Map(
+          todo.state.filename.getOrElse(filename) -> Map(
+            "filename" -> filename,
+            "content" -> todo.example.content
+          )
         )
       )
-    )
+    }
     val gistId = todo.state.remoteId
     for {
       apiURI <- uriParse(s"${adapterConfig.apiEndPoint}/gists/$gistId")

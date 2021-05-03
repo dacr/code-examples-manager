@@ -2,6 +2,7 @@ package fr.janalyse.cem
 
 import fr.janalyse.cem.model._
 import fr.janalyse.cem.tools.DescriptionTools
+import fr.janalyse.cem.tools.DescriptionTools.remoteExampleFileRename
 import fr.janalyse.cem.tools.HttpTools.{uriParse, webLinkingExtractNext}
 import org.json4s.JValue
 import org.json4s.ext.JavaTimeSerializers
@@ -92,7 +93,7 @@ object RemoteGitlabOperations {
   def gitlabRemoteExampleAdd(adapterConfig:PublishAdapterConfig, todo:AddExample):RIO[Logging with SttpClient, RemoteExample] = {
     def requestBody(description: String) = Map(
       "title"->todo.example.summary,
-      "file_name"->todo.example.filename,
+      "file_name"->remoteExampleFileRename(todo.example.filename, adapterConfig),
       "content"->todo.example.content,
       "description"->description,
       "visibility"->adapterConfig.defaultVisibility.getOrElse("public")
@@ -123,7 +124,7 @@ object RemoteGitlabOperations {
     def requestBody(description: String) = Map(
       "id"->todo.state.remoteId,
       "title"->todo.example.summary,
-      "file_name"->todo.example.filename,
+      "file_name"->remoteExampleFileRename(todo.example.filename, adapterConfig),
       "content"->todo.example.content,
       "description"->description,
       "visibility"->"public"
