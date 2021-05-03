@@ -115,7 +115,7 @@ object Synchronize {
     remoteExamplesChangesApplier: (PublishAdapterConfig, Iterable[WhatToDo]) => RIO[Logging with SttpClient, Iterable[RemoteExample]]
   ): RIO[Logging with SttpClient, Unit] = {
     val examplesToSynchronize = examples.filter(_.publish.contains(adapterConfig.activationKeyword))
-    if (!adapterConfig.enabled || examplesToSynchronize.isEmpty) RIO.unit
+    if (!adapterConfig.enabled || examplesToSynchronize.isEmpty || adapterConfig.token.isEmpty) RIO.unit
     else {
       for {
         remoteStates <- remoteExampleStatesFetcher(adapterConfig)
