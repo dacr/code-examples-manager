@@ -1,6 +1,6 @@
 package fr.janalyse.cem
 
-import fr.janalyse.cem.model.CodeExample
+import fr.janalyse.cem.model.*
 import fr.janalyse.cem.model.WhatToDo.*
 import fr.janalyse.cem.tools.DescriptionTools
 import fr.janalyse.cem.tools.DescriptionTools.remoteExampleFileRename

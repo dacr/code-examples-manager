@@ -29,6 +29,7 @@ libraryDependencies ++= Seq(
 
   "com.softwaremill.sttp.client3" %% "async-http-client-backend-zio" % versions.sttp cross CrossVersion.for3Use2_13,
   "com.softwaremill.sttp.client3" %% "json4s" % versions.sttp cross CrossVersion.for3Use2_13,
+  "com.softwaremill.sttp.client3" %% "zio-json" % versions.sttp cross CrossVersion.for3Use2_13,
 
   "org.json4s" %% "json4s-jackson" % versions.json4s cross CrossVersion.for3Use2_13,
   "org.json4s" %% "json4s-ext" % versions.json4s cross CrossVersion.for3Use2_13,
