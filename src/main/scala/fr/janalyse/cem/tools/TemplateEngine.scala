@@ -17,8 +17,8 @@ package fr.janalyse.cem.tools
 
 import fr.janalyse.cem.CodeExampleManagerConfig
 import fr.janalyse.cem.model.{ExampleContext, ExamplesForCategoryContext, OverviewContext}
-import yamusca.imports._
-import yamusca.implicits._
+import yamusca.imports.*
+import yamusca.implicits.*
 
 
 object TemplateEngine {

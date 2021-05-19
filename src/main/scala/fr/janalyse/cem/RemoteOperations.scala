@@ -1,9 +1,10 @@
 package fr.janalyse.cem
 
-import fr.janalyse.cem.model._
+import fr.janalyse.cem.model.*
+import fr.janalyse.cem.model.WhatToDo.*
 import sttp.client3.asynchttpclient.zio.SttpClient
 import zio.RIO
-import zio.logging._
+import zio.logging.*
 
 
 

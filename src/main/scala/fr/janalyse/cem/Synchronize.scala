@@ -2,9 +2,10 @@ package fr.janalyse.cem
 
 import zio.config.getConfig
 import zio.{Has, IO, RIO, Runtime, Task, ZIO, ZLayer, clock}
-import zio.logging._
-import better.files._
-import fr.janalyse.cem.model._
+import zio.logging.*
+import better.files.*
+import fr.janalyse.cem.model.*
+import fr.janalyse.cem.model.WhatToDo.*
 import sttp.client3.asynchttpclient.zio.{AsyncHttpClientZioBackend, SttpClient}
 import zio.clock.Clock
 
@@ -75,7 +76,7 @@ object Synchronize {
         states
           .filterNot(state => examplesUUIDs.contains(state.uuid))
           .map(state => (Some(state.uuid), examplesByUUID.get(state.uuid), Some(state)))
-    examplesTriple.toSet.toList.map { triple: (Option[String], Option[CodeExample], Option[RemoteExampleState]) =>
+    examplesTriple.toSet.toList.map { (triple: (Option[String], Option[CodeExample], Option[RemoteExampleState])) =>
       triple match {
         case (None, Some(example), None) => IgnoreExample(example)
         case (Some(uuid), None, Some(state)) => OrphanRemoteExample(uuid, state)

@@ -3,7 +3,7 @@ package fr.janalyse.cem.model
 import fr.janalyse.cem.tools.TemplateEngine
 import fr.janalyse.cem.{CodeExampleManagerConfig, PublishAdapterConfig}
 import zio.{RIO, Task}
-import zio.logging._
+import zio.logging.*
 
 import java.time.Instant
 

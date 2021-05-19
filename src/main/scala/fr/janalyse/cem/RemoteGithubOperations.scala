@@ -1,24 +1,28 @@
 package fr.janalyse.cem
 
-import fr.janalyse.cem.model.{AddExample, CodeExample, IgnoreExample, KeepRemoteExample, OrphanRemoteExample, RemoteExample, RemoteExampleState, UnsupportedOperation, UpdateRemoteExample, WhatToDo}
+import fr.janalyse.cem.model.CodeExample
+import fr.janalyse.cem.model.WhatToDo.*
 import fr.janalyse.cem.tools.DescriptionTools
 import fr.janalyse.cem.tools.DescriptionTools.remoteExampleFileRename
 import fr.janalyse.cem.tools.HttpTools.{uriParse, webLinkingExtractNext}
-import org.json4s.JValue
+import org.json4s.{Formats, JValue}
 import org.json4s.ext.JavaTimeSerializers
+import org.json4s.jackson.Serialization
 import sttp.client3.asynchttpclient.zio.SttpClient
-import sttp.client3.json4s._
+import sttp.client3.json4s.*
 import zio.{RIO, Task, ZIO}
-import zio.logging._
-import sttp.client3._
-import sttp.client3.asynchttpclient.zio._
+import zio.logging.*
+import sttp.client3.*
+import sttp.client3.asynchttpclient.zio.*
 import sttp.model.Uri
+
+
 
 
 object RemoteGithubOperations {
 
-  implicit val formats = org.json4s.DefaultFormats.lossless ++ JavaTimeSerializers.all
-  implicit val serialization = org.json4s.jackson.Serialization
+  implicit val formats: Formats = org.json4s.DefaultFormats.lossless ++ JavaTimeSerializers.all
+  implicit val serialization: Serialization.type = org.json4s.jackson.Serialization
 
   def githubInjectAuthToken[A, B](request: Request[A, B], tokenOption: Option[String]) = {
     val base = request.header("Accept", "application/vnd.github.v3+json")

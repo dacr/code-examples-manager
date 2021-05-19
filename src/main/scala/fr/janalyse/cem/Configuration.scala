@@ -1,12 +1,12 @@
 package fr.janalyse.cem
 
-import scala.util.Properties._
-import better.files._
+import scala.util.Properties.*
+import better.files.*
 import com.typesafe.config.{Config, ConfigFactory}
 import zio.{IO, RIO, ZIO, system}
-import zio.config._
-import zio.config.typesafe._
-import zio.config.magnolia.DeriveConfigDescriptor._
+import zio.config.*
+import zio.config.typesafe.*
+import zio.config.magnolia.DeriveConfigDescriptor.*
 
 case class ExamplesConfig(
   searchRootDirectories: String,
