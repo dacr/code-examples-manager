@@ -55,6 +55,16 @@ object RemoteGithubOperations {
     files: Map[String, GistFileInfo],
   )
 
+  case class GistCreateResponse(
+    id: String,
+    html_url: String,
+  )
+
+  case class GistUpdateResponse(
+    id: String,
+    html_url: String,
+  )
+
   def githubUser(adapterConfig: PublishAdapterConfig): RIO[Logging with SttpClient, GithubUser] = {
     import adapterConfig.apiEndPoint
     for {
@@ -124,10 +134,10 @@ object RemoteGithubOperations {
       apiURI <- uriParse(s"${adapterConfig.apiEndPoint}/gists")
       example = todo.example
       description <- ZIO.getOrFail(DescriptionTools.makeDescription(example))
-      query = basicRequest.post(apiURI).body(requestBody(description)).response(asJson[JValue])
+      query = basicRequest.post(apiURI).body(requestBody(description)).response(asJson[GistCreateResponse])
       response <- send(githubInjectAuthToken(query, adapterConfig.token)).map(_.body).absolve
-      id <- ZIO.getOrFail((response \ "id").extractOpt[String])
-      url <- ZIO.getOrFail((response \ "html_url").extractOpt[String])
+      id = response.id
+      url = response.html_url
       _ <- log.info(s"""${adapterConfig.targetName} : ADDED ${todo.uuid} - ${example.summary.getOrElse("")} - $url""")
     } yield RemoteExample(
       todo.example,
@@ -160,11 +170,11 @@ object RemoteGithubOperations {
       apiURI <- uriParse(s"${adapterConfig.apiEndPoint}/gists/$gistId")
       example = todo.example
       description <- ZIO.getOrFail(DescriptionTools.makeDescription(example))
-      query = basicRequest.post(apiURI).body(requestBody(description)).response(asJson[JValue])
+      query = basicRequest.post(apiURI).body(requestBody(description)).response(asJson[GistUpdateResponse])
       authedQuery = githubInjectAuthToken(query, adapterConfig.token)
       response <- send(authedQuery).map(_.body).absolve
-      id <- ZIO.getOrFail((response \ "id").extractOpt[String])
-      url <- ZIO.getOrFail((response \ "html_url").extractOpt[String])
+      id = response.id
+      url = response.html_url
       _ <- log.info(s"""${adapterConfig.targetName} : UPDATED ${todo.uuid} - ${example.summary.getOrElse("")} - $url""")
     } yield RemoteExample(
       todo.example,
