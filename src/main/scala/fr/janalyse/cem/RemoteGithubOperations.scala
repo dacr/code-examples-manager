@@ -13,17 +13,11 @@ import sttp.model.Uri
 import sttp.client3.*
 import sttp.client3.asynchttpclient.zio.*
 import sttp.client3.circe.*
-import io.circe.Codec
-import io.circe.Codec.AsObject
-
+import io.circe.*
+import sttp.client3.circe.circeBodySerializer
 
 
 object RemoteGithubOperations {
-
-  def githubInjectAuthToken[A, B](request: Request[A, B], tokenOption: Option[String]) = {
-    val base = request.header("Accept", "application/vnd.github.v3+json")
-    tokenOption.fold(base)(token => base.header("Authorization", s"token $token"))
-  }
 
   case class GithubUser(
     login: String, // user name in APIs
@@ -33,7 +27,7 @@ object RemoteGithubOperations {
     private_gists: Int,
     followers: Int,
     following: Int,
-  ) derives AsObject
+  ) derives Codec.AsObject
 
   case class GistFileInfo(
     filename: String,
@@ -41,7 +35,7 @@ object RemoteGithubOperations {
     language: String,
     raw_url: String,
     size: Int,
-  ) derives AsObject
+  ) derives Codec.AsObject
 
   case class GistInfo(
     id: String,
@@ -49,23 +43,22 @@ object RemoteGithubOperations {
     html_url: String,
     public: Boolean,
     files: Map[String, GistFileInfo],
-  ) derives AsObject
+  ) derives Codec.AsObject
 
   case class GistCreateResponse(
     id: String,
     html_url: String,
-  ) derives AsObject
+  ) derives Codec.AsObject
 
   case class GistUpdateResponse(
     id: String,
     html_url: String,
-  ) derives AsObject
+  ) derives Codec.AsObject
 
-  given Codec[GithubUser] = Codec.AsObject.derived
-  given Codec[GistFileInfo] = Codec.AsObject.derived
-  given Codec[GistInfo] = Codec.AsObject.derived
-  given Codec[GistCreateResponse] = Codec.AsObject.derived
-  given Codec[GistUpdateResponse] = Codec.AsObject.derived
+  def githubInjectAuthToken[A, B](request: Request[A, B], tokenOption: Option[String]) = {
+    val base = request.header("Accept", "application/vnd.github.v3+json")
+    tokenOption.fold(base)(token => base.header("Authorization", s"token $token"))
+  }
 
   def githubUser(adapterConfig: PublishAdapterConfig): RIO[Logging with SttpClient, GithubUser] = {
     import adapterConfig.apiEndPoint
@@ -89,6 +82,7 @@ object RemoteGithubOperations {
         nextGists <- RIO.foreach(nextUriOption)(uri => worker(uri)).map(_.getOrElse(Iterable.empty))
       } yield gists ++ nextGists
     }
+
     val perPage = 100
     for {
       userLogin <- githubUser(adapterConfig).map(_.login)
@@ -118,9 +112,9 @@ object RemoteGithubOperations {
   }
 
   def githubRemoteExampleAdd(adapterConfig: PublishAdapterConfig, todo: AddExample): RIO[Logging with SttpClient, RemoteExample] = {
-    def requestBody(description: String) = {
+    def requestBody(description: String):Json = {
       val filename = remoteExampleFileRename(todo.example.filename, adapterConfig)
-      Map(
+      val body = Map(
         "description" -> description,
         "public" -> adapterConfig.defaultVisibility.map(_.trim.toLowerCase == "public").getOrElse(true),
         "files" -> Map(
@@ -130,6 +124,7 @@ object RemoteGithubOperations {
           )
         )
       )
+      body
     }
 
     for {
@@ -155,9 +150,9 @@ object RemoteGithubOperations {
 
 
   def githubRemoteExampleUpdate(adapterConfig: PublishAdapterConfig, todo: UpdateRemoteExample): RIO[Logging with SttpClient, RemoteExample] = {
-    def requestBody(description: String) = {
+    def requestBody(description: String): Json = {
       val filename = remoteExampleFileRename(todo.example.filename, adapterConfig)
-      Map(
+      val body = Map(
         "description" -> description,
         "files" -> Map(
           todo.state.filename.getOrElse(filename) -> Map(
@@ -166,7 +161,9 @@ object RemoteGithubOperations {
           )
         )
       )
+      body
     }
+
     val gistId = todo.state.remoteId
     for {
       apiURI <- uriParse(s"${adapterConfig.apiEndPoint}/gists/$gistId")

@@ -12,18 +12,13 @@ import zio.logging.*
 import sttp.model.Uri
 import sttp.client3.*
 import sttp.client3.asynchttpclient.zio.*
-import sttp.client3.circe.*
-import io.circe.generic.auto.*
+import io.circe.Codec
+import sttp.client3.circe.circeBodySerializer
 
 import java.time.OffsetDateTime
 
 
 object RemoteGitlabOperations {
-
-  def gitlabInjectAuthToken[A,B](request:Request[A,B], tokenOption: Option[String]) = {
-    val base = request.header("Content-Type","application/json")
-    tokenOption.fold(base)(token => base.header("Authorization", s"Bearer $token"))
-  }
 
   case class SnippetAuthor(
     id: Long,
@@ -32,7 +27,7 @@ object RemoteGitlabOperations {
     state: String,
     avatar_url: String,
     web_url: String
-  )
+  ) derives Codec.AsObject
 
   case class SnippetInfo(
     id: Long,
@@ -45,7 +40,40 @@ object RemoteGitlabOperations {
     created_at: OffsetDateTime,
     web_url: String,
     raw_url: String,
-  )
+  ) derives Codec.AsObject
+
+  case class SnippetAddRequest(
+    title: Option[String],
+    file_name: String,
+    content: String,
+    description: String,
+    visibility: String
+  ) derives Codec.AsObject
+
+  case class SnippetUpdateRequest(
+    id: String,
+    title: Option[String],
+    file_name: String,
+    content: String,
+    description: String,
+    visibility: String,
+  ) derives Codec.AsObject
+
+  /*
+    given Codec[SnippetAuthor] = Codec.AsObject.derived
+
+    given Codec[SnippetInfo] = Codec.AsObject.derived
+
+    given Codec[SnippetAddRequest] = Codec.AsObject.derived
+
+    given Codec[SnippetUpdateRequest] = Codec.AsObject.derived
+   */
+
+  def gitlabInjectAuthToken[A, B](request: Request[A, B], tokenOption: Option[String]) = {
+    val base = request.header("Content-Type", "application/json")
+    tokenOption.fold(base)(token => base.header("Authorization", s"Bearer $token"))
+  }
+
 
   def gitlabRemoteExamplesStatesFetch(adapterConfig: PublishAdapterConfig): RIO[Logging with SttpClient, Iterable[RemoteExampleState]] = {
     import adapterConfig.apiEndPoint
@@ -88,13 +116,14 @@ object RemoteGitlabOperations {
     }
   }
 
-  def gitlabRemoteExampleAdd(adapterConfig:PublishAdapterConfig, todo:AddExample):RIO[Logging with SttpClient, RemoteExample] = {
-    def requestBody(description: String) = Map(
-      "title"->todo.example.summary,
-      "file_name"->remoteExampleFileRename(todo.example.filename, adapterConfig),
-      "content"->todo.example.content,
-      "description"->description,
-      "visibility"->adapterConfig.defaultVisibility.getOrElse("public")
+  def gitlabRemoteExampleAdd(adapterConfig: PublishAdapterConfig, todo: AddExample): RIO[Logging with SttpClient, RemoteExample] = {
+
+    def requestBody(description: String): SnippetAddRequest = SnippetAddRequest(
+      title = todo.example.summary,
+      file_name = remoteExampleFileRename(todo.example.filename, adapterConfig),
+      content = todo.example.content,
+      description = description,
+      visibility = adapterConfig.defaultVisibility.getOrElse("public")
     )
 
     for {
@@ -118,15 +147,16 @@ object RemoteGitlabOperations {
       ))
   }
 
-  def gitlabRemoteExampleUpdate(adapterConfig:PublishAdapterConfig, todo:UpdateRemoteExample):RIO[Logging with SttpClient, RemoteExample] = {
-    def requestBody(description: String) = Map(
-      "id"->todo.state.remoteId,
-      "title"->todo.example.summary,
-      "file_name"->remoteExampleFileRename(todo.example.filename, adapterConfig),
-      "content"->todo.example.content,
-      "description"->description,
-      "visibility"->adapterConfig.defaultVisibility.getOrElse("public")
+  def gitlabRemoteExampleUpdate(adapterConfig: PublishAdapterConfig, todo: UpdateRemoteExample): RIO[Logging with SttpClient, RemoteExample] = {
+    def requestBody(description: String): SnippetUpdateRequest = SnippetUpdateRequest(
+      id = todo.state.remoteId,
+      title = todo.example.summary,
+      file_name = remoteExampleFileRename(todo.example.filename, adapterConfig),
+      content = todo.example.content,
+      description = description,
+      visibility = adapterConfig.defaultVisibility.getOrElse("public")
     )
+
     val snippetId = todo.state.remoteId
     for {
       apiURI <- uriParse(s"${adapterConfig.apiEndPoint}/snippets/$snippetId")
@@ -150,14 +180,14 @@ object RemoteGitlabOperations {
       ))
   }
 
-  def gitlabRemoteExampleChangesApply(adapterConfig: PublishAdapterConfig)(todo: WhatToDo) : RIO[Logging with SttpClient, Option[RemoteExample]] = {
+  def gitlabRemoteExampleChangesApply(adapterConfig: PublishAdapterConfig)(todo: WhatToDo): RIO[Logging with SttpClient, Option[RemoteExample]] = {
     todo match {
-      case _:IgnoreExample => ZIO.succeed(None)
-      case _:UnsupportedOperation => ZIO.succeed(None)
-      case _:OrphanRemoteExample => ZIO.succeed(None)
+      case _: IgnoreExample => ZIO.succeed(None)
+      case _: UnsupportedOperation => ZIO.succeed(None)
+      case _: OrphanRemoteExample => ZIO.succeed(None)
       case KeepRemoteExample(uuid, example, state) => ZIO.succeed(Some(RemoteExample(example, state)))
-      case exampleTODO:UpdateRemoteExample => gitlabRemoteExampleUpdate(adapterConfig, exampleTODO).asSome
-      case exampleTODO:AddExample => gitlabRemoteExampleAdd(adapterConfig, exampleTODO).asSome
+      case exampleTODO: UpdateRemoteExample => gitlabRemoteExampleUpdate(adapterConfig, exampleTODO).asSome
+      case exampleTODO: AddExample => gitlabRemoteExampleAdd(adapterConfig, exampleTODO).asSome
     }
   }
 
