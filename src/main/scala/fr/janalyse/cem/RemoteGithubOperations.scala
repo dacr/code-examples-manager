@@ -5,24 +5,20 @@ import fr.janalyse.cem.model.WhatToDo.*
 import fr.janalyse.cem.tools.DescriptionTools
 import fr.janalyse.cem.tools.DescriptionTools.remoteExampleFileRename
 import fr.janalyse.cem.tools.HttpTools.{uriParse, webLinkingExtractNext}
-import org.json4s.{Formats, JValue}
-import org.json4s.ext.JavaTimeSerializers
-import org.json4s.jackson.Serialization
 import sttp.client3.asynchttpclient.zio.SttpClient
-import sttp.client3.json4s.*
+import sttp.client3.circe.*
 import zio.{RIO, Task, ZIO}
 import zio.logging.*
+import sttp.model.Uri
 import sttp.client3.*
 import sttp.client3.asynchttpclient.zio.*
-import sttp.model.Uri
-
+import sttp.client3.circe.*
+import io.circe.Codec
+import io.circe.Codec.AsObject
 
 
 
 object RemoteGithubOperations {
-
-  implicit val formats: Formats = org.json4s.DefaultFormats.lossless ++ JavaTimeSerializers.all
-  implicit val serialization: Serialization.type = org.json4s.jackson.Serialization
 
   def githubInjectAuthToken[A, B](request: Request[A, B], tokenOption: Option[String]) = {
     val base = request.header("Accept", "application/vnd.github.v3+json")
@@ -37,7 +33,7 @@ object RemoteGithubOperations {
     private_gists: Int,
     followers: Int,
     following: Int,
-  )
+  ) derives AsObject
 
   case class GistFileInfo(
     filename: String,
@@ -45,7 +41,7 @@ object RemoteGithubOperations {
     language: String,
     raw_url: String,
     size: Int,
-  )
+  ) derives AsObject
 
   case class GistInfo(
     id: String,
@@ -53,17 +49,23 @@ object RemoteGithubOperations {
     html_url: String,
     public: Boolean,
     files: Map[String, GistFileInfo],
-  )
+  ) derives AsObject
 
   case class GistCreateResponse(
     id: String,
     html_url: String,
-  )
+  ) derives AsObject
 
   case class GistUpdateResponse(
     id: String,
     html_url: String,
-  )
+  ) derives AsObject
+
+  given Codec[GithubUser] = Codec.AsObject.derived
+  given Codec[GistFileInfo] = Codec.AsObject.derived
+  given Codec[GistInfo] = Codec.AsObject.derived
+  given Codec[GistCreateResponse] = Codec.AsObject.derived
+  given Codec[GistUpdateResponse] = Codec.AsObject.derived
 
   def githubUser(adapterConfig: PublishAdapterConfig): RIO[Logging with SttpClient, GithubUser] = {
     import adapterConfig.apiEndPoint

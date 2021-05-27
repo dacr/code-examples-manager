@@ -73,7 +73,7 @@ case class ApplicationConfig(
 object ApplicationConfig {
   def apply(): RIO[system.System, ApplicationConfig] = {
     val metaConfigResourceName = "cem-meta.conf"
-    val automaticConfigDescriptor = descriptor[ApplicationConfig].mapKey(toKebabCase)
+    val automaticConfigDescriptor:ConfigDescriptor[ApplicationConfig] = descriptor[ApplicationConfig].mapKey(toKebabCase)
 
     for {
       customConfigFileEnvOption <- zio.system.env("CEM_CONFIG_FILE")
