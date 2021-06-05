@@ -1,7 +1,6 @@
 package fr.janalyse.cem
 
 import scala.util.Properties.*
-import better.files.*
 import com.typesafe.config.{Config, ConfigFactory}
 import zio.{IO, RIO, ZIO, system}
 import zio.config.*

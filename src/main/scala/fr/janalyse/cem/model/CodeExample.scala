@@ -1,7 +1,8 @@
 package fr.janalyse.cem.model
 
 import fr.janalyse.cem.tools.Hashes.sha1
-import zio.Task
+import zio.*
+import zio.blocking.*
 
 import java.io.File
 
@@ -52,7 +53,7 @@ object CodeExample {
     }
   }
 
-  def makeExample(exampleFilepath: String, fromSearchRoot: String, contentFetcher: Task[String]): Task[CodeExample] = {
+  def makeExample(exampleFilepath: String, fromSearchRoot: String, contentFetcher: RIO[Blocking, String]): RIO[Blocking, CodeExample] = {
     for {
       rawContent <- contentFetcher
       filename = filenameFromFilepath(exampleFilepath)
