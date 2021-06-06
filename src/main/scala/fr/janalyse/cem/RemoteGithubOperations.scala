@@ -60,16 +60,6 @@ object RemoteGithubOperations {
     tokenOption.fold(base)(token => base.header("Authorization", s"token $token"))
   }
 
-  case class GistCreateResponse(
-    id: String,
-    html_url: String,
-  )
-
-  case class GistUpdateResponse(
-    id: String,
-    html_url: String,
-  )
-
   def githubUser(adapterConfig: PublishAdapterConfig): RIO[Logging with SttpClient, GithubUser] = {
     import adapterConfig.apiEndPoint
     for {
