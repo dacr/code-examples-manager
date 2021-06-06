@@ -112,19 +112,20 @@ object RemoteGithubOperations {
   }
 
   def githubRemoteExampleAdd(adapterConfig: PublishAdapterConfig, todo: AddExample): RIO[Logging with SttpClient, RemoteExample] = {
-    def requestBody(description: String):Json = {
+    def requestBody(description: String): Json = {
+      import io.circe.Encoder.*
       val filename = remoteExampleFileRename(todo.example.filename, adapterConfig)
-      val body = Map(
-        "description" -> description,
-        "public" -> adapterConfig.defaultVisibility.map(_.trim.toLowerCase == "public").getOrElse(true),
-        "files" -> Map(
-          filename -> Map(
-            "filename" -> filename,
-            "content" -> todo.example.content
-          )
-        )
-      )
-      body
+      val publicBool = adapterConfig.defaultVisibility.map(_.trim.toLowerCase == "public").getOrElse(true)
+      Json.fromJsonObject(JsonObject( // TODO - find a better way
+        "description" -> encodeString(description),
+        "public" -> encodeBoolean(publicBool),
+        "files" -> Json.fromJsonObject(JsonObject(
+          filename -> Json.fromJsonObject(JsonObject(
+            "filename" -> encodeString(filename),
+            "content" -> encodeString(todo.example.content)
+          ))
+        ))
+      ))
     }
 
     for {
@@ -151,17 +152,19 @@ object RemoteGithubOperations {
 
   def githubRemoteExampleUpdate(adapterConfig: PublishAdapterConfig, todo: UpdateRemoteExample): RIO[Logging with SttpClient, RemoteExample] = {
     def requestBody(description: String): Json = {
+      import io.circe.Encoder.*
       val filename = remoteExampleFileRename(todo.example.filename, adapterConfig)
-      val body = Map(
-        "description" -> description,
-        "files" -> Map(
-          todo.state.filename.getOrElse(filename) -> Map(
-            "filename" -> filename,
-            "content" -> todo.example.content
-          )
-        )
-      )
-      body
+      val oldFilename = todo.state.filename.getOrElse(filename)
+      Json.fromJsonObject(JsonObject( // TODO - find a better way
+        "description" -> encodeString(description),
+        "files" -> Json.fromJsonObject(JsonObject(
+          oldFilename -> Json.fromJsonObject(JsonObject(
+            "filename" -> encodeString(filename),
+            "content" -> encodeString(todo.example.content)
+          ))
+        ))
+      ))
+
     }
 
     val gistId = todo.state.remoteId
