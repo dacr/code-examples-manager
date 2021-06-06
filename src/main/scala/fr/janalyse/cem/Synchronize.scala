@@ -32,21 +32,21 @@ object Synchronize {
     } yield content
   }
 
-  def findFiles(fromRootFilename: SearchRoot, globPattern: SearchGlob): RIO[Blocking, Iterator[ExampleFilename]] = {
+  def findFiles(fromRootFilename: SearchRoot, globPattern: SearchGlob): RIO[Blocking, List[ExampleFilename]] = {
     val pathMatcher = FileSystem.default.getPathMatcher(s"glob:$globPattern")
     def pathFilter(path:Path, fileAttrs:BasicFileAttributes):Boolean = pathMatcher.matches(path.toFile.toPath)
     val from = Path(fromRootFilename)
     val foundFilesStream = Files.find(from)(pathFilter)
     val foundFiles = for {
       foundFiles <- foundFilesStream.run(ZSink.collectAll)
-    } yield foundFiles.to(Iterator).map(_.toFile.getPath) // TODO
+    } yield foundFiles.to(List).map(_.toFile.getPath) // TODO
     foundFiles
   }
 
   def examplesFromGivenRoot(
     searchRoot: SearchRoot,
     globPattern: SearchGlob,
-    filesFetcher: (SearchRoot, SearchGlob) => RIO[Blocking, Iterator[ExampleFilename]],
+    filesFetcher: (SearchRoot, SearchGlob) => RIO[Blocking, List[ExampleFilename]],
     contentFetcher: ExampleFilename => RIO[Blocking, FileContent]
   ): RIO[Blocking, List[CodeExample]] = {
     for {
@@ -192,7 +192,7 @@ object Synchronize {
     _ <- log.info(s"$appName application is starting")
     _ <- log.info(s"$appCode version $version")
     _ <- log.info(s"$appCode project page $projectURL (with configuration documentation) ")
-    examples <- examplesCollect.map(_.filter(_.category==Some("cem/tests")))
+    examples <- examplesCollect
     _ <- log.info(s"Found ${examples.size} available locally for synchronization purpose")
     _ <- log.info("Available by publishing targets : " + countExamplesByPublishKeyword(examples).toList.sorted.map { case (k, n) => s"$k:$n" }.mkString(", "))
     _ <- examplesPublish(examples, config)

@@ -16,7 +16,6 @@ lazy val versions = new {
   val zioconfig = "1.0.6"
   val ziologging = "0.5.10"
   val naturalsort = "1.0.1"
-  val circe = "0.14.1"
 }
 
 libraryDependencies ++= Seq(

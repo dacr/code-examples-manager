@@ -1,6 +1,6 @@
 # CEM - Code Examples Manager [![][CodeExamplesManagerImg]][CodeExamplesManagerLnk] ![Scala CI][scalaci-master]
 
-Code example manager (CEM) is a software tool which manage your code examples
+Code example manager (CEM) is a software tool which manage your notes and your code examples
 and provide publish mechanisms to [github.com][githubcom] (as [gists][gists]) or
 [gitlab.com][gitlabcom] (as [snippets][snippets]).
 
@@ -8,7 +8,7 @@ Current [Code example manager (CEM)][cem] implementation is just a command line 
 which compare locally available examples with already published ones in order to find
 what it should do (add, update, do nothing). 
 
-All my code examples (my programming knowledge base) are now shared using this tool,
+All my notes and code examples (my programming knowledge base) are now managed using this tool,
 you can take a look to [my public gists overview on github][mygists] to illustrate the 
 publishing work achieved by CEM. 
 
@@ -28,15 +28,12 @@ is really not easy and time-consuming, in particular if you want to keep them up
 
 That's why I've decided to automate their management. The first iteration was script based,
 (and so shared as a gist) but with the increase of complexity , a dedicated project became 
-necessary, and so **code-examples-manager** was born. After a huge refactoring, which has
-introduced mustache templating, better configuration management, multiple publishing targets,
-gitlab snippets support, **code-examples-manager** is now mature. I'm using it at least once 
-each week.
+necessary, and so **code-examples-manager** was born. After a first huge refactoring, which has
+introduced templating, better configuration management, multiple publishing targets,
+gitlab snippets support, **code-examples-manager** became mature. I'm using it almost everyday.
+More recently it has been rewritten from scratch using Scala3 and [ZIO][zio].
 
 _Start small, make it works quickly, and then refactor !_
-
-A lot of thanks to [Li Haoyi][lihaoyi] for his wonderful work on [ammonite][amm] which is
-probably the best solution for code examples and scripting in [scala][scala].
 
 ## Quick start
 
@@ -144,6 +141,8 @@ allow a simple configuration way based on environment variables which override d
 |CEM_GITHUB_TOKEN           | github authentication token for gists API access, see below for how to get this token
 |CEM_EXAMPLES_OVERVIEW_UUID | the fixed UUID for the overview GIST which list all examples, default value is `cafacafe-cafecafe`
 |CEM_CONFIG_FILE            | your custom advanced configuration file (optional, see next section for more information)
+|CEM_GITHUB_ENABLED         | to enable or disable standard GITHUB support, default is true
+|CEM_GITLAB_ENABLED         | to enable or disable standard GITLAB support, default is true
 
 Configuration examples :
 ```shell
@@ -190,7 +189,23 @@ Get an access token from gitlab.com :
 - **Keep it carefully as it is not possible to retrieve it later.**
 - **And of course KEEP IT SECURE**
 
+## Project history
 
+- 2019-06 - Poc#1 example proof of concept
+- 2019-07 - Poc#2 example proof of concept (in prod)
+- 2019-08 - Switch to a real world project
+- 2019-09 - In prod for my own usage
+- 2020-07 - First public release
+- 2021-05 - Full refactoring to use [ZIO][zio]- pure functional
+- 2021-06 - Migration to Scala3
+
+## Acknowledgements
+
+- A lot of thanks to [Li Haoyi][lihaoyi] for his wonderful work on [ammonite][amm] which is
+  probably the best solution for code examples and scripting in [scala][scala].
+- Of course a lot of thanks to the ZIO team, and the wonderful content they've made available
+  on [ZIO site](zio), and on YouTube.
+  
 
 [CodeExamplesManager]:    https://github.com/dacr/code-examples-manager
 [CodeExamplesManagerImg]: https://img.shields.io/maven-central/v/fr.janalyse/code-examples-manager_2.13.svg
@@ -213,3 +228,4 @@ Get an access token from gitlab.com :
 [rules]: https://github.com/dacr/the-rules-for-good-code-examples
 [cs]: https://get-coursier.io/
 [csget]: https://get-coursier.io/docs/cli-installation
+[zio]: https://zio.dev/

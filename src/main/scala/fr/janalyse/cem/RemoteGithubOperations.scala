@@ -32,7 +32,7 @@ object RemoteGithubOperations {
   case class GistFileInfo(
     filename: String,
     `type`: String,
-    language: String,
+    language: Option[String],
     raw_url: String,
     size: Int,
   ) derives Codec.AsObject
