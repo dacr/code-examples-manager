@@ -192,7 +192,7 @@ object Synchronize {
     _ <- log.info(s"$appName application is starting")
     _ <- log.info(s"$appCode version $version")
     _ <- log.info(s"$appCode project page $projectURL (with configuration documentation) ")
-    examples <- examplesCollect //.map(_.filter(_.category==Some("cem/tests")))
+    examples <- examplesCollect.map(_.filter(_.category==Some("cem/tests")))
     _ <- log.info(s"Found ${examples.size} available locally for synchronization purpose")
     _ <- log.info("Available by publishing targets : " + countExamplesByPublishKeyword(examples).toList.sorted.map { case (k, n) => s"$k:$n" }.mkString(", "))
     _ <- examplesPublish(examples, config)
@@ -203,7 +203,7 @@ object Synchronize {
 
   //@main
   def main(args: Array[String]): Unit = {
-    val configLayer = ZLayer.fromEffect(ApplicationConfig())
+    val configLayer = ZLayer.fromEffect(Configuration())
     val httpClientLayer = AsyncHttpClientZioBackend.layer()
     val clockLayer = Clock.live
     val blockLayer = Blocking.live

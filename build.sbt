@@ -15,7 +15,6 @@ lazy val versions = new {
   val zionio = "1.0.0-RC11"
   val zioconfig = "1.0.6"
   val ziologging = "0.5.10"
-  val json4s = "3.6.11"
   val naturalsort = "1.0.1"
   val circe = "0.14.1"
 }
