@@ -1,29 +1,23 @@
 package fr.janalyse.cem
 
-import fr.janalyse.cem.model.{AddExample, CodeExample, IgnoreExample, KeepRemoteExample, OrphanRemoteExample, RemoteExample, RemoteExampleState, UnsupportedOperation, UpdateRemoteExample, WhatToDo}
+import fr.janalyse.cem.model.*
+import fr.janalyse.cem.model.WhatToDo.*
 import fr.janalyse.cem.tools.DescriptionTools
 import fr.janalyse.cem.tools.DescriptionTools.remoteExampleFileRename
 import fr.janalyse.cem.tools.HttpTools.{uriParse, webLinkingExtractNext}
-import org.json4s.JValue
-import org.json4s.ext.JavaTimeSerializers
 import sttp.client3.asynchttpclient.zio.SttpClient
-import sttp.client3.json4s._
+import sttp.client3.circe.*
 import zio.{RIO, Task, ZIO}
-import zio.logging._
-import sttp.client3._
-import sttp.client3.asynchttpclient.zio._
+import zio.logging.*
 import sttp.model.Uri
+import sttp.client3.*
+import sttp.client3.asynchttpclient.zio.*
+import sttp.client3.circe.*
+import io.circe.*
+import sttp.client3.circe.circeBodySerializer
 
 
 object RemoteGithubOperations {
-
-  implicit val formats = org.json4s.DefaultFormats.lossless ++ JavaTimeSerializers.all
-  implicit val serialization = org.json4s.jackson.Serialization
-
-  def githubInjectAuthToken[A, B](request: Request[A, B], tokenOption: Option[String]) = {
-    val base = request.header("Accept", "application/vnd.github.v3+json")
-    tokenOption.fold(base)(token => base.header("Authorization", s"token $token"))
-  }
 
   case class GithubUser(
     login: String, // user name in APIs
@@ -33,15 +27,15 @@ object RemoteGithubOperations {
     private_gists: Int,
     followers: Int,
     following: Int,
-  )
+  ) derives Codec.AsObject
 
   case class GistFileInfo(
     filename: String,
     `type`: String,
-    language: String,
+    language: Option[String],
     raw_url: String,
     size: Int,
-  )
+  ) derives Codec.AsObject
 
   case class GistInfo(
     id: String,
@@ -49,7 +43,22 @@ object RemoteGithubOperations {
     html_url: String,
     public: Boolean,
     files: Map[String, GistFileInfo],
-  )
+  ) derives Codec.AsObject
+
+  case class GistCreateResponse(
+    id: String,
+    html_url: String,
+  ) derives Codec.AsObject
+
+  case class GistUpdateResponse(
+    id: String,
+    html_url: String,
+  ) derives Codec.AsObject
+
+  def githubInjectAuthToken[A, B](request: Request[A, B], tokenOption: Option[String]) = {
+    val base = request.header("Accept", "application/vnd.github.v3+json")
+    tokenOption.fold(base)(token => base.header("Authorization", s"token $token"))
+  }
 
   case class GistCreateResponse(
     id: String,
@@ -83,6 +92,7 @@ object RemoteGithubOperations {
         nextGists <- RIO.foreach(nextUriOption)(uri => worker(uri)).map(_.getOrElse(Iterable.empty))
       } yield gists ++ nextGists
     }
+
     val perPage = 100
     for {
       userLogin <- githubUser(adapterConfig).map(_.login)
@@ -112,18 +122,20 @@ object RemoteGithubOperations {
   }
 
   def githubRemoteExampleAdd(adapterConfig: PublishAdapterConfig, todo: AddExample): RIO[Logging with SttpClient, RemoteExample] = {
-    def requestBody(description: String) = {
+    def requestBody(description: String): Json = {
+      import io.circe.Encoder.*
       val filename = remoteExampleFileRename(todo.example.filename, adapterConfig)
-      Map(
-        "description" -> description,
-        "public" -> adapterConfig.defaultVisibility.map(_.trim.toLowerCase == "public").getOrElse(true),
-        "files" -> Map(
-          filename -> Map(
-            "filename" -> filename,
-            "content" -> todo.example.content
-          )
-        )
-      )
+      val publicBool = adapterConfig.defaultVisibility.map(_.trim.toLowerCase == "public").getOrElse(true)
+      Json.fromJsonObject(JsonObject( // TODO - find a better way
+        "description" -> encodeString(description),
+        "public" -> encodeBoolean(publicBool),
+        "files" -> Json.fromJsonObject(JsonObject(
+          filename -> Json.fromJsonObject(JsonObject(
+            "filename" -> encodeString(filename),
+            "content" -> encodeString(todo.example.content)
+          ))
+        ))
+      ))
     }
 
     for {
@@ -149,18 +161,22 @@ object RemoteGithubOperations {
 
 
   def githubRemoteExampleUpdate(adapterConfig: PublishAdapterConfig, todo: UpdateRemoteExample): RIO[Logging with SttpClient, RemoteExample] = {
-    def requestBody(description: String) = {
+    def requestBody(description: String): Json = {
+      import io.circe.Encoder.*
       val filename = remoteExampleFileRename(todo.example.filename, adapterConfig)
-      Map(
-        "description" -> description,
-        "files" -> Map(
-          todo.state.filename.getOrElse(filename) -> Map(
-            "filename" -> filename,
-            "content" -> todo.example.content
-          )
-        )
-      )
+      val oldFilename = todo.state.filename.getOrElse(filename)
+      Json.fromJsonObject(JsonObject( // TODO - find a better way
+        "description" -> encodeString(description),
+        "files" -> Json.fromJsonObject(JsonObject(
+          oldFilename -> Json.fromJsonObject(JsonObject(
+            "filename" -> encodeString(filename),
+            "content" -> encodeString(todo.example.content)
+          ))
+        ))
+      ))
+
     }
+
     val gistId = todo.state.remoteId
     for {
       apiURI <- uriParse(s"${adapterConfig.apiEndPoint}/gists/$gistId")
