@@ -12,8 +12,6 @@ All my notes and code examples (my programming knowledge base) are now managed u
 you can take a look to [my public gists overview on github][mygists] to illustrate the 
 publishing work achieved by CEM. 
 
-The origin of this tool comes from [this talk][ac2019talk] originally presented at [AlpesCraft 2019][ac2019].
-
 ## Why ?
 
 Code examples are very important, each example is most of the time designed to focus
@@ -24,16 +22,8 @@ parts of them are working.
 **[See the rules for good code examples][rules] for more information.**
 
 Managing hundreds of published code example files as gists (github) and/or snippets (gitlab)
-is really not easy and time-consuming, in particular if you want to keep them up to date.
-
-That's why I've decided to automate their management. The first iteration was script based,
-(and so shared as a gist) but with the increase of complexity , a dedicated project became 
-necessary, and so **code-examples-manager** was born. After a first huge refactoring, which has
-introduced templating, better configuration management, multiple publishing targets,
-gitlab snippets support, **code-examples-manager** became mature. I'm using it almost everyday.
-More recently it has been rewritten from scratch using Scala3 and [ZIO][zio].
-
-_Start small, make it works quickly, and then refactor !_
+is really not easy and time-consuming, in particular if you want to keep them up to date. This
+is the main issue addressed by this software.
 
 ## Quick start
 
