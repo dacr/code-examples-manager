@@ -2,8 +2,8 @@ package fr.janalyse.cem
 
 import fr.janalyse.cem.model.CodeExample
 import zio.{Exit, ZIO}
-import zio.test._
-import zio.test.Assertion._
+import zio.test.*
+import zio.test.Assertion.*
 import zio.test.junit.JUnitRunnableSpec
 
 class SynchronizeSpec extends JUnitRunnableSpec {

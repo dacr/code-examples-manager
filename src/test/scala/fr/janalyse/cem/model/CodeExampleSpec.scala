@@ -1,7 +1,7 @@
 package fr.janalyse.cem.model
 
 import zio.Task
-import zio.test.Assertion._
+import zio.test.Assertion.*
 import zio.test.assert
 import zio.test.junit.JUnitRunnableSpec
 

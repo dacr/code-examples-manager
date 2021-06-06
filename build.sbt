@@ -21,6 +21,7 @@ libraryDependencies ++= Seq(
   "dev.zio" %% "zio" % versions.zio,
   "dev.zio" %% "zio-test" % versions.zio,
   "dev.zio" %% "zio-test-junit" % versions.zio,
+  "dev.zio" %% "zio-test-sbt" % versions.zio,
   "dev.zio" %% "zio-nio" % versions.zionio,
   "dev.zio" %% "zio-logging" % versions.ziologging,
   "dev.zio" %% "zio-config" % versions.zioconfig,
@@ -32,6 +33,9 @@ libraryDependencies ++= Seq(
 
   "fr.janalyse" %% "naturalsort" % versions.naturalsort,
 )
+
+testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+
 
 enablePlugins(SbtTwirl)
 

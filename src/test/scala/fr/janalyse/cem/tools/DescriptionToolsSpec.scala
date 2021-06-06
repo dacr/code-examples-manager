@@ -1,8 +1,8 @@
 package fr.janalyse.cem.tools
 
 import fr.janalyse.cem.model.CodeExample
-import fr.janalyse.cem.tools.DescriptionTools._
-import zio.test.Assertion._
+import fr.janalyse.cem.tools.DescriptionTools.*
+import zio.test.Assertion.*
 import zio.test.assert
 import zio.test.junit.JUnitRunnableSpec
 

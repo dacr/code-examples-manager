@@ -1,7 +1,7 @@
 package fr.janalyse.cem.tools
 
-import fr.janalyse.cem.tools.Hashes._
-import zio.test.Assertion._
+import fr.janalyse.cem.tools.Hashes.*
+import zio.test.Assertion.*
 import zio.test.assert
 import zio.test.junit.JUnitRunnableSpec
 

@@ -2,14 +2,14 @@ package fr.janalyse.cem
 
 import fr.janalyse.cem.model.*
 import fr.janalyse.cem.model.WhatToDo.*
-import fr.janalyse.cem.tools.DescriptionTools._
+import fr.janalyse.cem.tools.DescriptionTools.*
 import sttp.client3.asynchttpclient.zio.AsyncHttpClientZioBackend
 import sttp.client3.asynchttpclient.zio.stubbing.whenRequestMatches
 import zio.{Task, ZIO}
-import zio.test.Assertion._
-import zio.test.{assert, assertM}
+import zio.test.Assertion.*
+import zio.test.*
 import zio.test.junit.JUnitRunnableSpec
-import zio.logging._
+import zio.logging.*
 import zio.blocking.Blocking
 
 class RemoteGithubOperationsSpec extends JUnitRunnableSpec {
