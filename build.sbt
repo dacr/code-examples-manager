@@ -25,7 +25,6 @@ libraryDependencies ++= Seq(
   "dev.zio" %% "zio-nio" % versions.zionio,
   "dev.zio" %% "zio-logging" % versions.ziologging,
   "dev.zio" %% "zio-config" % versions.zioconfig,
-  "dev.zio" %% "zio-config-magnolia" % versions.zioconfig cross CrossVersion.for3Use2_13,
   "dev.zio" %% "zio-config-typesafe" % versions.zioconfig,
 
   "com.softwaremill.sttp.client3" %% "async-http-client-backend-zio" % versions.sttp,

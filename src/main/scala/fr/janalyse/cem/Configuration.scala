@@ -7,7 +7,6 @@ import zio.config.*
 import zio.config.typesafe.*
 import zio.config.ConfigDescriptor.*
 import zio.config.ConfigSource.*
-//import zio.config.magnolia.DeriveConfigDescriptor.*
 
 final case class ExamplesConfig(
   searchRootDirectories: String,
