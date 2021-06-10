@@ -4,13 +4,13 @@ Code example manager (CEM) is a software tool which manage your notes and your c
 and provide publish mechanisms to [github.com][githubcom] (as [gists][gists]) or
 [gitlab.com][gitlabcom] (as [snippets][snippets]).
 
+All my notes and code examples (my programming knowledge base) are now managed using this tool,
+you can take a look to **[my public gists overview on github][mygists]** to illustrate the 
+publishing work achieved by CEM. 
+
 Current [Code example manager (CEM)][cem] implementation is just a command line tool
 which compare locally available examples with already published ones in order to find
-what it should do (add, update, do nothing). 
-
-All my notes and code examples (my programming knowledge base) are now managed using this tool,
-you can take a look to [my public gists overview on github][mygists] to illustrate the 
-publishing work achieved by CEM. 
+what it should do (add, update, do nothing).
 
 ## Why ?
 
@@ -54,7 +54,7 @@ Instructions example with github.com publishing configuration :
   ```
 - Run the following command from your terminal (`cs` is the [coursier][cs] CLI command):
   ```
-  cs launch fr.janalyse::code-examples-manager:1.0.9
+  cs launch fr.janalyse::code-examples-manager:2.0.3
   ```
   - you can even use `cs launch fr.janalyse::code-examples-manager:latest.release` to always use the latest release
   - current release is : [![][CodeExamplesManagerImg]][CodeExamplesManagerLnk]
@@ -198,7 +198,7 @@ Get an access token from gitlab.com :
   
 
 [CodeExamplesManager]:    https://github.com/dacr/code-examples-manager
-[CodeExamplesManagerImg]: https://img.shields.io/maven-central/v/fr.janalyse/code-examples-manager_2.13.svg
+[CodeExamplesManagerImg]: https://img.shields.io/maven-central/v/fr.janalyse/code-examples-manager_3.svg
 [CodeExamplesManagerLnk]: https://search.maven.org/#search%7Cga%7C1%7Cfr.janalyse.code-examples-manager
 [scalaci-master]: https://github.com/dacr/code-examples-manager/workflows/Scala%20CI/badge.svg
 [mygists]: https://gist.github.com/c071a7b7d3de633281cbe84a34be47f1
