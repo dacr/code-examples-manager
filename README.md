@@ -8,6 +8,8 @@ All my notes and code examples (my programming knowledge base) are now managed u
 you can take a look to **[my public gists overview on github][mygists]** to illustrate the 
 publishing work achieved by CEM. 
 
+![](images/cloudtags.png)
+
 Current [Code example manager (CEM)][cem] implementation is just a command line tool
 which compare locally available examples with already published ones in order to find
 what it should do (add, update, do nothing).
