@@ -25,7 +25,13 @@ parts of them are working.
 
 Managing hundreds of published code example files as gists (github) and/or snippets (gitlab)
 is really not easy and time-consuming, in particular if you want to keep them up to date. This
-is the main issue addressed by this software.
+is the main issue addressed by this software. 
+
+![](images/created-examples-trend.png)
+
+As you can see through the previous charts, once you have industrialized your notes and code
+examples, analytics on your examples become quite easy, and a lot of advanced features become
+possible... So stay connected to this project ;)
 
 ## Quick start
 
