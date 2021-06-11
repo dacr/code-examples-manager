@@ -123,16 +123,18 @@ allow a simple configuration way based on environment variables which override d
 
 ### Simplified configuration
 
-|env or property name       | description
-|---------------------------|----------------
-|CEM_SEARCH_ROOTS           | examples search roots
-|CEM_SEARCH_GLOB            | examples files globs
-|CEM_GITLAB_TOKEN           | gitlab authentication token for snippets API access
-|CEM_GITHUB_TOKEN           | github authentication token for gists API access, see below for how to get this token
-|CEM_EXAMPLES_OVERVIEW_UUID | the fixed UUID for the overview GIST which list all examples, default value is `cafacafe-cafecafe`
-|CEM_CONFIG_FILE            | your custom advanced configuration file (optional, see next section for more information)
-|CEM_GITHUB_ENABLED         | to enable or disable standard GITHUB support, default is true
-|CEM_GITLAB_ENABLED         | to enable or disable standard GITLAB support, default is true
+|env or property name       | description                                                   | default value
+|---------------------------|---------------------------------------------------------------|---------------------------
+|CEM_SEARCH_ROOTS           | examples search roots (comma separated)                       | ""
+|CEM_SEARCH_GLOB            | examples files globs                                          | *see configuration file*
+|CEM_EXAMPLES_OVERVIEW_UUID | the fixed UUID for the overview GIST which list all examples  | "cafacafe-cafecafe"
+|CEM_CONFIG_FILE            | your custom advanced configuration file (optional)            | *undefined*
+|CEM_GITHUB_TOKEN           | github authentication token for gists API access              | *more information below*
+|CEM_GITHUB_ENABLED         | to enable or disable standard GITHUB support                  | true
+|CEM_GITHUB_API             | Github API http end point                                     | "https://api.github.com"
+|CEM_GITLAB_TOKEN           | gitlab authentication token for snippets API access           | *more information below*
+|CEM_GITLAB_ENABLED         | to enable or disable standard GITLAB support                  | true
+|CEM_GITLAB_API             | Gitlab API http end point                                     | "https://gitlab.com/api/v4"
 
 Configuration examples :
 ```shell
