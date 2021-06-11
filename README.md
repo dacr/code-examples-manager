@@ -100,6 +100,7 @@ Request keys in description header are the following :
     `amm -c 'println(java.util.UUID.randomUUID.toString)'`
   - This python oneliner :  
     `python -c "import uuid, sys;sys.stdout.write(str(uuid.uuid4()))"`
+  - Or use a dedicated UUID plugin for your IDE such as "UUID Generator" for IntelliJ IDEA
 - **execution** : how to execute the example, execution runtime release constraints, ...
 
 ## CEM operations
@@ -125,15 +126,17 @@ allow a simple configuration way based on environment variables which override d
 
 |env or property name       | description                                                   | default value
 |---------------------------|---------------------------------------------------------------|---------------------------
-|CEM_SEARCH_ROOTS           | examples search roots (comma separated)                       | ""
-|CEM_SEARCH_GLOB            | examples files globs                                          | *see configuration file*
-|CEM_EXAMPLES_OVERVIEW_UUID | the fixed UUID for the overview GIST which list all examples  | "cafacafe-cafecafe"
-|CEM_CONFIG_FILE            | your custom advanced configuration file (optional)            | *undefined*
-|CEM_GITHUB_TOKEN           | github authentication token for gists API access              | *more information below*
-|CEM_GITHUB_ENABLED         | to enable or disable standard GITHUB support                  | true
+|CEM_SEARCH_ROOTS           | Examples search roots (comma separated)                       | ""
+|CEM_SEARCH_GLOB            | Examples files globs                                          | *see configuration file*
+|CEM_EXAMPLES_OVERVIEW_UUID | The fixed UUID for the overview GIST which list all examples  | "cafacafe-cafecafe"
+|CEM_CONFIG_FILE            | Your custom advanced configuration file (optional)            | *undefined*
+|CEM_GITHUB_ENABLED         | To enable or disable standard GITHUB support                  | true
+|CEM_GITHUB_ACTIVATION_KEY  | Example publish keyword for github                            | "gist"
+|CEM_GITHUB_TOKEN           | Github authentication token for gists API access              | *more information below*
 |CEM_GITHUB_API             | Github API http end point                                     | "https://api.github.com"
+|CEM_GITLAB_ENABLED         | To enable or disable standard GITLAB support                  | true
+|CEM_GITLAB_ACTIVATION_KEY  | Example publish keyword for the gitlab                        | "snippet"
 |CEM_GITLAB_TOKEN           | gitlab authentication token for snippets API access           | *more information below*
-|CEM_GITLAB_ENABLED         | to enable or disable standard GITLAB support                  | true
 |CEM_GITLAB_API             | Gitlab API http end point                                     | "https://gitlab.com/api/v4"
 
 Configuration examples :
