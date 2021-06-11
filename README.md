@@ -146,6 +146,7 @@ allow a simple configuration way based on environment variables which override d
 |CEM_GITLAB_ACTIVATION_KEY  | Example publish keyword for the gitlab                        | "snippet"
 |CEM_GITLAB_TOKEN           | gitlab authentication token for snippets API access           | *more information below*
 |CEM_GITLAB_API             | Gitlab API http end point                                     | "https://gitlab.com/api/v4"
+|CEM_GITLAB_VISIBILITY      | Gitlab published examples chosen visibility                   | "public"
 
 Configuration examples :
 ```shell
