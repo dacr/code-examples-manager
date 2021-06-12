@@ -16,19 +16,18 @@ object DescriptionTools {
   def makeDescription(example: CodeExample): Option[String] = {
     for {
       summary <- example.summary
-      uuid <- example.uuid
-      chksum = example.checksum
-      cemURL = "https://github.com/dacr/code-examples-manager"
+      uuid    <- example.uuid
+      chksum   = example.checksum
+      cemURL   = "https://github.com/dacr/code-examples-manager"
     } yield s"$summary / published by $cemURL #$uuid/$chksum"
   }
 
-  /**
-    * rename file only on the remote publish site in order to take benefit of colorization feature
+  /** rename file only on the remote publish site in order to take benefit of colorization feature
     * @param filename
-    * @param config
+    *   @param config
     * @return
     */
-  def remoteExampleFileRename(filename:String, config: PublishAdapterConfig):String = {
-    config.filenameRenameRules.values.foldLeft(filename){ (current, rule) => rule.rename(current)}
+  def remoteExampleFileRename(filename: String, config: PublishAdapterConfig): String = {
+    config.filenameRenameRules.values.foldLeft(filename) { (current, rule) => rule.rename(current) }
   }
 }

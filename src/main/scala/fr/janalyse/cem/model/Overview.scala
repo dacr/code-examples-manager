@@ -8,30 +8,29 @@ import zio.logging.*
 import java.time.Instant
 
 case class OverviewContext(
-  examplesCount:Int,
-  examples: List[ExampleContext],
-  examplesByCategory: List[ExamplesForCategoryContext],
-  projectName: String,
-  projectURL: String,
-  version: String,
-  lastUpdated: String
+    examplesCount: Int,
+    examples: List[ExampleContext],
+    examplesByCategory: List[ExamplesForCategoryContext],
+    projectName: String,
+    projectURL: String,
+    version: String,
+    lastUpdated: String
 )
-case class ExampleContext(category:String, filename:String, summary:String, url:String)
+case class ExampleContext(category: String, filename: String, summary: String, url: String)
 case class ExamplesForCategoryContext(category: String, categoryExamples: Seq[ExampleContext])
-
-
 
 object Overview {
 
   def makeOverview(publishedExamples: Iterable[RemoteExample], adapter: PublishAdapterConfig, config: CodeExampleManagerConfig): RIO[Logging, Option[CodeExample]] = {
-    if (publishedExamples.isEmpty) RIO.none else {
+    if (publishedExamples.isEmpty) RIO.none
+    else {
       import fr.janalyse.tools.NaturalSort.ord
-      val exampleContexts = for {
+      val exampleContexts           = for {
         publishedExample <- publishedExamples.toSeq
-        category = publishedExample.example.category.getOrElse("Without category")
-        filename = publishedExample.example.filename
-        summary = publishedExample.example.summary.getOrElse("")
-        url = publishedExample.state.url
+        category          = publishedExample.example.category.getOrElse("Without category")
+        filename          = publishedExample.example.filename
+        summary           = publishedExample.example.summary.getOrElse("")
+        url               = publishedExample.state.url
       } yield {
         ExampleContext(category = category, filename = filename, summary = summary, url = url)
       }
@@ -51,8 +50,8 @@ object Overview {
         version = config.metaInfo.version,
         lastUpdated = Instant.now().toString
       )
-      val templateName = "templates/examples-overview.mustache"
-      val templateLogic = for {
+      val templateName    = "templates/examples-overview.mustache"
+      val templateLogic   = for {
         //_ <- log.info(s"${adapter.targetName} : Generating overview")
         overviewContent <- Task.effect(ExamplesOverviewTemplate.render(overviewContext).body)
       } yield {

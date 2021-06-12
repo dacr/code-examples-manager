@@ -6,13 +6,11 @@ import sttp.client3.asynchttpclient.zio.SttpClient
 import zio.RIO
 import zio.logging.*
 
-
-
 object RemoteOperations {
 
   def remoteExampleStatesFetch(adapterConfig: PublishAdapterConfig): RIO[Logging with SttpClient, Iterable[RemoteExampleState]] = {
     for {
-      _ <- log.info(s"${adapterConfig.targetName} : Fetching already published examples")
+      _      <- log.info(s"${adapterConfig.targetName} : Fetching already published examples")
       states <-
         if (adapterConfig.kind == "github") RemoteGithubOperations.githubRemoteExamplesStatesFetch(adapterConfig)
         else if (adapterConfig.kind == "gitlab") RemoteGitlabOperations.gitlabRemoteExamplesStatesFetch(adapterConfig)
@@ -20,7 +18,7 @@ object RemoteOperations {
     } yield states
   }
 
-  def remoteExamplesChangesApply(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]):RIO[Logging with SttpClient, Iterable[RemoteExample]] = {
+  def remoteExamplesChangesApply(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]): RIO[Logging with SttpClient, Iterable[RemoteExample]] = {
     for {
       //_ <- log.info(s"${adapterConfig.targetName} : Applying changes")
       //_ <- log.info(s"${adapterConfig.targetName} : To add count ${todos.count(_.isInstanceOf[AddExample])}")

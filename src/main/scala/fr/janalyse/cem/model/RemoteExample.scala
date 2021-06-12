@@ -1,6 +1,6 @@
 package fr.janalyse.cem.model
 
 case class RemoteExample(
-  example:CodeExample,
-  state:RemoteExampleState
+    example: CodeExample,
+    state: RemoteExampleState
 )

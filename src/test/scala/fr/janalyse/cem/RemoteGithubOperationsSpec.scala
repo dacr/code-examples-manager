@@ -17,9 +17,9 @@ class RemoteGithubOperationsSpec extends JUnitRunnableSpec {
   import RemoteGithubOperations._
 
   val exampleTask1 = {
-    val filename = "test-data/sample1/fake-testing-pi.sc"
+    val filename   = "test-data/sample1/fake-testing-pi.sc"
     val searchRoot = "test-data/sample1"
-    val content =
+    val content    =
       """// summary : Simplest scalatest test framework usage.
         |// keywords : scalatest, pi, @testable
         |// publish : gist, snippet
@@ -38,23 +38,29 @@ class RemoteGithubOperationsSpec extends JUnitRunnableSpec {
   // ----------------------------------------------------------------------------------------------
   val t1 = testM("") {
     val config = PublishAdapterConfig(
-      enabled = true, kind = "github", activationKeyword = "gist", apiEndPoint = "https://api.github.com",
-      overviewUUID = "cafacafe-cafecafe", token = Some("aaa-aa"), defaultVisibility = None, filenameRenameRules = Map.empty
+      enabled = true,
+      kind = "github",
+      activationKeyword = "gist",
+      apiEndPoint = "https://api.github.com",
+      overviewUUID = "cafacafe-cafecafe",
+      token = Some("aaa-aa"),
+      defaultVisibility = None,
+      filenameRenameRules = Map.empty
     )
 
     val logic = for {
       example1 <- exampleTask1
-      uuid1 <- Task.getOrFail(example1.uuid)
-      state1 = RemoteExampleState(
-        remoteId="6e40f8239fa6828ab45a064b8131fdfc", // // MDQ6R2lzdDQ1NTk5OTQ= --> 04:Gist4559994 --> 4559994
-        description="desc",
-        url="https://truc/aa-bb",
-        filename=Some(example1.filename),
-        uuid=uuid1,
-        checksum=example1.checksum
-      )
-      todos = List(UpdateRemoteExample(uuid1,example1, state1))
-      results <- githubRemoteExamplesChangesApply(config, todos)
+      uuid1    <- Task.getOrFail(example1.uuid)
+      state1    = RemoteExampleState(
+                    remoteId = "6e40f8239fa6828ab45a064b8131fdfc", // // MDQ6R2lzdDQ1NTk5OTQ= --> 04:Gist4559994 --> 4559994
+                    description = "desc",
+                    url = "https://truc/aa-bb",
+                    filename = Some(example1.filename),
+                    uuid = uuid1,
+                    checksum = example1.checksum
+                  )
+      todos     = List(UpdateRemoteExample(uuid1, example1, state1))
+      results  <- githubRemoteExamplesChangesApply(config, todos)
     } yield results
 
     val stub = for {
@@ -64,9 +70,9 @@ class RemoteGithubOperationsSpec extends JUnitRunnableSpec {
     } yield ()
 
     val httpClientLayer = AsyncHttpClientZioBackend.stubLayer
-    val stubbedLogic = stub *> logic
-    val layers = Logging.ignore ++ httpClientLayer ++ Blocking.live
-    assertM(stubbedLogic.provideLayer(layers).run)( succeeds(anything))
+    val stubbedLogic    = stub *> logic
+    val layers          = Logging.ignore ++ httpClientLayer ++ Blocking.live
+    assertM(stubbedLogic.provideLayer(layers).run)(succeeds(anything))
   }
 
   // ----------------------------------------------------------------------------------------------

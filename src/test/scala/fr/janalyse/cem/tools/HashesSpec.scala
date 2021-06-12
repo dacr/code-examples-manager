@@ -5,9 +5,7 @@ import zio.test.Assertion.*
 import zio.test.assert
 import zio.test.junit.JUnitRunnableSpec
 
-
 class HashesSpec extends JUnitRunnableSpec {
-
 
   // ----------------------------------------------------------------------------------------------
   val t1 = test("sha1 compute the right hash value") {
