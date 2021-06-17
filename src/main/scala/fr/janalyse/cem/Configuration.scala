@@ -60,10 +60,15 @@ final case class MetaConfig(
   def projectURL: String = projectPage.getOrElse("https://github.com/dacr")
 }
 
+final case class SummaryConfig(
+  title: String
+)
+
 final case class CodeExampleManagerConfig(
   examples: ExamplesConfig,
   publishAdapters: Map[String, PublishAdapterConfig],
-  metaInfo: MetaConfig
+  metaInfo: MetaConfig,
+  summary: SummaryConfig
 )
 
 final case class ApplicationConfig(
@@ -93,7 +98,7 @@ object Configuration {
       map("filename-rename-rules")(renameRuleConfig)
   ).to[PublishAdapterConfig]
 
-  val metaConfig: ConfigDescriptor[MetaConfig] = (
+  val metaConfig = (
     string("project-name").optional |@|
       string("project-group").optional |@|
       string("project-page").optional |@|
@@ -103,10 +108,15 @@ object Configuration {
       string("build-uuid").optional
   ).to[MetaConfig]
 
+  val summaryConfig = (
+    string("title")
+  ).to[SummaryConfig]
+
   val codeExampleManagerConfig: ConfigDescriptor[CodeExampleManagerConfig] = (
     nested("examples")(examplesConfig) |@|
       map("publish-adapters")(publishAdapterConfig) |@|
-      nested("meta-info")(metaConfig)
+      nested("meta-info")(metaConfig) |@|
+      nested("summary")(summaryConfig)
   ).to[CodeExampleManagerConfig]
 
   val applicationConfig: ConfigDescriptor[ApplicationConfig] = (

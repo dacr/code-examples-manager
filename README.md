@@ -138,6 +138,7 @@ allow a simple configuration way based on environment variables which override d
 |CEM_SEARCH_GLOB            | Examples files globs                                          | *see configuration file*
 |CEM_EXAMPLES_OVERVIEW_UUID | The fixed UUID for the overview GIST which list all examples  | "cafacafe-cafecafe"
 |CEM_CONFIG_FILE            | Your custom advanced configuration file (optional)            | *undefined*
+|CEM_SUMMARY_TITLE          | Generated summary title                                       | Examples knowledge base
 |CEM_GITHUB_ENABLED         | To enable or disable standard GITHUB support                  | true
 |CEM_GITHUB_ACTIVATION_KEY  | Example publish keyword for github                            | "gist"
 |CEM_GITHUB_TOKEN           | Github authentication token for gists API access              | *more information below*

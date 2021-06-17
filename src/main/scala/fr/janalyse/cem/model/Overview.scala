@@ -8,6 +8,7 @@ import zio.logging.*
 import java.time.Instant
 
 case class OverviewContext(
+  title: String,
   examplesCount: Int,
   examples: List[ExampleContext],
   examplesByCategory: List[ExamplesForCategoryContext],
@@ -42,6 +43,7 @@ object Overview {
           .sortBy(_.category)
 
       val overviewContext = OverviewContext(
+        title = config.summary.title,
         examplesCount = exampleContexts.size,
         examples = exampleContexts.sortBy(_.summary).toList,
         examplesByCategory = examplesContextByCategory,
@@ -50,7 +52,6 @@ object Overview {
         version = config.metaInfo.version,
         lastUpdated = Instant.now().toString
       )
-      val templateName    = "templates/examples-overview.mustache"
       val templateLogic   = for {
         //_ <- log.info(s"${adapter.targetName} : Generating overview")
         overviewContent <- Task.effect(ExamplesOverviewTemplate.render(overviewContext).body)
@@ -58,7 +59,7 @@ object Overview {
         CodeExample(
           filename = "index.md",
           category = None,
-          summary = Some("Programming knowledge base examples overview"),
+          summary = Some(config.summary.title),
           keywords = Nil,
           publish = List(adapter.activationKeyword),
           authors = Nil,
