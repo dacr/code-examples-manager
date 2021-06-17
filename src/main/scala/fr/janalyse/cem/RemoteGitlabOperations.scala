@@ -20,42 +20,42 @@ import java.time.OffsetDateTime
 object RemoteGitlabOperations {
 
   case class SnippetAuthor(
-      id: Long,
-      name: String,
-      username: String,
-      state: String,
-      avatar_url: String,
-      web_url: String
+    id: Long,
+    name: String,
+    username: String,
+    state: String,
+    avatar_url: String,
+    web_url: String
   ) derives Codec.AsObject
 
   case class SnippetInfo(
-      id: Long,
-      title: String,
-      file_name: String,
-      description: String,
-      visibility: String,
-      author: SnippetAuthor,
-      updated_at: OffsetDateTime,
-      created_at: OffsetDateTime,
-      web_url: String,
-      raw_url: String
+    id: Long,
+    title: String,
+    file_name: String,
+    description: String,
+    visibility: String,
+    author: SnippetAuthor,
+    updated_at: OffsetDateTime,
+    created_at: OffsetDateTime,
+    web_url: String,
+    raw_url: String
   ) derives Codec.AsObject
 
   case class SnippetAddRequest(
-      title: Option[String],
-      file_name: String,
-      content: String,
-      description: String,
-      visibility: String
+    title: Option[String],
+    file_name: String,
+    content: String,
+    description: String,
+    visibility: String
   ) derives Codec.AsObject
 
   case class SnippetUpdateRequest(
-      id: String,
-      title: Option[String],
-      file_name: String,
-      content: String,
-      description: String,
-      visibility: String
+    id: String,
+    title: Option[String],
+    file_name: String,
+    content: String,
+    description: String,
+    visibility: String
   ) derives Codec.AsObject
 
   /*

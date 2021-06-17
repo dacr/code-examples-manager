@@ -9,13 +9,13 @@ import zio.config.ConfigDescriptor.*
 import zio.config.ConfigSource.*
 
 final case class ExamplesConfig(
-    searchRootDirectories: String,
-    searchGlob: String
+  searchRootDirectories: String,
+  searchGlob: String
 )
 
 final case class RenameRuleConfig(
-    from: String,
-    to: String
+  from: String,
+  to: String
 ) {
   def rename(input: String): String = {
     if (input.matches(from)) {
@@ -25,27 +25,27 @@ final case class RenameRuleConfig(
 }
 
 final case class PublishAdapterConfig(
-    enabled: Boolean,
-    kind: String,
-    activationKeyword: String,
-    apiEndPoint: String,
-    overviewUUID: String,
-    token: Option[String],
-    defaultVisibility: Option[String],
-    filenameRenameRules: Map[String, RenameRuleConfig]
+  enabled: Boolean,
+  kind: String,
+  activationKeyword: String,
+  apiEndPoint: String,
+  overviewUUID: String,
+  token: Option[String],
+  defaultVisibility: Option[String],
+  filenameRenameRules: Map[String, RenameRuleConfig]
 ) {
   def targetName = s"$kind/$activationKeyword"
 }
 
 // Automatically populated by the build process from a generated config file
 final case class MetaConfig(
-    projectName: Option[String],
-    projectGroup: Option[String],
-    projectPage: Option[String],
-    projectCode: Option[String],
-    buildVersion: Option[String],
-    buildDateTime: Option[String],
-    buildUUID: Option[String]
+  projectName: Option[String],
+  projectGroup: Option[String],
+  projectPage: Option[String],
+  projectCode: Option[String],
+  buildVersion: Option[String],
+  buildDateTime: Option[String],
+  buildUUID: Option[String]
 ) {
   def name: String = projectName.getOrElse("code-examples-manager")
 
@@ -61,13 +61,13 @@ final case class MetaConfig(
 }
 
 final case class CodeExampleManagerConfig(
-    examples: ExamplesConfig,
-    publishAdapters: Map[String, PublishAdapterConfig],
-    metaInfo: MetaConfig
+  examples: ExamplesConfig,
+  publishAdapters: Map[String, PublishAdapterConfig],
+  metaInfo: MetaConfig
 )
 
 final case class ApplicationConfig(
-    codeExamplesManagerConfig: CodeExampleManagerConfig
+  codeExamplesManagerConfig: CodeExampleManagerConfig
 )
 
 object Configuration {

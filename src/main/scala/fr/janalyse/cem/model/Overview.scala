@@ -8,13 +8,13 @@ import zio.logging.*
 import java.time.Instant
 
 case class OverviewContext(
-    examplesCount: Int,
-    examples: List[ExampleContext],
-    examplesByCategory: List[ExamplesForCategoryContext],
-    projectName: String,
-    projectURL: String,
-    version: String,
-    lastUpdated: String
+  examplesCount: Int,
+  examples: List[ExampleContext],
+  examplesByCategory: List[ExamplesForCategoryContext],
+  projectName: String,
+  projectURL: String,
+  version: String,
+  lastUpdated: String
 )
 case class ExampleContext(category: String, filename: String, summary: String, url: String)
 case class ExamplesForCategoryContext(category: String, categoryExamples: Seq[ExampleContext])

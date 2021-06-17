@@ -17,7 +17,6 @@ import sttp.client3.asynchttpclient.zio.{AsyncHttpClientZioBackend, SttpClient}
 import zio.clock.Clock
 
 object Synchronize {
-
   type SearchRoot      = String
   type SearchGlob      = String
   type ExampleFilename = String
@@ -46,10 +45,10 @@ object Synchronize {
   }
 
   def examplesFromGivenRoot(
-      searchRoot: SearchRoot,
-      globPattern: SearchGlob,
-      filesFetcher: (SearchRoot, SearchGlob) => RIO[Blocking, List[ExampleFilename]],
-      contentFetcher: ExampleFilename => RIO[Blocking, FileContent]
+    searchRoot: SearchRoot,
+    globPattern: SearchGlob,
+    filesFetcher: (SearchRoot, SearchGlob) => RIO[Blocking, List[ExampleFilename]],
+    contentFetcher: ExampleFilename => RIO[Blocking, FileContent]
   ): RIO[Blocking, List[CodeExample]] = {
     for {
       foundFilenames <- filesFetcher(searchRoot, globPattern)
@@ -129,11 +128,11 @@ object Synchronize {
   }
 
   def examplesPublishToGivenAdapter(
-      examples: Iterable[CodeExample],
-      adapterConfig: PublishAdapterConfig,
-      config: CodeExampleManagerConfig,
-      remoteExampleStatesFetcher: PublishAdapterConfig => RIO[Logging with SttpClient, Iterable[RemoteExampleState]],
-      remoteExamplesChangesApplier: (PublishAdapterConfig, Iterable[WhatToDo]) => RIO[Logging with SttpClient, Iterable[RemoteExample]]
+    examples: Iterable[CodeExample],
+    adapterConfig: PublishAdapterConfig,
+    config: CodeExampleManagerConfig,
+    remoteExampleStatesFetcher: PublishAdapterConfig => RIO[Logging with SttpClient, Iterable[RemoteExampleState]],
+    remoteExamplesChangesApplier: (PublishAdapterConfig, Iterable[WhatToDo]) => RIO[Logging with SttpClient, Iterable[RemoteExample]]
   ): RIO[Logging with SttpClient, Unit] = {
     val examplesToSynchronize = examples.filter(_.publish.contains(adapterConfig.activationKeyword))
     if (!adapterConfig.enabled || examplesToSynchronize.isEmpty || adapterConfig.token.isEmpty) RIO.unit

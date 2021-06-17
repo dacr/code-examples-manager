@@ -7,14 +7,14 @@ import zio.blocking.*
 import java.io.File
 
 case class CodeExample(
-    filename: String,
-    category: Option[String] = None, // used sub-directory
-    summary: Option[String] = None,
-    keywords: List[String] = Nil,
-    publish: List[String] = Nil,
-    authors: List[String] = Nil,
-    uuid: Option[String] = None,
-    content: String
+  filename: String,
+  category: Option[String] = None, // used sub-directory
+  summary: Option[String] = None,
+  keywords: List[String] = Nil,
+  publish: List[String] = Nil,
+  authors: List[String] = Nil,
+  uuid: Option[String] = None,
+  content: String
 ) {
   def fileExt: String = filename.split("[.]", 2).drop(1).headOption.getOrElse("")
 

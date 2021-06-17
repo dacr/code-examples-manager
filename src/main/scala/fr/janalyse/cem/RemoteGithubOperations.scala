@@ -19,39 +19,39 @@ import sttp.client3.circe.circeBodySerializer
 object RemoteGithubOperations {
 
   case class GithubUser(
-      login: String, // user name in APIs
-      name: String,
-      id: Int,
-      public_gists: Int,
-      private_gists: Int,
-      followers: Int,
-      following: Int
+    login: String, // user name in APIs
+    name: String,
+    id: Int,
+    public_gists: Int,
+    private_gists: Int,
+    followers: Int,
+    following: Int
   ) derives Codec.AsObject
 
   case class GistFileInfo(
-      filename: String,
-      `type`: String,
-      language: Option[String],
-      raw_url: String,
-      size: Int
+    filename: String,
+    `type`: String,
+    language: Option[String],
+    raw_url: String,
+    size: Int
   ) derives Codec.AsObject
 
   case class GistInfo(
-      id: String,
-      description: String,
-      html_url: String,
-      public: Boolean,
-      files: Map[String, GistFileInfo]
+    id: String,
+    description: String,
+    html_url: String,
+    public: Boolean,
+    files: Map[String, GistFileInfo]
   ) derives Codec.AsObject
 
   case class GistCreateResponse(
-      id: String,
-      html_url: String
+    id: String,
+    html_url: String
   ) derives Codec.AsObject
 
   case class GistUpdateResponse(
-      id: String,
-      html_url: String
+    id: String,
+    html_url: String
   ) derives Codec.AsObject
 
   def githubInjectAuthToken[A, B](request: Request[A, B], tokenOption: Option[String]) = {
