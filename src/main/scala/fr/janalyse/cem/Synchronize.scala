@@ -34,7 +34,7 @@ object Synchronize {
   def findFiles(fromRootFilename: SearchRoot, globPattern: SearchGlob): RIO[Blocking, List[ExampleFilename]] = {
     val pathMatcher      = FileSystem.default.getPathMatcher(s"glob:$globPattern")
     def pathFilter(path: Path, fileAttrs: BasicFileAttributes): Boolean = {
-      pathMatcher.matches(path.toFile.toPath)
+      pathMatcher.matches(path.toFile.toPath) && !fileAttrs.isDirectory
     }
     val from             = Path(fromRootFilename)
     val foundFilesStream = Files.find(from)(pathFilter)
