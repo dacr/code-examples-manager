@@ -17,10 +17,9 @@ package fr.janalyse.cem.tools
 
 import fr.janalyse.cem.tools.Hashes.*
 import zio.test.Assertion.*
-import zio.test.assert
-import zio.test.junit.JUnitRunnableSpec
+import zio.test.*
 
-class HashesSpec extends JUnitRunnableSpec {
+object HashesSpec extends DefaultRunnableSpec {
 
   // ----------------------------------------------------------------------------------------------
   val t1 = test("sha1 compute the right hash value") {

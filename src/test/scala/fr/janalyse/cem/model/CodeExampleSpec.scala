@@ -17,10 +17,9 @@ package fr.janalyse.cem.model
 
 import zio.Task
 import zio.test.Assertion.*
-import zio.test.assert
-import zio.test.junit.JUnitRunnableSpec
+import zio.test.*
 
-class CodeExampleSpec extends JUnitRunnableSpec {
+object CodeExampleSpec extends DefaultRunnableSpec {
 
   val exampleFakeTestingFilename = "test-data/sample1/fake-testing-pi.sc"
   val exampleFakeTestingSearchRoot = "test-data/sample1"

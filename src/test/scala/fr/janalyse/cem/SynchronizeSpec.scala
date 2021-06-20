@@ -19,9 +19,8 @@ import fr.janalyse.cem.model.CodeExample
 import zio.{Exit, ZIO}
 import zio.test.*
 import zio.test.Assertion.*
-import zio.test.junit.JUnitRunnableSpec
 
-class SynchronizeSpec extends JUnitRunnableSpec {
+object SynchronizeSpec extends DefaultRunnableSpec {
   // ----------------------------------------------------------------------------------------------
   val t1 = testM("check examples coherency success with valid examples") {
     val examplesWithIssues = List(

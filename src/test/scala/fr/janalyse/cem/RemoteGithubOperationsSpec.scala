@@ -23,11 +23,10 @@ import sttp.client3.asynchttpclient.zio.stubbing.whenRequestMatches
 import zio.{Task, ZIO}
 import zio.test.Assertion.*
 import zio.test.*
-import zio.test.junit.JUnitRunnableSpec
 import zio.logging.*
 import zio.blocking.Blocking
 
-class RemoteGithubOperationsSpec extends JUnitRunnableSpec {
+object RemoteGithubOperationsSpec extends DefaultRunnableSpec {
 
   import RemoteGithubOperations._
 
@@ -51,7 +50,7 @@ class RemoteGithubOperationsSpec extends JUnitRunnableSpec {
   }
 
   // ----------------------------------------------------------------------------------------------
-  val t1 = testM("") {
+  val t1 = testM("apply changes") {
     val config = PublishAdapterConfig(
       enabled = true,
       kind = "github",
