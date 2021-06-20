@@ -21,9 +21,9 @@ import zio.test.*
 
 object CodeExampleSpec extends DefaultRunnableSpec {
 
-  val exampleFakeTestingFilename = "test-data/sample1/fake-testing-pi.sc"
+  val exampleFakeTestingFilename   = "test-data/sample1/fake-testing-pi.sc"
   val exampleFakeTestingSearchRoot = "test-data/sample1"
-  val exampleFakeTestingPiContent =
+  val exampleFakeTestingPiContent  =
     """// summary : Simplest scalatest test framework usage.
       |// keywords : scalatest, pi, @testable
       |// publish : gist, snippet
@@ -41,32 +41,33 @@ object CodeExampleSpec extends DefaultRunnableSpec {
   val t1 = testM("make an example") {
     for {
       example <- CodeExample.makeExample(exampleFakeTestingFilename, exampleFakeTestingSearchRoot, Task(exampleFakeTestingPiContent))
-    } yield
-      assert(example.filename)(equalTo("fake-testing-pi.sc")) &&
-        assert(example.category)(equalTo(None)) &&
-        assert(example.summary)(equalTo(Some("Simplest scalatest test framework usage."))) &&
-        assert(example.fileExt)(equalTo("sc")) &&
-        assert(example.publish)(equalTo(List("gist", "snippet"))) &&
-        assert(example.authors)(equalTo(List("David Crosson"))) &&
-        assert(example.keywords)(equalTo(List("scalatest", "pi", "@testable"))) &&
-        assert(example.uuid)(equalTo(Some("8f2e14ba-9856-4500-80ab-3b9ba2234ce2"))) &&
-        assert(example.content)(matchesRegex("(?s).*id [:] 8f2e14ba-9856-4500-80ab-3b9ba2234ce2.*")) &&
-        assert(example.checksum)(equalTo("5f6dd8a2d2f813ee946542161503d61cb9a8074e"))
+    } yield assert(example.filename)(equalTo("fake-testing-pi.sc")) &&
+      assert(example.category)(equalTo(None)) &&
+      assert(example.summary)(equalTo(Some("Simplest scalatest test framework usage."))) &&
+      assert(example.fileExt)(equalTo("sc")) &&
+      assert(example.publish)(equalTo(List("gist", "snippet"))) &&
+      assert(example.authors)(equalTo(List("David Crosson"))) &&
+      assert(example.keywords)(equalTo(List("scalatest", "pi", "@testable"))) &&
+      assert(example.uuid)(equalTo(Some("8f2e14ba-9856-4500-80ab-3b9ba2234ce2"))) &&
+      assert(example.content)(matchesRegex("(?s).*id [:] 8f2e14ba-9856-4500-80ab-3b9ba2234ce2.*")) &&
+      assert(example.checksum)(equalTo("5f6dd8a2d2f813ee946542161503d61cb9a8074e"))
   }
 
   // ----------------------------------------------------------------------------------------------
   val t2 = test("automatically recognize categories from sub-directory name") {
     val inputsAndExpectedResults: List[((String, String), Option[String])] = List(
-      ("test-data/fake-testing-pi.sc", "test-data/") -> None,
-      ("test-data/fake-testing-pi.sc", "") -> Some("test-data"),
+      ("test-data/fake-testing-pi.sc", "test-data/")                -> None,
+      ("test-data/fake-testing-pi.sc", "")                          -> Some("test-data"),
       ("test-data/sample1/fake-testing-pi.sc", "test-data/sample1") -> None,
-      ("test-data/sample1/fake-testing-pi.sc", "test-data") -> Some("sample1"),
-      ("test-data/sample1/fake-testing-pi.sc", "test-data/") -> Some("sample1"),
-      ("test-data/sample1/fake-testing-pi.sc", "") -> Some("test-data/sample1")
+      ("test-data/sample1/fake-testing-pi.sc", "test-data")         -> Some("sample1"),
+      ("test-data/sample1/fake-testing-pi.sc", "test-data/")        -> Some("sample1"),
+      ("test-data/sample1/fake-testing-pi.sc", "")                  -> Some("test-data/sample1")
     )
-    inputsAndExpectedResults.map { case ((filename, searchRoot), expectedResult) =>
-      assert(CodeExample.exampleCategoryFromFilepath(filename, searchRoot))(equalTo(expectedResult))
-    }.reduce(_ && _)
+    inputsAndExpectedResults
+      .map { case ((filename, searchRoot), expectedResult) =>
+        assert(CodeExample.exampleCategoryFromFilepath(filename, searchRoot))(equalTo(expectedResult))
+      }
+      .reduce(_ && _)
   }
 
   // ----------------------------------------------------------------------------------------------

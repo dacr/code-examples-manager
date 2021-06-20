@@ -20,16 +20,12 @@ import fr.janalyse.cem.tools.DescriptionTools.*
 import zio.test.Assertion.*
 import zio.test.*
 
-
 object DescriptionToolsSpec extends DefaultRunnableSpec {
-
 
   // ----------------------------------------------------------------------------------------------
   val t1 = test("extractMetaDataFromDescription can return example uuid and checksum from the description") {
     val description = "Blah example / published by https://github.com/dacr/code-examples-manager #7135b214-5b48-47d0-afd7-c7f64c0a31c3/5ec6b73c57561e0cc578dea654eeddce09433252"
-    assert(extractMetaDataFromDescription(description))(
-      equalTo(Some("7135b214-5b48-47d0-afd7-c7f64c0a31c3"->"5ec6b73c57561e0cc578dea654eeddce09433252")
-      ))
+    assert(extractMetaDataFromDescription(description))(equalTo(Some("7135b214-5b48-47d0-afd7-c7f64c0a31c3" -> "5ec6b73c57561e0cc578dea654eeddce09433252")))
   }
 
   // ----------------------------------------------------------------------------------------------
@@ -40,7 +36,7 @@ object DescriptionToolsSpec extends DefaultRunnableSpec {
 
   // ----------------------------------------------------------------------------------------------
   val t3 = test("makeDescription should return a description for ready to publish code examples") {
-    assert(makeDescription(CodeExample(filename="truc.sc", uuid = Some("aaaa"), content="blah"))) (
+    assert(makeDescription(CodeExample(filename = "truc.sc", uuid = Some("aaaa"), content = "blah")))(
       isSome(
         endsWithString("#aaaa/")
       )
