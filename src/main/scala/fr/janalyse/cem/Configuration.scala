@@ -60,7 +60,8 @@ final case class MetaConfig(
   projectCode: Option[String],
   buildVersion: Option[String],
   buildDateTime: Option[String],
-  buildUUID: Option[String]
+  buildUUID: Option[String],
+  contactEmail: Option[String],
 ) {
   def name: String = projectName.getOrElse("code-examples-manager")
 
@@ -73,6 +74,8 @@ final case class MetaConfig(
   def uuid: String = buildUUID.getOrElse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
 
   def projectURL: String = projectPage.getOrElse("https://github.com/dacr")
+
+  def contact: String = contactEmail.getOrElse("crosson.david@gmail.com")
 }
 
 final case class SummaryConfig(
@@ -120,7 +123,8 @@ object Configuration {
       string("project-code").optional |@|
       string("build-version").optional |@|
       string("build-date-time").optional |@|
-      string("build-uuid").optional
+      string("build-uuid").optional |@|
+      string("contact-email").optional
   ).to[MetaConfig]
 
   val summaryConfig = (
