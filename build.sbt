@@ -1,7 +1,9 @@
 organization := "fr.janalyse"
-name := "code-examples-manager"
-homepage := Some(new URL("https://github.com/dacr/code-examples-manager"))
+name         := "code-examples-manager"
+homepage     := Some(new URL("https://github.com/dacr/code-examples-manager"))
+
 licenses += "Apache 2" -> url(s"https://www.apache.org/licenses/LICENSE-2.0.txt")
+
 scmInfo := Some(
   ScmInfo(
     url(s"https://github.com/dacr/code-examples-manager.git"),
@@ -9,16 +11,16 @@ scmInfo := Some(
   )
 )
 
-scalaVersion := "3.0.0"
+scalaVersion := "3.0.2"
 
 mainClass := Some("fr.janalyse.cem.Synchronize")
 
 lazy val versions = new {
-  val sttp        = "3.3.7"
-  val zio         = "1.0.9"
+  val sttp        = "3.3.15"
+  val zio         = "1.0.12"
   val zionio      = "1.0.0-RC11"
-  val zioconfig   = "1.0.6"
-  val ziologging  = "0.5.11"
+  val zioconfig   = "1.0.10"
+  val ziologging  = "0.5.12"
   val naturalsort = "1.0.1"
 }
 
@@ -35,6 +37,9 @@ libraryDependencies ++= Seq(
   "com.softwaremill.sttp.client3" %% "circe"                         % versions.sttp,
   "fr.janalyse"                   %% "naturalsort"                   % versions.naturalsort
 )
+
+excludeDependencies += "org.scala-lang.modules" % "scala-collection-compat_2.13"
+
 
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
