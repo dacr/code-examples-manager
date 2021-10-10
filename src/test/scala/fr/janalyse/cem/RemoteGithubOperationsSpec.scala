@@ -18,6 +18,7 @@ package fr.janalyse.cem
 import fr.janalyse.cem.model.*
 import fr.janalyse.cem.model.WhatToDo.*
 import fr.janalyse.cem.tools.DescriptionTools.*
+import org.junit.runner.RunWith
 import sttp.client3.asynchttpclient.zio.AsyncHttpClientZioBackend
 import sttp.client3.asynchttpclient.zio.stubbing.whenRequestMatches
 import zio.{Task, ZIO}
@@ -26,6 +27,7 @@ import zio.test.*
 import zio.logging.*
 import zio.blocking.Blocking
 
+@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
 object RemoteGithubOperationsSpec extends DefaultRunnableSpec {
 
   import RemoteGithubOperations._
