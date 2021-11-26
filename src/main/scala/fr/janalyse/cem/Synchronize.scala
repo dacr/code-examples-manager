@@ -36,6 +36,7 @@ object Synchronize {
   type SearchGlob      = String
   type ExampleFilename = String
   type FileContent     = String
+  type IgnoreMask      = String
 
   val charset = Charset.Standard.utf8
 
@@ -46,10 +47,13 @@ object Synchronize {
     } yield content
   }
 
-  def findFiles(fromRootFilename: SearchRoot, globPattern: SearchGlob): RIO[Blocking, List[ExampleFilename]] = {
+  def findFiles(fromRootFilename: SearchRoot, globPattern: SearchGlob, ignoreMask:Option[IgnoreMask]=None): RIO[Blocking, List[ExampleFilename]] = {
     val pathMatcher      = FileSystem.default.getPathMatcher(s"glob:$globPattern")
+    val ignoreMaskRegex  = ignoreMask.map(_.r)
     def pathFilter(path: Path, fileAttrs: BasicFileAttributes): Boolean = {
-      pathMatcher.matches(path.toFile.toPath) && !fileAttrs.isDirectory
+      pathMatcher.matches(path.toFile.toPath) &&
+        !fileAttrs.isDirectory &&
+        (ignoreMask.isEmpty || ignoreMaskRegex.get.findFirstIn(path.toString).isEmpty)
     }
     val from             = Path(fromRootFilename)
     val foundFilesStream = Files.find(from)(pathFilter)
@@ -62,11 +66,12 @@ object Synchronize {
   def examplesFromGivenRoot(
     searchRoot: SearchRoot,
     globPattern: SearchGlob,
-    filesFetcher: (SearchRoot, SearchGlob) => RIO[Blocking, List[ExampleFilename]],
+    ignoreMask: Option[IgnoreMask],
+    filesFetcher: (SearchRoot, SearchGlob, Option[IgnoreMask]) => RIO[Blocking, List[ExampleFilename]],
     contentFetcher: ExampleFilename => RIO[Blocking, FileContent]
   ): RIO[Blocking, List[CodeExample]] = {
     for {
-      foundFilenames <- filesFetcher(searchRoot, globPattern)
+      foundFilenames <- filesFetcher(searchRoot, globPattern, ignoreMask)
       examplesTasks   = foundFilenames.map(file => CodeExample.makeExample(file, searchRoot, contentFetcher(file))).toList
       examples       <- RIO.mergeAll(examplesTasks)(List.empty[CodeExample])((accu, next) => next :: accu)
     } yield examples.filter(_.uuid.isDefined)
@@ -81,8 +86,8 @@ object Synchronize {
     } yield pathsAsStrings
   }
 
-  def examplesCollectFor(searchRoots: List[SearchRoot], usingGlobPattern: SearchGlob): RIO[Blocking, Vector[CodeExample]] = {
-    val examplesFromRoots = searchRoots.map(fromRoot => examplesFromGivenRoot(fromRoot, usingGlobPattern, findFiles, readFileContent))
+  def examplesCollectFor(searchRoots: List[SearchRoot], usingGlobPattern: SearchGlob, usingIgnoreMask:Option[IgnoreMask]): RIO[Blocking, Vector[CodeExample]] = {
+    val examplesFromRoots = searchRoots.map(fromRoot => examplesFromGivenRoot(fromRoot, usingGlobPattern, usingIgnoreMask, findFiles, readFileContent))
     RIO.mergeAll(examplesFromRoots)(Vector.empty[CodeExample])((accu, newRoot) => accu.appendedAll(newRoot))
   }
 
@@ -98,7 +103,7 @@ object Synchronize {
     config        <- getConfig[ApplicationConfig]
     examplesConfig = config.codeExamplesManagerConfig.examples
     searchRoots   <- examplesValidSearchRoots(examplesConfig.searchRootDirectories)
-    localExamples <- examplesCollectFor(searchRoots, examplesConfig.searchGlob)
+    localExamples <- examplesCollectFor(searchRoots, examplesConfig.searchGlob, examplesConfig.searchIgnoreMask)
     _             <- examplesCheckCoherency(localExamples)
   } yield localExamples
 

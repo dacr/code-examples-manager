@@ -132,22 +132,23 @@ allow a simple configuration way based on environment variables which override d
 
 ### Simplified configuration
 
-|env or property name       | description                                                   | default value
-|---------------------------|---------------------------------------------------------------|---------------------------
-|CEM_SEARCH_ROOTS           | Examples search roots (comma separated)                       | ""
-|CEM_SEARCH_GLOB            | Examples files globs                                          | "**/*.*"
-|CEM_EXAMPLES_OVERVIEW_UUID | The fixed UUID for the overview GIST which list all examples  | "cafacafe-cafecafe"
-|CEM_CONFIG_FILE            | Your custom advanced configuration file (optional)            | *undefined*
-|CEM_SUMMARY_TITLE          | Generated summary title                                       | Examples knowledge base
-|CEM_GITHUB_ENABLED         | To enable or disable standard GITHUB support                  | true
-|CEM_GITHUB_ACTIVATION_KEY  | Example publish keyword for github                            | "gist"
-|CEM_GITHUB_TOKEN           | Github authentication token for gists API access              | *more information below*
-|CEM_GITHUB_API             | Github API http end point                                     | "https://api.github.com"
-|CEM_GITLAB_ENABLED         | To enable or disable standard GITLAB support                  | true
-|CEM_GITLAB_ACTIVATION_KEY  | Example publish keyword for the gitlab                        | "snippet"
-|CEM_GITLAB_TOKEN           | gitlab authentication token for snippets API access           | *more information below*
-|CEM_GITLAB_API             | Gitlab API http end point                                     | "https://gitlab.com/api/v4"
-|CEM_GITLAB_VISIBILITY      | Gitlab published examples chosen visibility                   | "public"
+| env or property name       | description                                                   | default value
+|----------------------------|---------------------------------------------------------------|---------------------------
+| CEM_SEARCH_ROOTS           | Examples search roots (comma separated)                       | ""
+| CEM_SEARCH_GLOB            | Examples files globs                                          | "**/*.*"
+| CEM_SEARCH_IGNORE_MASK     | Ignore file regular expression                                | "(/[.]bsp)|(/[.]scala)"
+| CEM_EXAMPLES_OVERVIEW_UUID | The fixed UUID for the overview GIST which list all examples  | "cafacafe-cafecafe"
+| CEM_CONFIG_FILE            | Your custom advanced configuration file (optional)            | *undefined*
+| CEM_SUMMARY_TITLE          | Generated summary title                                       | Examples knowledge base
+| CEM_GITHUB_ENABLED         | To enable or disable standard GITHUB support                  | true
+| CEM_GITHUB_ACTIVATION_KEY  | Example publish keyword for github                            | "gist"
+| CEM_GITHUB_TOKEN           | Github authentication token for gists API access              | *more information below*
+| CEM_GITHUB_API             | Github API http end point                                     | "https://api.github.com"
+| CEM_GITLAB_ENABLED         | To enable or disable standard GITLAB support                  | true
+| CEM_GITLAB_ACTIVATION_KEY  | Example publish keyword for the gitlab                        | "snippet"
+| CEM_GITLAB_TOKEN           | gitlab authentication token for snippets API access           | *more information below*
+| CEM_GITLAB_API             | Gitlab API http end point                                     | "https://gitlab.com/api/v4"
+| CEM_GITLAB_VISIBILITY      | Gitlab published examples chosen visibility                   | "public"
 
 Configuration examples :
 ```shell

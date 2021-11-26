@@ -25,7 +25,8 @@ import zio.config.ConfigSource.*
 
 final case class ExamplesConfig(
   searchRootDirectories: String,
-  searchGlob: String
+  searchGlob: String,
+  searchIgnoreMask: Option[String]
 )
 
 final case class RenameRuleConfig(
@@ -61,7 +62,7 @@ final case class MetaConfig(
   buildVersion: Option[String],
   buildDateTime: Option[String],
   buildUUID: Option[String],
-  contactEmail: Option[String],
+  contactEmail: Option[String]
 ) {
   def name: String = projectName.getOrElse("code-examples-manager")
 
@@ -97,7 +98,8 @@ object Configuration {
 
   val examplesConfig = (
     string("search-root-directories") |@|
-      string("search-glob")
+      string("search-glob") |@|
+      string("search-ignore-mask").optional
   ).to[ExamplesConfig]
 
   val renameRuleConfig = (
