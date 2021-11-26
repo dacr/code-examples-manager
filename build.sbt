@@ -11,12 +11,12 @@ scmInfo := Some(
   )
 )
 
-scalaVersion := "3.0.2"
+scalaVersion := "3.1.0"
 
 mainClass := Some("fr.janalyse.cem.Synchronize")
 
 lazy val versions = new {
-  val sttp        = "3.3.15"
+  val sttp        = "3.3.17"
   val zio         = "1.0.12"
   val zionio      = "1.0.0-RC11"
   val zioconfig   = "1.0.10"
