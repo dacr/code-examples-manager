@@ -103,6 +103,7 @@ object Synchronize {
     config        <- getConfig[ApplicationConfig]
     examplesConfig = config.codeExamplesManagerConfig.examples
     searchRoots   <- examplesValidSearchRoots(examplesConfig.searchRootDirectories)
+    _             <- log.info(s"Searching examples in ${searchRoots.mkString(",")}")
     localExamples <- examplesCollectFor(searchRoots, examplesConfig.searchGlob, examplesConfig.searchIgnoreMask)
     _             <- examplesCheckCoherency(localExamples)
   } yield localExamples
