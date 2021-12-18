@@ -20,7 +20,7 @@ import zio.Task
 import zio.test.Assertion.*
 import zio.test.*
 
-@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
+//@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
 object CodeExampleSpec extends DefaultRunnableSpec {
 
   val exampleFakeTestingFilename   = "test-data/sample1/fake-testing-pi.sc"

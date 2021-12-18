@@ -21,7 +21,7 @@ import zio.{Exit, ZIO}
 import zio.test.*
 import zio.test.Assertion.*
 
-@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
+//@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
 object SynchronizeSpec extends DefaultRunnableSpec {
   // ----------------------------------------------------------------------------------------------
   val t1 = testM("check examples coherency success with valid examples") {

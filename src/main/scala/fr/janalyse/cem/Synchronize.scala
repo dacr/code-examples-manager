@@ -21,8 +21,8 @@ import zio.blocking.*
 import zio.logging.*
 import zio.console.*
 import zio.stream.*
-import zio.nio.core.file.*
-import zio.nio.core.charset.Charset
+import zio.nio.file.*
+import zio.nio.charset.Charset
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{FileVisitOption, OpenOption, StandardOpenOption}
 import zio.nio.file.Files

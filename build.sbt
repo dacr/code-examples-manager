@@ -16,11 +16,11 @@ scalaVersion := "3.1.0"
 mainClass := Some("fr.janalyse.cem.Synchronize")
 
 lazy val versions = new {
-  val sttp        = "3.3.17"
-  val zio         = "1.0.12"
-  val zionio      = "1.0.0-RC11"
+  val sttp        = "3.3.18"
+  val zio         = "1.0.13"
+  val zionio      = "1.0.0-RC12"
   val zioconfig   = "1.0.10"
-  val ziologging  = "0.5.12"
+  val ziologging  = "0.5.14"
   val naturalsort = "1.0.1"
 }
 

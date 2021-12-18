@@ -21,7 +21,7 @@ import org.junit.runner.RunWith
 import zio.test.Assertion.*
 import zio.test.*
 
-@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
+//@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
 object DescriptionToolsSpec extends DefaultRunnableSpec {
 
   // ----------------------------------------------------------------------------------------------

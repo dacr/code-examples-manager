@@ -27,7 +27,7 @@ import zio.test.*
 import zio.logging.*
 import zio.blocking.Blocking
 
-@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
+//@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
 object RemoteGithubOperationsSpec extends DefaultRunnableSpec {
 
   import RemoteGithubOperations._
