@@ -29,6 +29,7 @@ libraryDependencies ++= Seq(
   "dev.zio"                       %% "zio-test"                      % versions.zio % Test,
   "dev.zio"                       %% "zio-test-junit"                % versions.zio % Test,
   "dev.zio"                       %% "zio-test-sbt"                  % versions.zio % Test,
+  "dev.zio"                       %% "zio-test-scalacheck"           % versions.zio % Test,
   "dev.zio"                       %% "zio-nio"                       % versions.zionio,
   "dev.zio"                       %% "zio-logging"                   % versions.ziologging,
   "dev.zio"                       %% "zio-config"                    % versions.zioconfig,
@@ -39,7 +40,6 @@ libraryDependencies ++= Seq(
 )
 
 excludeDependencies += "org.scala-lang.modules" % "scala-collection-compat_2.13"
-
 
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 

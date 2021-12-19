@@ -17,26 +17,44 @@ package fr.janalyse.cem.tools
 
 import fr.janalyse.cem.tools.Hashes.*
 import org.junit.runner.RunWith
-import zio.test.Assertion.*
+import zio.random.Random
+import zio.*
 import zio.test.*
+import zio.test.Assertion.*
+import zio.test.environment.*
 
 //@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
 object HashesSpec extends DefaultRunnableSpec {
 
-  // ----------------------------------------------------------------------------------------------
-  val t1 = test("sha1 compute the right hash value") {
-    val example = "Please hash me !"
-    assert(sha1(example))(equalTo("4031d74d6a72919da236a388bdf3b966126b80f2"))
+  object Generators {
+    import zio.test.Gen._
+    val someContent :Gen[Random with Sized, String] = anyString
   }
 
-  // ----------------------------------------------------------------------------------------------
-  val t2 = test("sha1 should not fail") {
-    assert(sha1(""))(equalTo("da39a3ee5e6b4b0d3255bfef95601890afd80709"))
-    assert(sha1(null))(equalTo("da39a3ee5e6b4b0d3255bfef95601890afd80709"))
-  }
-
-  // ----------------------------------------------------------------------------------------------
-  override def spec = {
-    suite("Hash function tests")(t1, t2)
+  def spec: ZSpec[TestEnvironment, TestResult] = {
+    suite("Hash function tests")(
+      // ----------------------------------------------------------------------------------------------
+      test("sha1 compute the right hash value") {
+        val example = "Please hash me !"
+        assertTrue(sha1(example) == "4031d74d6a72919da236a388bdf3b966126b80f2")
+      },
+      // ----------------------------------------------------------------------------------------------
+      test("sha1 should not fail") {
+        assertTrue(sha1("") == "da39a3ee5e6b4b0d3255bfef95601890afd80709") &&
+        assertTrue(sha1(null) == "da39a3ee5e6b4b0d3255bfef95601890afd80709")
+      },
+      // ----------------------------------------------------------------------------------------------
+      testM("sha1 hashes are never empty") {
+        check(Generators.someContent) { content =>
+          assert(sha1(content))(isNonEmptyString)
+        }
+      },
+      testM("sha1 hashes are different if their content are differents") {
+        check(Generators.someContent, Generators.someContent) { (content1, content2)  =>
+          assertTrue(content1 != content2 && sha1(content1) != sha1(content2)) ||
+          assertTrue(content1 == content2 && sha1(content1) == sha1(content2))
+        }
+      }
+    )
   }
 }

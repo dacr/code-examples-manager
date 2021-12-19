@@ -30,7 +30,7 @@ object DescriptionTools {
 
   def makeDescription(example: CodeExample): Option[String] = {
     for {
-      summary <- example.summary
+      summary <- example.summary.orElse(Some(""))
       uuid    <- example.uuid
       chksum   = example.checksum
       cemURL   = "https://github.com/dacr/code-examples-manager"
