@@ -197,13 +197,14 @@ Get an access token from gitlab.com :
 
 ## Project history
 
-- 2019-06 - Poc#1 example proof of concept
-- 2019-07 - Poc#2 example proof of concept (in prod)
+- 2019-06 - PoC#1 example proof of concept
+- 2019-07 - PoC#2 example proof of concept (in prod)
 - 2019-08 - Switch to a real world project
 - 2019-09 - In prod for my own usage
 - 2020-07 - First public release
 - 2021-05 - Full refactoring to use [ZIO][zio] - pure functional
 - 2021-06 - Migration to Scala3
+- 2021-12 - PoC#3 Search & Execution engines
 
 ## Acknowledgements
 
