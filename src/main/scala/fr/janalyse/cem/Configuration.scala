@@ -23,6 +23,8 @@ import zio.config.magnolia.*
 import zio.config.typesafe.*
 import zio.config.ConfigDescriptor.*
 
+import java.io.File
+
 final case class ExamplesConfig(
   searchRootDirectories: String,
   searchGlob: String,
@@ -96,20 +98,21 @@ object Configuration {
       configFileEnvOption  <- zio.system.env("CEM_CONFIG_FILE")
       configFilePropOption <- zio.system.property("CEM_CONFIG_FILE")
       configFileOption      = configFileEnvOption.orElse(configFilePropOption)
-      typesafeConfig       <- IO(
-                                ConfigFactory
-                                  .empty()
-                                  .withFallback(
-                                    configFileOption
-                                      .map(f => ConfigFactory.parseFile(new java.io.File(f)))
-                                      .getOrElse(ConfigFactory.load())
-                                  )
-                                  .withFallback(ConfigFactory.load(metaConfigResourceName))
-                                  .resolve()
-                              )
+      typesafeConfig       <- IO(loadTypesafeBasedConfigData(metaConfigResourceName, configFileOption))
       configSource         <- IO.fromEither(TypesafeConfigSource.fromTypesafeConfig(typesafeConfig))
       config               <- IO.fromEither(zio.config.read(descriptor[ApplicationConfig].mapKey(toKebabCase) from configSource))
     } yield config
   }
 
+  private def loadTypesafeBasedConfigData(metaConfigResourceName: String, configFileOption: Option[String]) = {
+    val metaDataConfig    = ConfigFactory.load(metaConfigResourceName)
+    val applicationConfig = configFileOption
+      .map(f => ConfigFactory.parseFile(new File(f)))
+      .getOrElse(ConfigFactory.load())
+    ConfigFactory
+      .empty()
+      .withFallback(applicationConfig)
+      .withFallback(metaDataConfig)
+      .resolve()
+  }
 }
