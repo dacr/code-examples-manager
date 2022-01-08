@@ -34,6 +34,7 @@ libraryDependencies ++= Seq(
   "dev.zio"                       %% "zio-logging"                   % versions.ziologging,
   "dev.zio"                       %% "zio-config"                    % versions.zioconfig,
   "dev.zio"                       %% "zio-config-typesafe"           % versions.zioconfig,
+  "dev.zio"                       %% "zio-config-magnolia"           % versions.zioconfig,
   "com.softwaremill.sttp.client3" %% "async-http-client-backend-zio" % versions.sttp,
   "com.softwaremill.sttp.client3" %% "circe"                         % versions.sttp,
   "fr.janalyse"                   %% "naturalsort"                   % versions.naturalsort
