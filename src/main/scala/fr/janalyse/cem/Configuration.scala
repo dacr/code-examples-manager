@@ -19,9 +19,9 @@ import scala.util.Properties.*
 import com.typesafe.config.{Config, ConfigFactory}
 import zio.{IO, RIO, ZIO, system}
 import zio.config.*
+import zio.config.magnolia.*
 import zio.config.typesafe.*
 import zio.config.ConfigDescriptor.*
-import zio.config.ConfigSource.*
 
 final case class ExamplesConfig(
   searchRootDirectories: String,
@@ -64,19 +64,13 @@ final case class MetaConfig(
   buildUUID: Option[String],
   contactEmail: Option[String]
 ) {
-  def name: String = projectName.getOrElse("code-examples-manager")
-
-  def code: String = projectName.getOrElse("cem")
-
-  def version: String = buildVersion.getOrElse("x.y.z")
-
-  def dateTime: String = buildDateTime.getOrElse("?")
-
-  def uuid: String = buildUUID.getOrElse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
-
+  def name: String       = projectName.getOrElse("code-examples-manager")
+  def code: String       = projectName.getOrElse("cem")
+  def version: String    = buildVersion.getOrElse("x.y.z")
+  def dateTime: String   = buildDateTime.getOrElse("?")
+  def uuid: String       = buildUUID.getOrElse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
   def projectURL: String = projectPage.getOrElse("https://github.com/dacr")
-
-  def contact: String = contactEmail.getOrElse("crosson.david@gmail.com")
+  def contact: String    = contactEmail.getOrElse("crosson.david@gmail.com")
 }
 
 final case class SummaryConfig(
@@ -95,56 +89,7 @@ final case class ApplicationConfig(
 )
 
 object Configuration {
-
-  val examplesConfig = (
-    string("search-root-directories") |@|
-      string("search-glob") |@|
-      string("search-ignore-mask").optional
-  ).to[ExamplesConfig]
-
-  val renameRuleConfig = (
-    string("from") |@|
-      string("to")
-  ).to[RenameRuleConfig]
-
-  val publishAdapterConfig = (
-    boolean("enabled") |@|
-      string("kind") |@|
-      string("activation-keyword") |@|
-      string("api-end-point") |@|
-      string("overview-uuid") |@|
-      string("token").optional |@|
-      string("default-visibility").optional |@|
-      map("filename-rename-rules")(renameRuleConfig)
-  ).to[PublishAdapterConfig]
-
-  val metaConfig = (
-    string("project-name").optional |@|
-      string("project-group").optional |@|
-      string("project-page").optional |@|
-      string("project-code").optional |@|
-      string("build-version").optional |@|
-      string("build-date-time").optional |@|
-      string("build-uuid").optional |@|
-      string("contact-email").optional
-  ).to[MetaConfig]
-
-  val summaryConfig = (
-    string("title")
-  ).to[SummaryConfig]
-
-  val codeExampleManagerConfig: ConfigDescriptor[CodeExampleManagerConfig] = (
-    nested("examples")(examplesConfig) |@|
-      map("publish-adapters")(publishAdapterConfig) |@|
-      nested("meta-info")(metaConfig) |@|
-      nested("summary")(summaryConfig)
-  ).to[CodeExampleManagerConfig]
-
-  val applicationConfig: ConfigDescriptor[ApplicationConfig] = (
-    nested("code-examples-manager-config")(codeExampleManagerConfig)
-  ).to[ApplicationConfig]
-
-  def apply(): RIO[system.System, ApplicationConfig] = {
+  def apply(): RIO[system.System & zio.console.Console, ApplicationConfig] = {
     val metaConfigResourceName = "cem-meta.conf"
 
     for {
@@ -163,7 +108,7 @@ object Configuration {
                                   .resolve()
                               )
       configSource         <- IO.fromEither(TypesafeConfigSource.fromTypesafeConfig(typesafeConfig))
-      config               <- IO.fromEither(zio.config.read(applicationConfig from configSource))
+      config               <- IO.fromEither(zio.config.read(descriptor[ApplicationConfig].mapKey(toKebabCase) from configSource))
     } yield config
   }
 
