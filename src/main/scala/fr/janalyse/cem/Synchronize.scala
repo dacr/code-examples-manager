@@ -210,6 +210,7 @@ object Synchronize {
     _         <- log.info(s"$appCode project page $projectURL (with configuration documentation) ")
     examples  <- examplesCollect
     _         <- log.info(s"Found ${examples.size} available locally for synchronization purpose")
+    _         <- log.info(s"Found ${examples.count(_.publish.size >0)} distinct publishable examples")
     _         <- log.info("Available by publishing targets : " + countExamplesByPublishKeyword(examples).toList.sorted.map { case (k, n) => s"$k:$n" }.mkString(", "))
     _         <- examplesPublish(examples, config)
     endTime   <- clock.nanoTime
