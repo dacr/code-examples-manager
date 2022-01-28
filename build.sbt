@@ -11,16 +11,16 @@ scmInfo := Some(
   )
 )
 
-scalaVersion := "3.1.0"
+scalaVersion := "3.1.1"
 
 mainClass := Some("fr.janalyse.cem.Synchronize")
 
 lazy val versions = new {
-  val sttp        = "3.3.18"
-  val zio         = "1.0.13"
-  val zionio      = "1.0.0-RC12"
-  val zioconfig   = "1.0.10"
-  val ziologging  = "0.5.14"
+  val sttp        = "3.4.0"
+  val zio         = "2.0.0-RC1"
+  val zionio      = "2.0.0-RC1"
+  val zioconfig   = "3.0.0-RC1"
+  val ziologging  = "2.0.0-RC4"
   val naturalsort = "1.0.1"
 }
 
@@ -36,7 +36,7 @@ libraryDependencies ++= Seq(
   "dev.zio"                       %% "zio-config-typesafe"           % versions.zioconfig,
   "dev.zio"                       %% "zio-config-magnolia"           % versions.zioconfig,
   "com.softwaremill.sttp.client3" %% "async-http-client-backend-zio" % versions.sttp,
-  "com.softwaremill.sttp.client3" %% "circe"                         % versions.sttp,
+  "com.softwaremill.sttp.client3" %% "zio-json"                      % versions.sttp,
   "fr.janalyse"                   %% "naturalsort"                   % versions.naturalsort
 )
 
