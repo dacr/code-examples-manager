@@ -15,9 +15,9 @@
  */
 package fr.janalyse.cem
 
+import zio.*
 import scala.util.Properties.*
 import com.typesafe.config.{Config, ConfigFactory}
-import zio.{IO, RIO, ZIO, system}
 import zio.config.*
 import zio.config.magnolia.*
 import zio.config.typesafe.*
@@ -91,16 +91,16 @@ final case class ApplicationConfig(
 )
 
 object Configuration {
-  def apply(): RIO[system.System & zio.console.Console, ApplicationConfig] = {
+  def apply(): RIO[System & Console, ApplicationConfig] = {
     val metaConfigResourceName = "cem-meta.conf"
 
     for {
-      configFileEnvOption  <- zio.system.env("CEM_CONFIG_FILE")
-      configFilePropOption <- zio.system.property("CEM_CONFIG_FILE")
+      configFileEnvOption  <- System.env("CEM_CONFIG_FILE")
+      configFilePropOption <- System.property("CEM_CONFIG_FILE")
       configFileOption      = configFileEnvOption.orElse(configFilePropOption)
-      typesafeConfig       <- IO(loadTypesafeBasedConfigData(metaConfigResourceName, configFileOption))
-      configSource         <- IO.fromEither(TypesafeConfigSource.fromTypesafeConfig(typesafeConfig))
-      config               <- IO.fromEither(zio.config.read(descriptor[ApplicationConfig].mapKey(toKebabCase) from configSource))
+      typesafeConfig       = IO(loadTypesafeBasedConfigData(metaConfigResourceName, configFileOption))
+      configSource         = TypesafeConfigSource.fromTypesafeConfig(typesafeConfig)
+      config               <- zio.config.read(descriptor[ApplicationConfig].mapKey(toKebabCase) from configSource)
     } yield config
   }
 

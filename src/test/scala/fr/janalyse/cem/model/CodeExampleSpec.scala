@@ -15,10 +15,10 @@
  */
 package fr.janalyse.cem.model
 
-import org.junit.runner.RunWith
-import zio.Task
-import zio.test.Assertion.*
+import zio.*
 import zio.test.*
+import zio.test.Assertion.*
+import org.junit.runner.RunWith
 
 //@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
 object CodeExampleSpec extends DefaultRunnableSpec {
@@ -40,7 +40,7 @@ object CodeExampleSpec extends DefaultRunnableSpec {
       |math.Pi shouldBe 3.14d +- 0.01d""".stripMargin
 
   // ----------------------------------------------------------------------------------------------
-  val t1 = testM("make an example") {
+  val t1 = test("make an example") {
     for {
       example <- CodeExample.makeExample(exampleFakeTestingFilename, exampleFakeTestingSearchRoot, Task(exampleFakeTestingPiContent))
     } yield assertTrue(example.filename == "fake-testing-pi.sc") &&

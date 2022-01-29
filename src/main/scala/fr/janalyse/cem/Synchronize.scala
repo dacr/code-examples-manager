@@ -15,21 +15,18 @@
  */
 package fr.janalyse.cem
 
-import zio.config.getConfig
 import zio.*
-import zio.blocking.*
-import zio.logging.*
-import zio.console.*
+import zio.config.getConfig
 import zio.stream.*
 import zio.nio.file.*
 import zio.nio.charset.Charset
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{FileVisitOption, OpenOption, StandardOpenOption}
 import zio.nio.file.Files
+
 import fr.janalyse.cem.model.*
 import fr.janalyse.cem.model.WhatToDo.*
 import sttp.client3.asynchttpclient.zio.{AsyncHttpClientZioBackend, SttpClient}
-import zio.clock.Clock
 
 object Synchronize {
   type SearchRoot      = String
@@ -40,24 +37,24 @@ object Synchronize {
 
   val charset = Charset.Standard.utf8
 
-  def readFileContent(fromFilename: ExampleFilename): RIO[Blocking, FileContent] = {
+  def readFileContent(fromFilename: ExampleFilename): RIO[Any, FileContent] = {
     for {
       bytesRead <- Files.readAllBytes(Path(fromFilename))
       content   <- charset.decodeString(bytesRead)
     } yield content
   }
 
-  def findFiles(fromRootFilename: SearchRoot, globPattern: SearchGlob, ignoreMask:Option[IgnoreMask]=None): RIO[Blocking, List[ExampleFilename]] = {
-    val pathMatcher      = FileSystem.default.getPathMatcher(s"glob:$globPattern")
-    val ignoreMaskRegex  = ignoreMask.map(_.r)
+  def findFiles(fromRootFilename: SearchRoot, globPattern: SearchGlob, ignoreMask: Option[IgnoreMask] = None): RIO[Any, List[ExampleFilename]] = {
+    val pathMatcher                                                     = FileSystem.default.getPathMatcher(s"glob:$globPattern")
+    val ignoreMaskRegex                                                 = ignoreMask.map(_.r)
     def pathFilter(path: Path, fileAttrs: BasicFileAttributes): Boolean = {
       pathMatcher.matches(path.toFile.toPath) &&
-        !fileAttrs.isDirectory &&
-        (ignoreMask.isEmpty || ignoreMaskRegex.get.findFirstIn(path.toString).isEmpty)
+      !fileAttrs.isDirectory &&
+      (ignoreMask.isEmpty || ignoreMaskRegex.get.findFirstIn(path.toString).isEmpty)
     }
-    val from             = Path(fromRootFilename)
-    val foundFilesStream = Files.find(from)(pathFilter)
-    val foundFiles       = for {
+    val from                                                            = Path(fromRootFilename)
+    val foundFilesStream                                                = Files.find(from)(pathFilter)
+    val foundFiles                                                      = for {
       foundFiles <- foundFilesStream.run(ZSink.collectAll)
     } yield foundFiles.to(List).map(_.toFile.getPath) // TODO
     foundFiles
@@ -67,9 +64,9 @@ object Synchronize {
     searchRoot: SearchRoot,
     globPattern: SearchGlob,
     ignoreMask: Option[IgnoreMask],
-    filesFetcher: (SearchRoot, SearchGlob, Option[IgnoreMask]) => RIO[Blocking, List[ExampleFilename]],
-    contentFetcher: ExampleFilename => RIO[Blocking, FileContent]
-  ): RIO[Blocking, List[CodeExample]] = {
+    filesFetcher: (SearchRoot, SearchGlob, Option[IgnoreMask]) => RIO[Any, List[ExampleFilename]],
+    contentFetcher: ExampleFilename => RIO[Any, FileContent]
+  ): RIO[Any, List[CodeExample]] = {
     for {
       foundFilenames <- filesFetcher(searchRoot, globPattern, ignoreMask)
       examplesTasks   = foundFilenames.map(file => CodeExample.makeExample(file, searchRoot, contentFetcher(file))).toList
@@ -78,7 +75,7 @@ object Synchronize {
 
   }
 
-  def examplesValidSearchRoots(searchRootDirectories: String): RIO[Blocking, List[SearchRoot]] = {
+  def examplesValidSearchRoots(searchRootDirectories: String): RIO[Any, List[SearchRoot]] = {
     for {
       roots         <- Task(searchRootDirectories.split("""\s*,\s*""").toList.map(_.trim).map(r => Path(r)))
       validRoots    <- ZIO.filter(roots)(root => Files.isDirectory(root))
@@ -86,7 +83,7 @@ object Synchronize {
     } yield pathsAsStrings
   }
 
-  def examplesCollectFor(searchRoots: List[SearchRoot], usingGlobPattern: SearchGlob, usingIgnoreMask:Option[IgnoreMask]): RIO[Blocking, Vector[CodeExample]] = {
+  def examplesCollectFor(searchRoots: List[SearchRoot], usingGlobPattern: SearchGlob, usingIgnoreMask: Option[IgnoreMask]): RIO[Any, Vector[CodeExample]] = {
     val examplesFromRoots = searchRoots.map(fromRoot => examplesFromGivenRoot(fromRoot, usingGlobPattern, usingIgnoreMask, findFiles, readFileContent))
     RIO.mergeAll(examplesFromRoots)(Vector.empty[CodeExample])((accu, newRoot) => accu.appendedAll(newRoot))
   }
@@ -103,7 +100,7 @@ object Synchronize {
     config        <- getConfig[ApplicationConfig]
     examplesConfig = config.codeExamplesManagerConfig.examples
     searchRoots   <- examplesValidSearchRoots(examplesConfig.searchRootDirectories)
-    _             <- log.info(s"Searching examples in ${searchRoots.mkString(",")}")
+    _             <- ZIO.logInfo(s"Searching examples in ${searchRoots.mkString(",")}")
     localExamples <- examplesCollectFor(searchRoots, examplesConfig.searchGlob, examplesConfig.searchIgnoreMask)
     _             <- examplesCheckCoherency(localExamples)
   } yield localExamples
@@ -129,20 +126,20 @@ object Synchronize {
     }
   }
 
-  def checkRemote(adapterConfig: PublishAdapterConfig)(todo: WhatToDo): RIO[Logging, Unit] = {
+  def checkRemote(adapterConfig: PublishAdapterConfig)(todo: WhatToDo): RIO[Any, Unit] = {
     todo match {
-      case UnsupportedOperation(uuidOption, exampleOption, stateOption)           => log.info(s"${adapterConfig.targetName} : Invalid input $uuidOption - $exampleOption - $stateOption")
-      case OrphanRemoteExample(uuid, state) if uuid != adapterConfig.overviewUUID => log.info(s"${adapterConfig.targetName} : Found orphan example $uuid - ${state.description} - ${state.url}")
-      case _: OrphanRemoteExample                                                 => RIO.unit
-      case _: IgnoreExample                                                       => RIO.unit
-      case _: KeepRemoteExample                                                   => RIO.unit
-      case _: UpdateRemoteExample                                                 => RIO.unit
-      case _: AddExample                                                          => RIO.unit
-      case _: DeleteRemoteExample                                                 => RIO.unit
+      case UnsupportedOperation(uuidOption, exampleOption, stateOption)           => ZIO.logInfo(s"${adapterConfig.targetName} : Invalid input $uuidOption - $exampleOption - $stateOption")
+      case OrphanRemoteExample(uuid, state) if uuid != adapterConfig.overviewUUID => ZIO.logInfo(s"${adapterConfig.targetName} : Found orphan example $uuid - ${state.description} - ${state.url}")
+      case _: OrphanRemoteExample                                                 => ZIO.unit
+      case _: IgnoreExample                                                       => ZIO.unit
+      case _: KeepRemoteExample                                                   => ZIO.unit
+      case _: UpdateRemoteExample                                                 => ZIO.unit
+      case _: AddExample                                                          => ZIO.unit
+      case _: DeleteRemoteExample                                                 => ZIO.unit
     }
   }
 
-  def checkCoherency(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]): RIO[Logging, Unit] = {
+  def checkCoherency(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]): RIO[Any, Unit] = {
     for {
       _ <- RIO.foreach(todos)(checkRemote(adapterConfig))
     } yield ()
@@ -152,30 +149,30 @@ object Synchronize {
     examples: Iterable[CodeExample],
     adapterConfig: PublishAdapterConfig,
     config: CodeExampleManagerConfig,
-    remoteExampleStatesFetcher: PublishAdapterConfig => RIO[Logging with SttpClient, Iterable[RemoteExampleState]],
-    remoteExamplesChangesApplier: (PublishAdapterConfig, Iterable[WhatToDo]) => RIO[Logging with SttpClient, Iterable[RemoteExample]]
-  ): RIO[Logging with SttpClient, Unit] = {
+    remoteExampleStatesFetcher: PublishAdapterConfig => RIO[SttpClient, Iterable[RemoteExampleState]],
+    remoteExamplesChangesApplier: (PublishAdapterConfig, Iterable[WhatToDo]) => RIO[SttpClient, Iterable[RemoteExample]]
+  ): RIO[SttpClient, Unit] = {
     val examplesToSynchronize = examples.filter(_.publish.contains(adapterConfig.activationKeyword))
     if (!adapterConfig.enabled || examplesToSynchronize.isEmpty || adapterConfig.token.isEmpty) RIO.unit
     else {
       for {
         remoteStates   <- remoteExampleStatesFetcher(adapterConfig)
-        _              <- log.info(s"${adapterConfig.targetName} : Found ${remoteStates.size}  already published artifacts")
-        _              <- log.info(s"${adapterConfig.targetName} : Found ${examplesToSynchronize.size} synchronisable examples")
+        _              <- ZIO.logInfo(s"${adapterConfig.targetName} : Found ${remoteStates.size}  already published artifacts")
+        _              <- ZIO.logInfo(s"${adapterConfig.targetName} : Found ${examplesToSynchronize.size} synchronisable examples")
         todos           = computeWorkToDo(examplesToSynchronize, remoteStates)
         _              <- checkCoherency(adapterConfig, todos)
         remoteExamples <- remoteExamplesChangesApplier(adapterConfig, todos)
-        //_            <- log.info(s"${adapterConfig.targetName} : Build examples summary")
+        // _            <- ZIO.logInfo(s"${adapterConfig.targetName} : Build examples summary")
         overviewOption <- Overview.makeOverview(remoteExamples, adapterConfig, config)
-        //_            <- log.info(s"${adapterConfig.targetName} : Publish examples summary")
+        // _            <- ZIO.logInfo(s"${adapterConfig.targetName} : Publish examples summary")
         overviewTodo    = computeWorkToDo(overviewOption, remoteStates)
         remoteOverview <- remoteExamplesChangesApplier(adapterConfig, overviewTodo)
-        _              <- RIO.foreach(remoteOverview.headOption)(publishedOverview => log.info(s"${adapterConfig.targetName} : Summary available at ${publishedOverview.state.url}"))
+        _              <- RIO.foreach(remoteOverview.headOption)(publishedOverview => ZIO.logInfo(s"${adapterConfig.targetName} : Summary available at ${publishedOverview.state.url}"))
       } yield ()
     }
   }
 
-  def examplesPublish(examples: Vector[CodeExample], config: CodeExampleManagerConfig): RIO[Logging with SttpClient, Unit] = {
+  def examplesPublish(examples: Vector[CodeExample], config: CodeExampleManagerConfig): RIO[SttpClient, Unit] = {
     val results = for {
       (adapterName, adapterConfig) <- config.publishAdapters
     } yield {
@@ -197,39 +194,36 @@ object Synchronize {
       .map { case (key, examples) => key -> examples.size }
   }
 
-  def synchronizeEffect: RIO[Blocking with Logging with Clock with SttpClient with Has[ApplicationConfig], Unit] = for {
-    startTime <- clock.nanoTime
+  def synchronizeEffect: RIO[Clock & SttpClient & ApplicationConfig, Unit] = for {
+    startTime <- Clock.nanoTime
     config    <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig)
     metaInfo   = config.metaInfo
     version    = metaInfo.version
     appName    = metaInfo.name
     appCode    = metaInfo.code
     projectURL = metaInfo.projectURL
-    _         <- log.info(s"$appName application is starting")
-    _         <- log.info(s"$appCode version $version")
-    _         <- log.info(s"$appCode project page $projectURL (with configuration documentation) ")
+    _         <- ZIO.logInfo(s"$appName application is starting")
+    _         <- ZIO.logInfo(s"$appCode version $version")
+    _         <- ZIO.logInfo(s"$appCode project page $projectURL (with configuration documentation) ")
     examples  <- examplesCollect
-    _         <- log.info(s"Found ${examples.size} available locally for synchronization purpose")
-    _         <- log.info(s"Found ${examples.count(_.publish.size >0)} distinct publishable examples")
-    _         <- log.info("Available by publishing targets : " + countExamplesByPublishKeyword(examples).toList.sorted.map { case (k, n) => s"$k:$n" }.mkString(", "))
+    _         <- ZIO.logInfo(s"Found ${examples.size} available locally for synchronization purpose")
+    _         <- ZIO.logInfo(s"Found ${examples.count(_.publish.size > 0)} distinct publishable examples")
+    _         <- ZIO.logInfo("Available by publishing targets : " + countExamplesByPublishKeyword(examples).toList.sorted.map { case (k, n) => s"$k:$n" }.mkString(", "))
     _         <- examplesPublish(examples, config)
-    endTime   <- clock.nanoTime
-    _         <- log.info(s"Code examples manager publishing operations took ${(endTime - startTime) / 1000000}ms")
+    endTime   <- Clock.nanoTime
+    _         <- ZIO.logInfo(s"Code examples manager publishing operations took ${(endTime - startTime) / 1000000}ms")
   } yield ()
 
   def main(args: Array[String]): Unit = {
-    val configLayer     = ZLayer.fromEffect(Configuration())
+    val configLayer     = ZLayer.fromZIO(Configuration())
     val httpClientLayer = AsyncHttpClientZioBackend.layer()
-    val clockLayer      = Clock.live
-    val blockLayer      = Blocking.live
 
-    val loggingLayer =
-      Logging.console(
-        logLevel = LogLevel.Info,
-        format = LogFormat.ColoredLogFormat()
-      ) >>> Logging.withRootLoggerName("Synchronize")
+//    val loggingLayer =
+//      Logging.console(
+//        logLevel = LogLevel.Info,
+//        format = LogFormat.ColoredLogFormat()
+//      ) >>> Logging.withRootLoggerName("Synchronize")
 
-    val layers = configLayer ++ httpClientLayer ++ clockLayer ++ loggingLayer ++ blockLayer
-    Runtime.default.unsafeRun(synchronizeEffect.provideLayer(layers))
+    Runtime.default.unsafeRun(synchronizeEffect.provide(System.live, Console.live, Clock.live, configLayer, httpClientLayer))
   }
 }

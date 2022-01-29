@@ -15,20 +15,19 @@
  */
 package fr.janalyse.cem
 
+import zio.*
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import sttp.model.Uri
+import sttp.client3.*
+import sttp.client3.ziojson.*
+import sttp.client3.asynchttpclient.zio.SttpClient
+import sttp.client3.asynchttpclient.zio.*
+
 import fr.janalyse.cem.model.*
 import fr.janalyse.cem.model.WhatToDo.*
 import fr.janalyse.cem.tools.DescriptionTools
 import fr.janalyse.cem.tools.DescriptionTools.remoteExampleFileRename
 import fr.janalyse.cem.tools.HttpTools.{uriParse, webLinkingExtractNext}
-import sttp.client3.asynchttpclient.zio.SttpClient
-import sttp.client3.circe.*
-import zio.{RIO, Task, ZIO}
-import zio.logging.*
-import sttp.model.Uri
-import sttp.client3.*
-import sttp.client3.asynchttpclient.zio.*
-import io.circe.Codec
-import sttp.client3.circe.circeBodySerializer
 
 import java.time.OffsetDateTime
 
@@ -41,7 +40,11 @@ object RemoteGitlabOperations {
     state: String,
     avatar_url: String,
     web_url: String
-  ) derives Codec.AsObject
+  )
+  object SnippetAuthor {
+    implicit val decoder: JsonDecoder[SnippetAuthor] = DeriveJsonDecoder.gen
+    implicit val encoder: JsonEncoder[SnippetAuthor] = DeriveJsonEncoder.gen
+  }
 
   case class SnippetInfo(
     id: Long,
@@ -54,7 +57,12 @@ object RemoteGitlabOperations {
     created_at: OffsetDateTime,
     web_url: String,
     raw_url: String
-  ) derives Codec.AsObject
+  )
+  object SnippetInfo {
+    implicit val decoder: JsonDecoder[SnippetInfo] = DeriveJsonDecoder.gen
+    implicit val encoder: JsonEncoder[SnippetInfo] = DeriveJsonEncoder.gen
+  }
+
 
   case class SnippetAddRequest(
     title: Option[String],
@@ -62,7 +70,11 @@ object RemoteGitlabOperations {
     content: String,
     description: String,
     visibility: String
-  ) derives Codec.AsObject
+  )
+  object SnippetAddRequest {
+    implicit val decoder: JsonDecoder[SnippetAddRequest] = DeriveJsonDecoder.gen
+    implicit val encoder: JsonEncoder[SnippetAddRequest] = DeriveJsonEncoder.gen
+  }
 
   case class SnippetUpdateRequest(
     id: String,
@@ -71,30 +83,26 @@ object RemoteGitlabOperations {
     content: String,
     description: String,
     visibility: String
-  ) derives Codec.AsObject
+  )
+  object SnippetUpdateRequest {
+    implicit val decoder: JsonDecoder[SnippetUpdateRequest] = DeriveJsonDecoder.gen
+    implicit val encoder: JsonEncoder[SnippetUpdateRequest] = DeriveJsonEncoder.gen
+  }
 
-  /*
-    given Codec[SnippetAuthor] = Codec.AsObject.derived
 
-    given Codec[SnippetInfo] = Codec.AsObject.derived
-
-    given Codec[SnippetAddRequest] = Codec.AsObject.derived
-
-    given Codec[SnippetUpdateRequest] = Codec.AsObject.derived
-   */
 
   def gitlabInjectAuthToken[A, B](request: Request[A, B], tokenOption: Option[String]) = {
     val base = request.header("Content-Type", "application/json")
     tokenOption.fold(base)(token => base.header("Authorization", s"Bearer $token"))
   }
 
-  def gitlabRemoteExamplesStatesFetch(adapterConfig: PublishAdapterConfig): RIO[Logging with SttpClient, Iterable[RemoteExampleState]] = {
+  def gitlabRemoteExamplesStatesFetch(adapterConfig: PublishAdapterConfig): RIO[SttpClient, Iterable[RemoteExampleState]] = {
     import adapterConfig.apiEndPoint
 
-    def worker(uri: Uri): RIO[Logging with SttpClient, Iterable[SnippetInfo]] = {
+    def worker(uri: Uri): RIO[SttpClient, Iterable[SnippetInfo]] = {
       val query = basicRequest.get(uri).response(asJson[Vector[SnippetInfo]])
       for {
-        _             <- log.info(s"${adapterConfig.targetName} : Fetching from $uri")
+        _             <- ZIO.logInfo(s"${adapterConfig.targetName} : Fetching from $uri")
         response      <- send(gitlabInjectAuthToken(query, adapterConfig.token))
         snippets      <- RIO.fromEither(response.body)
         nextLinkOption = response.header("Link").flatMap(webLinkingExtractNext)
@@ -129,7 +137,7 @@ object RemoteGitlabOperations {
     }
   }
 
-  def gitlabRemoteExampleAdd(adapterConfig: PublishAdapterConfig, todo: AddExample): RIO[Logging with SttpClient, RemoteExample] = {
+  def gitlabRemoteExampleAdd(adapterConfig: PublishAdapterConfig, todo: AddExample): RIO[SttpClient, RemoteExample] = {
 
     def requestBody(description: String): SnippetAddRequest = SnippetAddRequest(
       title = todo.example.summary,
@@ -147,7 +155,7 @@ object RemoteGitlabOperations {
       response    <- send(gitlabInjectAuthToken(query, adapterConfig.token)).map(_.body).absolve
       id           = response.id.toString
       url          = response.web_url
-      _           <- log.info(s"""${adapterConfig.targetName} : ADDED ${todo.uuid} - ${example.summary.getOrElse("")} - $url""")
+      _           <- ZIO.logInfo(s"""${adapterConfig.targetName} : ADDED ${todo.uuid} - ${example.summary.getOrElse("")} - $url""")
     } yield RemoteExample(
       todo.example,
       RemoteExampleState(
@@ -161,7 +169,7 @@ object RemoteGitlabOperations {
     )
   }
 
-  def gitlabRemoteExampleUpdate(adapterConfig: PublishAdapterConfig, todo: UpdateRemoteExample): RIO[Logging with SttpClient, RemoteExample] = {
+  def gitlabRemoteExampleUpdate(adapterConfig: PublishAdapterConfig, todo: UpdateRemoteExample): RIO[SttpClient, RemoteExample] = {
     def requestBody(description: String): SnippetUpdateRequest = SnippetUpdateRequest(
       id = todo.state.remoteId,
       title = todo.example.summary,
@@ -181,7 +189,7 @@ object RemoteGitlabOperations {
       response    <- send(authedQuery).map(_.body).absolve
       id           = response.id.toString
       url          = response.web_url
-      _           <- log.info(s"""${adapterConfig.targetName} : UPDATED ${todo.uuid} - ${example.summary.getOrElse("")} - $url""")
+      _           <- ZIO.logInfo(s"""${adapterConfig.targetName} : UPDATED ${todo.uuid} - ${example.summary.getOrElse("")} - $url""")
     } yield RemoteExample(
       todo.example,
       RemoteExampleState(
@@ -195,7 +203,7 @@ object RemoteGitlabOperations {
     )
   }
 
-  def gitlabRemoteExampleChangesApply(adapterConfig: PublishAdapterConfig)(todo: WhatToDo): RIO[Logging with SttpClient, Option[RemoteExample]] = {
+  def gitlabRemoteExampleChangesApply(adapterConfig: PublishAdapterConfig)(todo: WhatToDo): RIO[SttpClient, Option[RemoteExample]] = {
     todo match {
       case _: IgnoreExample                        => ZIO.succeed(None)
       case _: UnsupportedOperation                 => ZIO.succeed(None)
@@ -207,7 +215,7 @@ object RemoteGitlabOperations {
     }
   }
 
-  def gitlabRemoteExamplesChangesApply(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]): RIO[Logging with SttpClient, Iterable[RemoteExample]] = {
+  def gitlabRemoteExamplesChangesApply(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]): RIO[SttpClient, Iterable[RemoteExample]] = {
     for {
       remotes <- RIO.foreach(todos)(gitlabRemoteExampleChangesApply(adapterConfig)).map(_.flatten)
     } yield remotes

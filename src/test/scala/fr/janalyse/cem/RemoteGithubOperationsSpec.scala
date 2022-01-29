@@ -15,22 +15,21 @@
  */
 package fr.janalyse.cem
 
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
+import zio.logging.*
 import fr.janalyse.cem.model.*
 import fr.janalyse.cem.model.WhatToDo.*
 import fr.janalyse.cem.tools.DescriptionTools.*
 import org.junit.runner.RunWith
 import sttp.client3.asynchttpclient.zio.AsyncHttpClientZioBackend
 import sttp.client3.asynchttpclient.zio.stubbing.whenRequestMatches
-import zio.{Task, ZIO}
-import zio.test.Assertion.*
-import zio.test.*
-import zio.logging.*
-import zio.blocking.Blocking
 
 //@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
 object RemoteGithubOperationsSpec extends DefaultRunnableSpec {
 
-  import RemoteGithubOperations._
+  import RemoteGithubOperations.*
 
   val exampleTask1 = {
     val filename   = "test-data/sample1/fake-testing-pi.sc"
@@ -52,7 +51,7 @@ object RemoteGithubOperationsSpec extends DefaultRunnableSpec {
   }
 
   // ----------------------------------------------------------------------------------------------
-  val t1 = testM("apply changes") {
+  val t1 = test("apply changes") {
     val config = PublishAdapterConfig(
       enabled = true,
       kind = "github",
@@ -87,8 +86,8 @@ object RemoteGithubOperationsSpec extends DefaultRunnableSpec {
 
     val httpClientLayer = AsyncHttpClientZioBackend.stubLayer
     val stubbedLogic    = stub *> logic
-    val layers          = Logging.ignore ++ httpClientLayer ++ Blocking.live
-    assertM(stubbedLogic.provideLayer(layers).run)(succeeds(anything))
+
+    stubbedLogic.provide(httpClientLayer).map(result => assertTrue(true))
   }
 
   // ----------------------------------------------------------------------------------------------

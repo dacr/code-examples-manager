@@ -15,21 +15,22 @@
  */
 package fr.janalyse.cem
 
+import zio.*
+import zio.json.*
+import zio.json.ast.{Json, JsonCursor}
+import zio.logging.*
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import sttp.model.Uri
+import sttp.client3.*
+import sttp.client3.ziojson.*
+import sttp.client3.asynchttpclient.zio.SttpClient
+import sttp.client3.asynchttpclient.zio.*
+
 import fr.janalyse.cem.model.*
 import fr.janalyse.cem.model.WhatToDo.*
 import fr.janalyse.cem.tools.DescriptionTools
 import fr.janalyse.cem.tools.DescriptionTools.remoteExampleFileRename
 import fr.janalyse.cem.tools.HttpTools.{uriParse, webLinkingExtractNext}
-import sttp.client3.asynchttpclient.zio.SttpClient
-import sttp.client3.circe.*
-import zio.{RIO, Task, ZIO}
-import zio.logging.*
-import sttp.model.Uri
-import sttp.client3.*
-import sttp.client3.asynchttpclient.zio.*
-import sttp.client3.circe.*
-import io.circe.*
-import sttp.client3.circe.circeBodySerializer
 
 object RemoteGithubOperations {
 
@@ -41,7 +42,11 @@ object RemoteGithubOperations {
     private_gists: Int,
     followers: Int,
     following: Int
-  ) derives Codec.AsObject
+  )
+  object GithubUser         {
+    implicit val decoder: JsonDecoder[GithubUser] = DeriveJsonDecoder.gen
+    implicit val encoder: JsonEncoder[GithubUser] = DeriveJsonEncoder.gen
+  }
 
   case class GistFileInfo(
     filename: String,
@@ -49,7 +54,11 @@ object RemoteGithubOperations {
     language: Option[String],
     raw_url: String,
     size: Int
-  ) derives Codec.AsObject
+  )
+  object GistFileInfo       {
+    implicit val decoder: JsonDecoder[GistFileInfo] = DeriveJsonDecoder.gen
+    implicit val encoder: JsonEncoder[GistFileInfo] = DeriveJsonEncoder.gen
+  }
 
   case class GistInfo(
     id: String,
@@ -57,24 +66,36 @@ object RemoteGithubOperations {
     html_url: String,
     public: Boolean,
     files: Map[String, GistFileInfo]
-  ) derives Codec.AsObject
+  )
+  object GistInfo           {
+    implicit val decoder: JsonDecoder[GistInfo] = DeriveJsonDecoder.gen
+    implicit val encoder: JsonEncoder[GistInfo] = DeriveJsonEncoder.gen
+  }
 
   case class GistCreateResponse(
     id: String,
     html_url: String
-  ) derives Codec.AsObject
+  )
+  object GistCreateResponse {
+    implicit val decoder: JsonDecoder[GistCreateResponse] = DeriveJsonDecoder.gen
+    implicit val encoder: JsonEncoder[GistCreateResponse] = DeriveJsonEncoder.gen
+  }
 
   case class GistUpdateResponse(
     id: String,
     html_url: String
-  ) derives Codec.AsObject
+  )
+  object GistUpdateResponse {
+    implicit val decoder: JsonDecoder[GistUpdateResponse] = DeriveJsonDecoder.gen
+    implicit val encoder: JsonEncoder[GistUpdateResponse] = DeriveJsonEncoder.gen
+  }
 
   def githubInjectAuthToken[A, B](request: Request[A, B], tokenOption: Option[String]) = {
     val base = request.header("Accept", "application/vnd.github.v3+json")
     tokenOption.fold(base)(token => base.header("Authorization", s"token $token"))
   }
 
-  def githubUser(adapterConfig: PublishAdapterConfig): RIO[Logging with SttpClient, GithubUser] = {
+  def githubUser(adapterConfig: PublishAdapterConfig): RIO[SttpClient, GithubUser] = {
     import adapterConfig.apiEndPoint
     for {
       apiURI       <- uriParse(s"$apiEndPoint/user")
@@ -83,12 +104,12 @@ object RemoteGithubOperations {
     } yield responseBody
   }
 
-  def githubRemoteExamplesStatesFetch(adapterConfig: PublishAdapterConfig): RIO[Logging with SttpClient, Iterable[RemoteExampleState]] = {
+  def githubRemoteExamplesStatesFetch(adapterConfig: PublishAdapterConfig): RIO[SttpClient, Iterable[RemoteExampleState]] = {
 
-    def worker(uri: Uri): RIO[Logging with SttpClient, Iterable[GistInfo]] = {
+    def worker(uri: Uri): RIO[SttpClient, Iterable[GistInfo]] = {
       val query = basicRequest.get(uri).response(asJson[Vector[GistInfo]])
       for {
-        _             <- log.info(s"${adapterConfig.targetName} : Fetching from $uri")
+        _             <- ZIO.logInfo(s"${adapterConfig.targetName} : Fetching from $uri")
         response      <- send(githubInjectAuthToken(query, adapterConfig.token))
         gists         <- RIO.fromEither(response.body)
         nextLinkOption = response.header("Link").flatMap(webLinkingExtractNext)
@@ -125,24 +146,18 @@ object RemoteGithubOperations {
     }
   }
 
-  def githubRemoteExampleAdd(adapterConfig: PublishAdapterConfig, todo: AddExample): RIO[Logging with SttpClient, RemoteExample] = {
+  def githubRemoteExampleAdd(adapterConfig: PublishAdapterConfig, todo: AddExample): RIO[SttpClient, RemoteExample] = {
     def requestBody(description: String): Json = {
-      import io.circe.Encoder.*
+      import Json.*
       val filename   = remoteExampleFileRename(todo.example.filename, adapterConfig)
       val publicBool = adapterConfig.defaultVisibility.map(_.trim.toLowerCase == "public").getOrElse(true)
-      Json.fromJsonObject(
-        JsonObject( // TODO - find a better way
-          "description" -> encodeString(description),
-          "public"      -> encodeBoolean(publicBool),
-          "files"       -> Json.fromJsonObject(
-            JsonObject(
-              filename -> Json.fromJsonObject(
-                JsonObject(
-                  "filename" -> encodeString(filename),
-                  "content"  -> encodeString(todo.example.content)
-                )
-              )
-            )
+      Obj(
+        "description" -> Str(description),
+        "public"      -> Bool(publicBool),
+        "files"       -> Obj(
+          filename -> Obj(
+            "filename" -> Str(filename),
+            "content"  -> Str(todo.example.content)
           )
         )
       )
@@ -156,7 +171,7 @@ object RemoteGithubOperations {
       response    <- send(githubInjectAuthToken(query, adapterConfig.token)).map(_.body).absolve
       id           = response.id
       url          = response.html_url
-      _           <- log.info(s"""${adapterConfig.targetName} : ADDED ${todo.uuid} - ${example.summary.getOrElse("")} - $url""")
+      _           <- ZIO.logInfo(s"""${adapterConfig.targetName} : ADDED ${todo.uuid} - ${example.summary.getOrElse("")} - $url""")
     } yield RemoteExample(
       todo.example,
       RemoteExampleState(
@@ -170,23 +185,17 @@ object RemoteGithubOperations {
     )
   }
 
-  def githubRemoteExampleUpdate(adapterConfig: PublishAdapterConfig, todo: UpdateRemoteExample): RIO[Logging with SttpClient, RemoteExample] = {
+  def githubRemoteExampleUpdate(adapterConfig: PublishAdapterConfig, todo: UpdateRemoteExample): RIO[SttpClient, RemoteExample] = {
     def requestBody(description: String): Json = {
-      import io.circe.Encoder.*
+      import Json.*
       val filename    = remoteExampleFileRename(todo.example.filename, adapterConfig)
       val oldFilename = todo.state.filename.getOrElse(filename)
-      Json.fromJsonObject(
-        JsonObject( // TODO - find a better way
-          "description" -> encodeString(description),
-          "files"       -> Json.fromJsonObject(
-            JsonObject(
-              oldFilename -> Json.fromJsonObject(
-                JsonObject(
-                  "filename" -> encodeString(filename),
-                  "content"  -> encodeString(todo.example.content)
-                )
-              )
-            )
+      Obj( // TODO - find a better way
+        "description" -> Str(description),
+        "files"       -> Obj(
+          oldFilename -> Obj(
+            "filename" -> Str(filename),
+            "content"  -> Str(todo.example.content)
           )
         )
       )
@@ -203,7 +212,7 @@ object RemoteGithubOperations {
       response    <- send(authedQuery).map(_.body).absolve
       id           = response.id
       url          = response.html_url
-      _           <- log.info(s"""${adapterConfig.targetName} : UPDATED ${todo.uuid} - ${example.summary.getOrElse("")} - $url""")
+      _           <- ZIO.logInfo(s"""${adapterConfig.targetName} : UPDATED ${todo.uuid} - ${example.summary.getOrElse("")} - $url""")
     } yield RemoteExample(
       todo.example,
       RemoteExampleState(
@@ -217,7 +226,7 @@ object RemoteGithubOperations {
     )
   }
 
-  def githubRemoteExampleChangesApply(adapterConfig: PublishAdapterConfig)(todo: WhatToDo): RIO[Logging with SttpClient, Option[RemoteExample]] = {
+  def githubRemoteExampleChangesApply(adapterConfig: PublishAdapterConfig)(todo: WhatToDo): RIO[SttpClient, Option[RemoteExample]] = {
     todo match {
       case _: IgnoreExample                        => ZIO.succeed(None)
       case _: UnsupportedOperation                 => ZIO.succeed(None)
@@ -229,7 +238,7 @@ object RemoteGithubOperations {
     }
   }
 
-  def githubRemoteExamplesChangesApply(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]): RIO[Logging with SttpClient, Iterable[RemoteExample]] = {
+  def githubRemoteExamplesChangesApply(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]): RIO[SttpClient, Iterable[RemoteExample]] = {
     for {
       remotes <- RIO.foreach(todos)(githubRemoteExampleChangesApply(adapterConfig)).map(_.flatten)
     } yield remotes

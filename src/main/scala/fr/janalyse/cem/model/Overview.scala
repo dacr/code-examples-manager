@@ -37,7 +37,7 @@ case class ExamplesForCategoryContext(category: String, categoryExamples: Seq[Ex
 
 object Overview {
 
-  def makeOverview(publishedExamples: Iterable[RemoteExample], adapter: PublishAdapterConfig, config: CodeExampleManagerConfig): RIO[Logging, Option[CodeExample]] = {
+  def makeOverview(publishedExamples: Iterable[RemoteExample], adapter: PublishAdapterConfig, config: CodeExampleManagerConfig): RIO[Any, Option[CodeExample]] = {
     if (publishedExamples.isEmpty) RIO.none
     else {
       import fr.janalyse.tools.NaturalSort.ord

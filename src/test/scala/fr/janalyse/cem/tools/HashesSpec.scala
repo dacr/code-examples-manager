@@ -15,13 +15,11 @@
  */
 package fr.janalyse.cem.tools
 
-import fr.janalyse.cem.tools.Hashes.*
-import org.junit.runner.RunWith
-import zio.random.Random
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import zio.test.environment.*
+import org.junit.runner.RunWith
+import fr.janalyse.cem.tools.Hashes.*
 
 //@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
 object HashesSpec extends DefaultRunnableSpec {
