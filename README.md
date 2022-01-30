@@ -45,7 +45,6 @@ Instructions example with github.com publishing configuration :
 - Customize your configuration (see below for token configuration)
   ```
   export CEM_SEARCH_ROOTS="/home/myuser/myexamples"
-  export CEM_SEARCH_GLOB="**/*.{sc,sh,*.md,*.jsh}"
   export CEM_GITHUB_TOKEN="xxxxx"
   ```
 - Create an example file in `/home/myuser/myexamples` such as `hello.md`
@@ -116,7 +115,7 @@ Request keys in description header are the following :
 Code examples manager operations :
 - It reads its configuration
 - It searches for code examples from the given directories roots
-  - Only files with given extensions are selected (the given glob)
+  - select files matching the search pattern and not involved in the ignore mask
   - Selects code examples if and only if they contain a unique identifier (UUID)
 - It publishes or updates remote code examples to remote destinations
   - the code example publish scope (`publish` keyword) select target destinations
@@ -135,7 +134,7 @@ allow a simple configuration way based on environment variables which override d
 | env or property name       | description                                                   | default value
 |----------------------------|---------------------------------------------------------------|---------------------------
 | CEM_SEARCH_ROOTS           | Examples search roots (comma separated)                       | ""
-| CEM_SEARCH_GLOB            | Examples files globs                                          | "**/*.*"
+| CEM_SEARCH_PATTERN         | Examples files regular expression pattern                     | ".*[.].*"
 | CEM_SEARCH_IGNORE_MASK     | Ignore file regular expression                                | "(/[.]bsp)|(/[.]scala)"
 | CEM_EXAMPLES_OVERVIEW_UUID | The fixed UUID for the overview GIST which list all examples  | "cafacafe-cafecafe"
 | CEM_CONFIG_FILE            | Your custom advanced configuration file (optional)            | *undefined*
@@ -153,7 +152,7 @@ allow a simple configuration way based on environment variables which override d
 Configuration examples :
 ```shell
 export CEM_SEARCH_ROOTS="/tmp/someplace,/tmp/someotherplace"
-export CEM_SEARCH_GLOB="**/*.{sc,sh,*.md,*.jsh}"
+export CEM_SEARCH_PATTERN="[.](sc)|(sh)|(md)|(jsh)$"
 export CEM_GITHUB_TOKEN="fada-fada-fada-fada"
 ```
 
