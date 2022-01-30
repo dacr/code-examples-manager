@@ -152,25 +152,23 @@ object Synchronize {
 
   def examplesPublishToGivenAdapter(
     examples: Iterable[CodeExample],
-    adapterConfig: PublishAdapterConfig,
-    remoteExampleStatesFetcher: PublishAdapterConfig => RIO[SttpClient, Iterable[RemoteExampleState]],
-    remoteExamplesChangesApplier: (PublishAdapterConfig, Iterable[WhatToDo]) => RIO[SttpClient, Iterable[RemoteExample]]
+    adapterConfig: PublishAdapterConfig
   ): RIO[ApplicationConfig & SttpClient, Unit] = {
     val examplesToSynchronize = examples.filter(_.publish.contains(adapterConfig.activationKeyword))
     if (!adapterConfig.enabled || examplesToSynchronize.isEmpty || adapterConfig.token.isEmpty) RIO.unit
     else {
       for {
-        remoteStates   <- remoteExampleStatesFetcher(adapterConfig)
+        remoteStates   <- RemoteOperations.remoteExampleStatesFetch(adapterConfig)
         _              <- ZIO.log(s"${adapterConfig.targetName} : Found ${remoteStates.size}  already published artifacts")
         _              <- ZIO.log(s"${adapterConfig.targetName} : Found ${examplesToSynchronize.size} synchronisable examples")
         todos           = computeWorkToDo(examplesToSynchronize, remoteStates)
         _              <- checkCoherency(adapterConfig, todos)
-        remoteExamples <- remoteExamplesChangesApplier(adapterConfig, todos)
+        remoteExamples <- RemoteOperations.remoteExamplesChangesApply(adapterConfig, todos)
         // _            <- ZIO.log(s"${adapterConfig.targetName} : Build examples summary")
         overviewOption <- Overview.makeOverview(remoteExamples, adapterConfig)
         // _            <- ZIO.log(s"${adapterConfig.targetName} : Publish examples summary")
         overviewTodo    = computeWorkToDo(overviewOption, remoteStates)
-        remoteOverview <- remoteExamplesChangesApplier(adapterConfig, overviewTodo)
+        remoteOverview <- RemoteOperations.remoteExamplesChangesApply(adapterConfig, overviewTodo)
         _              <- RIO.foreach(remoteOverview.headOption)(publishedOverview => ZIO.log(s"${adapterConfig.targetName} : Summary available at ${publishedOverview.state.url}"))
       } yield ()
     }
@@ -180,12 +178,7 @@ object Synchronize {
     for {
       adapters <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.publishAdapters)
       _        <- RIO.foreachPar(adapters.toList) { case (adapterName, adapterConfig) =>
-                    examplesPublishToGivenAdapter(
-                      examples,
-                      adapterConfig,
-                      RemoteOperations.remoteExampleStatesFetch,
-                      RemoteOperations.remoteExamplesChangesApply
-                    )
+                    examplesPublishToGivenAdapter(examples, adapterConfig)
                   }
     } yield ()
   }
@@ -226,7 +219,7 @@ object Synchronize {
 //        format = zio.logging.LogFormat.colored
 //      ) >>> Logging.withRootLoggerName("Synchronize")
 //    )
-    val synchronizeApp = synchronizeEffect.provide(System.live, Console.live, Clock.live, configLayer, httpClientLayer)//, loggingLayer)
+    val synchronizeApp = synchronizeEffect.provide(System.live, Console.live, Clock.live, configLayer, httpClientLayer) // , loggingLayer)
 
     Runtime.default.unsafeRun(synchronizeApp)
   }
