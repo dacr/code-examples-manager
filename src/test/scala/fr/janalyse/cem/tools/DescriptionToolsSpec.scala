@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 David Crosson
+ * Copyright 2022 David Crosson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import zio.test.*
 import zio.test.Assertion.*
 import fr.janalyse.cem.model.CodeExample
 import fr.janalyse.cem.tools.DescriptionTools.*
+import java.util.UUID
 import org.junit.runner.RunWith
 
 //@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
@@ -38,10 +39,10 @@ object DescriptionToolsSpec extends DefaultRunnableSpec {
       },
       // ----------------------------------------------------------------------------------------------
       test("makeDescription should return a description for ready to publish code examples") {
-        val example = CodeExample(filename = "truc.sc", uuid = Some("aaaa"), content = "blah")
+        val example = CodeExample(filepath = None, filename = "truc.sc", uuid = UUID.fromString("049e6849-0c93-4b96-a914-f694f6982f5e"), content = "blah")
         assert(makeDescription(example))(
           isSome(
-            endsWithString(s"#aaaa/${example.checksum}")
+            endsWithString(s"#049e6849-0c93-4b96-a914-f694f6982f5e/${example.checksum}")
           )
         )
       }

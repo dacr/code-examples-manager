@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 David Crosson
+ * Copyright 2022 David Crosson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ object DescriptionTools {
   def makeDescription(example: CodeExample): Option[String] = {
     for {
       summary <- example.summary.orElse(Some(""))
-      uuid    <- example.uuid
+      uuid     = example.uuid
       chksum   = example.checksum
       cemURL   = "https://github.com/dacr/code-examples-manager"
     } yield s"$summary / published by $cemURL #$uuid/$chksum"

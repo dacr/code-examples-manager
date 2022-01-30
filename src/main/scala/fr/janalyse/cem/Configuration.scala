@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 David Crosson
+ * Copyright 2022 David Crosson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import java.io.File
 
 final case class ExamplesConfig(
   searchRootDirectories: String,
-  searchGlob: String,
+  searchOnlyPattern: Option[String],
   searchIgnoreMask: Option[String]
 )
 

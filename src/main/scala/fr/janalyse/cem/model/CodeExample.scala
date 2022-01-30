@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 David Crosson
+ * Copyright 2022 David Crosson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,27 +15,50 @@
  */
 package fr.janalyse.cem.model
 
+import fr.janalyse.cem.tools.GitOps
 import fr.janalyse.cem.tools.Hashes.sha1
 import zio.*
-
+import zio.nio.file.*
 import java.io.File
 
-case class CodeExample(
-  filename: String,
-  category: Option[String] = None, // used sub-directory
-  summary: Option[String] = None,
-  keywords: List[String] = Nil,
-  publish: List[String] = Nil,
-  authors: List[String] = Nil,
-  uuid: Option[String] = None,
-  content: String
-) {
-  def fileExt: String = filename.split("[.]", 2).drop(1).headOption.getOrElse("")
+import java.time.{Instant, OffsetDateTime, ZoneId}
+import java.util.UUID
 
-  val checksum: String = {
-    // only filename and category is defined outside from example content
-    sha1(content + filename + category.getOrElse(""))
-  }
+sealed trait ExampleIssue {
+  def filepath: Path
+}
+case class ExampleContentIssue(filepath: Path, throwable: Throwable)                    extends ExampleIssue
+case class ExampleFilenameIssue(filepath: Path, throwable: Throwable)                   extends ExampleIssue
+case class ExampleIOIssue(filepath: Path, throwable: Throwable)                         extends ExampleIssue
+case class ExampleIdentifierNotFoundIssue(filepath: Path)                               extends ExampleIssue
+case class ExampleUUIDIdentifierIssue(filepath: Path, id: String, throwable: Throwable) extends ExampleIssue
+case class ExampleCreatedOnDateFormatIssue(filepath: Path, throwable: Throwable)        extends ExampleIssue
+case class ExampleGitIssue(filepath: Path, throwable: Throwable)                        extends ExampleIssue
+
+case class CodeExample(
+  filepath: Option[Path],
+  filename: String,
+  content: String,
+  uuid: UUID,                                 // embedded
+  category: Option[String] = None,            // optionally embedded - default value is containing directory
+  createdOn: Option[OffsetDateTime] = None,   // embedded
+  lastUpdated: Option[OffsetDateTime] = None, // computed from file
+  summary: Option[String] = None,             // embedded
+  keywords: List[String] = Nil,               // embedded
+  publish: List[String] = Nil,                // embedded
+  authors: List[String] = Nil,                // embedded
+  runWith: Option[String] = None,             // embedded
+  managedBy: Option[String] = None,           // embedded
+  license: Option[String] = None,             // embedded
+  updatedCount: Option[Int] = None,           // computed from GIT history
+  attachments: List[String] = Nil             // embedded
+) {
+  def fileExtension: String     = filename.split("[.]", 2).drop(1).headOption.getOrElse("")
+  def checksum: String          = sha1(content + filename + category.getOrElse(""))
+  def isTestable: Boolean       = keywords.contains("@testable")
+  def shouldFail: Boolean       = keywords.contains("@fail")
+  def isPublishable: Boolean    = !publish.isEmpty
+  override def toString: String = s"$category $filename $uuid $summary"
 }
 
 object CodeExample {
@@ -52,39 +75,74 @@ object CodeExample {
     new File(filepath).getName
   }
 
-  def exampleCategoryFromFilepath(filename: String, searchRoot: String): Option[String] = {
-    val normalizedSearchRoot = new File(searchRoot).getPath
-    val file                 = new File(filename)
-    val parentFilename       = if (file.getParent != null) file.getParent else ""
-    parentFilename
-      .replace(normalizedSearchRoot, "")
-      .replaceAll("""^[/\\]""", "")
-      .replaceAll("""[/\\]$""", "")
-      .trim match {
-      case ""       => None
-      case category => Some(category)
-    }
+  def exampleCategoryFromFilepath(examplePath: Path, searchPath: Path): Option[String] = {
+    examplePath.parent
+      .map(parent => searchPath.relativize(parent))
+      .map(_.toString)
+      .filter(_.size>0)
   }
 
-  def makeExample(exampleFilepath: String, fromSearchRoot: String, contentFetcher: RIO[Any, String]): RIO[Any, CodeExample] = {
+  def fileLastModified(examplePath: Path) = {
+    OffsetDateTime.ofInstant(Instant.ofEpochMilli(examplePath.toFile.lastModified), ZoneId.systemDefault())
+  }
+
+  def makeExample(
+    examplePath: String,
+    fromSearchPath: String,
+    givenContent: String
+  ): ZIO[Any, ExampleIssue, CodeExample] = {
+    makeExample(Path(examplePath), Path(fromSearchPath), givenContent)
+  }
+
+  def makeExample(
+    examplePath: Path,
+    fromSearchPath: Path,
+    givenContent: String
+  ): ZIO[Any, ExampleIssue, CodeExample] = {
     for {
-      rawContent <- contentFetcher
-      filename    = filenameFromFilepath(exampleFilepath)
-      category    = exampleCategoryFromFilepath(exampleFilepath, fromSearchRoot)
-      content     = rawContent.replaceAll("\r", "")
+      filename      <- Task
+                         .getOrFail(Option(examplePath.filename).map(_.toString))
+                         .mapError(th => ExampleFilenameIssue(examplePath, th))
+      content        = givenContent.replaceAll("\r", "")
+      category       = exampleContentExtractValue(content, "category").orElse(exampleCategoryFromFilepath(examplePath, fromSearchPath))
+      foundId        = exampleContentExtractValue(content, "id")
+      foundCreatedOn = exampleContentExtractValue(content, "created-on")
+      id            <- Task
+                         .getOrFail(foundId)
+                         .mapError(th => ExampleIdentifierNotFoundIssue(examplePath))
+      uuid          <- Task
+                         .attempt(UUID.fromString(id))
+                         .mapError(th => ExampleUUIDIdentifierIssue(examplePath, id, th))
+      gitMetaData   <- Task // TODO quite slow !
+                         .attempt(GitOps.getGitFileMetaData(examplePath.toFile.toPath))
+                         .mapError(th => ExampleGitIssue(examplePath, th))
+      createdOn     <- Task
+                         .attempt(foundCreatedOn.map(OffsetDateTime.parse))
+                         .mapAttempt(_.orElse(gitMetaData.map(_.createdOn)))
+                         .mapError(th => ExampleCreatedOnDateFormatIssue(examplePath, th))
+      lastUpdated   <- Task
+                         .attempt(gitMetaData.map(_.lastUpdated))
+                         .mapAttempt(_.getOrElse(fileLastModified(examplePath)))
+                         .mapError(th => ExampleIOIssue(examplePath, th))
+      updatedCount   = gitMetaData.map(_.changesCount)
     } yield {
-      val id   = exampleContentExtractValue(content, "id")
-      val idRE = "[-0-9a-f]+".r
-      if (id.isDefined) assert(idRE.matches(id.get), s"INVALID UUID: $id for $filename")
       CodeExample(
+        uuid = uuid,
+        content = content,
         filename = filename,
+        filepath = Some(examplePath),
         category = category,
+        createdOn = createdOn,
+        lastUpdated = Some(lastUpdated),
+        updatedCount = updatedCount,
         summary = exampleContentExtractValue(content, "summary"),
         keywords = exampleContentExtractValueList(content, "keywords"),
         publish = exampleContentExtractValueList(content, "publish"),
         authors = exampleContentExtractValueList(content, "authors"),
-        uuid = id,
-        content = content
+        runWith = exampleContentExtractValue(content, "run-with"),
+        managedBy = exampleContentExtractValue(content, "managed-by"),
+        license = exampleContentExtractValue(content, "license"),
+        attachments = exampleContentExtractValueList(content, "attachments")
       )
     }
   }

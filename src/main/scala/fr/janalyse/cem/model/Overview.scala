@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 David Crosson
+ * Copyright 2022 David Crosson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,11 @@
 package fr.janalyse.cem.model
 
 import fr.janalyse.cem.templates.txt.*
-import fr.janalyse.cem.{CodeExampleManagerConfig, PublishAdapterConfig}
-import zio.{RIO, Task}
-import zio.logging.*
+import fr.janalyse.cem.{ApplicationConfig, CodeExampleManagerConfig, PublishAdapterConfig}
+import zio.config.getConfig
+import zio.*
 
+import java.util.UUID
 import java.time.Instant
 
 case class OverviewContext(
@@ -37,7 +38,7 @@ case class ExamplesForCategoryContext(category: String, categoryExamples: Seq[Ex
 
 object Overview {
 
-  def makeOverview(publishedExamples: Iterable[RemoteExample], adapter: PublishAdapterConfig, config: CodeExampleManagerConfig): RIO[Any, Option[CodeExample]] = {
+  def makeOverview(publishedExamples: Iterable[RemoteExample], adapter: PublishAdapterConfig): RIO[ApplicationConfig, Option[CodeExample]] = {
     if (publishedExamples.isEmpty) RIO.none
     else {
       import fr.janalyse.tools.NaturalSort.ord
@@ -57,28 +58,29 @@ object Overview {
           .map { case (category, examplesByCategory) => ExamplesForCategoryContext(category, examplesByCategory.sortBy(_.filename)) }
           .sortBy(_.category)
 
-      val overviewContext = OverviewContext(
-        title = config.summary.title,
-        examplesCount = exampleContexts.size,
-        examples = exampleContexts.sortBy(_.summary).toList,
-        examplesByCategory = examplesContextByCategory,
-        projectName = config.metaInfo.name,
-        projectURL = config.metaInfo.projectURL,
-        version = config.metaInfo.version,
-        lastUpdated = Instant.now().toString
-      )
-      val templateLogic   = for {
-        //_ <- log.info(s"${adapter.targetName} : Generating overview")
-        overviewContent <- Task.effect(ExamplesOverviewTemplate.render(overviewContext).body)
+      val templateLogic = for {
+        config          <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig)
+        overviewContext  = OverviewContext(
+                             title = config.summary.title,
+                             examplesCount = exampleContexts.size,
+                             examples = exampleContexts.sortBy(_.summary).toList,
+                             examplesByCategory = examplesContextByCategory,
+                             projectName = config.metaInfo.name,
+                             projectURL = config.metaInfo.projectURL,
+                             version = config.metaInfo.version,
+                             lastUpdated = Instant.now().toString
+                           )
+        overviewContent <- Task.attempt(ExamplesOverviewTemplate.render(overviewContext).body)
       } yield {
         CodeExample(
+          filepath = None,
           filename = "index.md",
           category = None,
           summary = Some(config.summary.title),
           keywords = Nil,
           publish = List(adapter.activationKeyword),
           authors = Nil,
-          uuid = Some(adapter.overviewUUID),
+          uuid = UUID.fromString(adapter.overviewUUID),
           content = overviewContent
         )
       }

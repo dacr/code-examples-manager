@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 David Crosson
+ * Copyright 2022 David Crosson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ object RemoteGithubOperationsSpec extends DefaultRunnableSpec {
 
   import RemoteGithubOperations.*
 
-  val exampleTask1 = {
+  val zexample1 = {
     val filename   = "test-data/sample1/fake-testing-pi.sc"
     val searchRoot = "test-data/sample1"
     val content    =
@@ -47,7 +47,7 @@ object RemoteGithubOperationsSpec extends DefaultRunnableSpec {
         |import org.scalatest._,matchers.should.Matchers._
         |
         |math.Pi shouldBe 3.14d +- 0.01d""".stripMargin
-    CodeExample.makeExample(filename, searchRoot, Task(content))
+    CodeExample.makeExample(filename, searchRoot, content)
   }
 
   // ----------------------------------------------------------------------------------------------
@@ -64,8 +64,8 @@ object RemoteGithubOperationsSpec extends DefaultRunnableSpec {
     )
 
     val logic = for {
-      example1 <- exampleTask1
-      uuid1    <- Task.getOrFail(example1.uuid)
+      example1 <- zexample1
+      uuid1    <- Task(example1.uuid)
       state1    = RemoteExampleState(
                     remoteId = "6e40f8239fa6828ab45a064b8131fdfc", // // MDQ6R2lzdDQ1NTk5OTQ= --> 04:Gist4559994 --> 4559994
                     description = "desc",

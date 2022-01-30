@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 David Crosson
+ * Copyright 2022 David Crosson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,13 @@
  */
 package fr.janalyse.cem.model
 
+import java.util.UUID
+
 enum WhatToDo {
-  case IgnoreExample(example: CodeExample)
-  case OrphanRemoteExample(uuid: String, state: RemoteExampleState)
-  case DeleteRemoteExample(uuid: String, state: RemoteExampleState)
-  case AddExample(uuid: String, example: CodeExample)
-  case KeepRemoteExample(uuid: String, example: CodeExample, state: RemoteExampleState)
-  case UpdateRemoteExample(uuid: String, example: CodeExample, state: RemoteExampleState)
-  case UnsupportedOperation(uuidOption: Option[String], exampleOption: Option[CodeExample], stateOption: Option[RemoteExampleState])
+  case OrphanRemoteExample(uuid: UUID, state: RemoteExampleState)
+  case DeleteRemoteExample(uuid: UUID, state: RemoteExampleState)
+  case AddExample(uuid: UUID, example: CodeExample)
+  case KeepRemoteExample(uuid: UUID, example: CodeExample, state: RemoteExampleState)
+  case UpdateRemoteExample(uuid: UUID, example: CodeExample, state: RemoteExampleState)
+  case UnsupportedOperation(uuid: UUID, exampleOption: Option[CodeExample], stateOption: Option[RemoteExampleState])
 }

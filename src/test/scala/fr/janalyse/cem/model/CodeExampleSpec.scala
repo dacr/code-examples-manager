@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 David Crosson
+ * Copyright 2022 David Crosson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package fr.janalyse.cem.model
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
+import zio.nio.file.Path
 import org.junit.runner.RunWith
 
 //@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
@@ -42,15 +43,15 @@ object CodeExampleSpec extends DefaultRunnableSpec {
   // ----------------------------------------------------------------------------------------------
   val t1 = test("make an example") {
     for {
-      example <- CodeExample.makeExample(exampleFakeTestingFilename, exampleFakeTestingSearchRoot, Task(exampleFakeTestingPiContent))
+      example <- CodeExample.makeExample(exampleFakeTestingFilename, exampleFakeTestingSearchRoot, exampleFakeTestingPiContent)
     } yield assertTrue(example.filename == "fake-testing-pi.sc") &&
       assertTrue(example.category.isEmpty) &&
       assertTrue(example.summary.contains("Simplest scalatest test framework usage.")) &&
-      assertTrue(example.fileExt == "sc") &&
+      assertTrue(example.fileExtension == "sc") &&
       assertTrue(example.publish == List("gist", "snippet")) &&
       assertTrue(example.authors == List("David Crosson")) &&
       assertTrue(example.keywords == List("scalatest", "pi", "@testable")) &&
-      assertTrue(example.uuid.contains("8f2e14ba-9856-4500-80ab-3b9ba2234ce2")) &&
+      assertTrue(example.uuid.toString == "8f2e14ba-9856-4500-80ab-3b9ba2234ce2") &&
       assert(example.content)(matchesRegex("(?s).*id [:] 8f2e14ba-9856-4500-80ab-3b9ba2234ce2.*")) &&
       assertTrue(example.checksum == "5f6dd8a2d2f813ee946542161503d61cb9a8074e")
   }
@@ -67,7 +68,7 @@ object CodeExampleSpec extends DefaultRunnableSpec {
     )
     inputsAndExpectedResults
       .map { case ((filename, searchRoot), expectedResult) =>
-        assertTrue(CodeExample.exampleCategoryFromFilepath(filename, searchRoot) == expectedResult)
+        assertTrue(CodeExample.exampleCategoryFromFilepath(Path(filename), Path(searchRoot)) == expectedResult)
       }
       .reduce(_ && _)
   }

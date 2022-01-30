@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 David Crosson
+ * Copyright 2022 David Crosson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,13 @@
  */
 package fr.janalyse.cem.model
 
+import java.util.UUID
+
 case class RemoteExampleState(
   remoteId: String,
   description: String,
   url: String,
   filename: Option[String],
-  uuid: String,
+  uuid: UUID,
   checksum: String
 )

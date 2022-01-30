@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 David Crosson
+ * Copyright 2022 David Crosson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import sttp.client3.*
 import sttp.client3.ziojson.*
 import sttp.client3.asynchttpclient.zio.SttpClient
 import sttp.client3.asynchttpclient.zio.*
+import java.util.UUID
 
 import fr.janalyse.cem.model.*
 import fr.janalyse.cem.model.WhatToDo.*
@@ -109,7 +110,7 @@ object RemoteGithubOperations {
     def worker(uri: Uri): RIO[SttpClient, Iterable[GistInfo]] = {
       val query = basicRequest.get(uri).response(asJson[Vector[GistInfo]])
       for {
-        _             <- ZIO.logInfo(s"${adapterConfig.targetName} : Fetching from $uri")
+        _             <- ZIO.log(s"${adapterConfig.targetName} : Fetching from $uri")
         response      <- send(githubInjectAuthToken(query, adapterConfig.token))
         gists         <- RIO.fromEither(response.body)
         nextLinkOption = response.header("Link").flatMap(webLinkingExtractNext)
@@ -140,7 +141,7 @@ object RemoteGithubOperations {
         description = desc,
         url = url,
         filename = files.keys.headOption, // TODO
-        uuid = uuid,
+        uuid = UUID.fromString(uuid),
         checksum = checksum
       )
     }
@@ -171,7 +172,7 @@ object RemoteGithubOperations {
       response    <- send(githubInjectAuthToken(query, adapterConfig.token)).map(_.body).absolve
       id           = response.id
       url          = response.html_url
-      _           <- ZIO.logInfo(s"""${adapterConfig.targetName} : ADDED ${todo.uuid} - ${example.summary.getOrElse("")} - $url""")
+      _           <- ZIO.log(s"""${adapterConfig.targetName} : ADDED ${todo.uuid} - ${example.summary.getOrElse("")} - $url""")
     } yield RemoteExample(
       todo.example,
       RemoteExampleState(
@@ -212,7 +213,7 @@ object RemoteGithubOperations {
       response    <- send(authedQuery).map(_.body).absolve
       id           = response.id
       url          = response.html_url
-      _           <- ZIO.logInfo(s"""${adapterConfig.targetName} : UPDATED ${todo.uuid} - ${example.summary.getOrElse("")} - $url""")
+      _           <- ZIO.log(s"""${adapterConfig.targetName} : UPDATED ${todo.uuid} - ${example.summary.getOrElse("")} - $url""")
     } yield RemoteExample(
       todo.example,
       RemoteExampleState(
@@ -228,7 +229,6 @@ object RemoteGithubOperations {
 
   def githubRemoteExampleChangesApply(adapterConfig: PublishAdapterConfig)(todo: WhatToDo): RIO[SttpClient, Option[RemoteExample]] = {
     todo match {
-      case _: IgnoreExample                        => ZIO.succeed(None)
       case _: UnsupportedOperation                 => ZIO.succeed(None)
       case _: OrphanRemoteExample                  => ZIO.succeed(None)
       case _: DeleteRemoteExample                  => ZIO.succeed(None) // TODO - Add support for delete operation

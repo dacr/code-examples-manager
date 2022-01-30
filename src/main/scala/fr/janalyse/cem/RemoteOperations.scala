@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 David Crosson
+ * Copyright 2022 David Crosson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ object RemoteOperations {
 
   def remoteExampleStatesFetch(adapterConfig: PublishAdapterConfig): RIO[SttpClient, Iterable[RemoteExampleState]] = {
     for {
-      _      <- ZIO.logInfo(s"${adapterConfig.targetName} : Fetching already published examples")
+      _      <- ZIO.log(s"${adapterConfig.targetName} : Fetching already published examples")
       states <-
         if (adapterConfig.kind == "github") RemoteGithubOperations.githubRemoteExamplesStatesFetch(adapterConfig)
         else if (adapterConfig.kind == "gitlab") RemoteGitlabOperations.gitlabRemoteExamplesStatesFetch(adapterConfig)
@@ -34,10 +34,10 @@ object RemoteOperations {
 
   def remoteExamplesChangesApply(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]): RIO[SttpClient, Iterable[RemoteExample]] = {
     for {
-      //_ <- ZIO.logInfo(s"${adapterConfig.targetName} : Applying changes")
-      //_ <- ZIO.logInfo(s"${adapterConfig.targetName} : To add count ${todos.count(_.isInstanceOf[AddExample])}")
-      //_ <- ZIO.logInfo(s"${adapterConfig.targetName} : To update count ${todos.count(_.isInstanceOf[UpdateRemoteExample])}")
-      //_ <- ZIO.logInfo(s"${adapterConfig.targetName} : To keep count ${todos.count(_.isInstanceOf[KeepRemoteExample])}")
+      //_ <- ZIO.log(s"${adapterConfig.targetName} : Applying changes")
+      //_ <- ZIO.log(s"${adapterConfig.targetName} : To add count ${todos.count(_.isInstanceOf[AddExample])}")
+      //_ <- ZIO.log(s"${adapterConfig.targetName} : To update count ${todos.count(_.isInstanceOf[UpdateRemoteExample])}")
+      //_ <- ZIO.log(s"${adapterConfig.targetName} : To keep count ${todos.count(_.isInstanceOf[KeepRemoteExample])}")
       remoteExamples <-
         if (adapterConfig.kind == "github") RemoteGithubOperations.githubRemoteExamplesChangesApply(adapterConfig, todos)
         else if (adapterConfig.kind == "gitlab") RemoteGitlabOperations.gitlabRemoteExamplesChangesApply(adapterConfig, todos)
