@@ -38,13 +38,6 @@ object Synchronize {
   type FileContent = String
   type IgnoreMask  = String
 
-  def readFileContent(inputPath: Path): ZIO[Any, Throwable, FileContent] = {
-    for {
-      charset <- IO.attempt(Charset.forName("UTF-8"))
-      content <- Files.readAllBytes(inputPath)
-    } yield String(content.toArray, charset.name)
-  }
-
   def searchPredicate(
     searchOnlyRegex: Option[Regex],
     ignoreMaskRegex: Option[Regex]
@@ -62,14 +55,10 @@ object Synchronize {
     ignoreMaskRegex: Option[Regex]
   ): ZIO[Any, Throwable, ZStream[Any, Throwable, ZIO[Any, ExampleIssue, CodeExample]]] = {
     for {
-      searchPath <- IO.attempt(Path(searchRoot))
-      stream      = Files.find(searchPath, 10)(searchPredicate(searchOnlyRegex, ignoreMaskRegex))
-    } yield stream.map(path =>
-      for {
-        rawContent <- readFileContent(path).mapError(th => ExampleContentIssue(path, th))
-        example    <- CodeExample.makeExample(path, searchPath, rawContent)
-      } yield example
-    )
+      searchPath     <- IO.attempt(Path(searchRoot))
+      stream          = Files.find(searchPath, 10)(searchPredicate(searchOnlyRegex, ignoreMaskRegex))
+      examplesStream  = stream.map(path => CodeExample.makeExample(path, searchPath))
+    } yield examplesStream
   }
 
   def examplesValidSearchRoots(searchRootDirectories: String): RIO[Any, List[SearchRoot]] = {
@@ -213,7 +202,7 @@ object Synchronize {
     val configLayer     = ZLayer.fromZIO(Configuration())
     val httpClientLayer = AsyncHttpClientZioBackend.layer()
 
-    val loggingLayer = ZLayer.succeed(zio.logging.LogFormat.colored.toLogger)
+    val loggingLayer   = ZLayer.succeed(zio.logging.LogFormat.colored.toLogger)
     val synchronizeApp = synchronizeEffect.provide(System.live, Console.live, Clock.live, configLayer, httpClientLayer, loggingLayer)
 
     Runtime.default.unsafeRun(synchronizeApp)

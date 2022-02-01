@@ -18,9 +18,10 @@ package fr.janalyse.cem.model
 import fr.janalyse.cem.tools.GitOps
 import fr.janalyse.cem.tools.Hashes.sha1
 import zio.*
+import zio.nio.charset.Charset
 import zio.nio.file.*
-import java.io.File
 
+import java.io.File
 import java.time.{Instant, OffsetDateTime, ZoneId}
 import java.util.UUID
 
@@ -39,19 +40,19 @@ case class CodeExample(
   filepath: Option[Path],
   filename: String,
   content: String,
-  uuid: UUID,                                 // embedded
-  category: Option[String] = None,            // optionally embedded - default value is containing directory
-  createdOn: Option[OffsetDateTime] = None,   // embedded
-  lastUpdated: Option[OffsetDateTime] = None, // computed from file
-  summary: Option[String] = None,             // embedded
-  keywords: List[String] = Nil,               // embedded
-  publish: List[String] = Nil,                // embedded
-  authors: List[String] = Nil,                // embedded
-  runWith: Option[String] = None,             // embedded
-  managedBy: Option[String] = None,           // embedded
-  license: Option[String] = None,             // embedded
-  updatedCount: Option[Int] = None,           // computed from GIT history
-  attachments: List[String] = Nil             // embedded
+  uuid: UUID,                                  // embedded
+  category: Option[String] = None,             // optionally embedded - default value is containing directory
+  createdOn: Option[OffsetDateTime] = None,    // embedded
+  lastUpdated: Option[OffsetDateTime] = None,  // computed from file
+  summary: Option[String] = None,              // embedded
+  keywords: List[String] = Nil,                // embedded
+  publish: List[String] = Nil,                 // embedded
+  authors: List[String] = Nil,                 // embedded
+  runWith: Option[String] = None,              // embedded
+  managedBy: Option[String] = None,            // embedded
+  license: Option[String] = None,              // embedded
+  updatedCount: Option[Int] = None,            // computed from GIT history
+  attachments: Map[String, String] = Map.empty // embedded
 ) {
   def fileExtension: String     = filename.split("[.]", 2).drop(1).headOption.getOrElse("")
   def checksum: String          = sha1(content + filename + category.getOrElse(""))
@@ -62,6 +63,14 @@ case class CodeExample(
 }
 
 object CodeExample {
+
+  def readFileContent(inputPath: Path): ZIO[Any, Throwable, String] = {
+    for {
+      charset <- IO.attempt(Charset.forName("UTF-8"))
+      content <- Files.readAllBytes(inputPath)
+    } yield String(content.toArray, charset.name)
+
+  }
   def exampleContentExtractValue(from: String, key: String): Option[String] = {
     val RE = ("""(?m)(?i)^(?:(?:// )|(?:## )|(?:- )|(?:-- )) *""" + key + """ *: *(.*)$""").r
     RE.findFirstIn(from).collect { case RE(value) => value.trim }.filter(_.size > 0)
@@ -79,12 +88,20 @@ object CodeExample {
     examplePath.parent
       .map(parent => searchPath.relativize(parent))
       .map(_.toString)
-      .filter(_.size>0)
+      .filter(_.size > 0)
   }
 
   def fileLastModified(examplePath: Path) = {
     OffsetDateTime.ofInstant(Instant.ofEpochMilli(examplePath.toFile.lastModified), ZoneId.systemDefault())
   }
+
+  def makeExample(
+    examplePath: Path,
+    fromSearchPath: Path
+  ): ZIO[Any, ExampleIssue, CodeExample] = for {
+    givenContent <- readFileContent(examplePath).mapError(th => ExampleContentIssue(examplePath, th))
+    example      <- makeExample(examplePath, fromSearchPath, givenContent)
+  } yield example
 
   def makeExample(
     examplePath: String,
@@ -142,7 +159,7 @@ object CodeExample {
         runWith = exampleContentExtractValue(content, "run-with"),
         managedBy = exampleContentExtractValue(content, "managed-by"),
         license = exampleContentExtractValue(content, "license"),
-        attachments = exampleContentExtractValueList(content, "attachments")
+        attachments = exampleContentExtractValueList(content, "attachments").map(filename => filename-> "").toMap
       )
     }
   }

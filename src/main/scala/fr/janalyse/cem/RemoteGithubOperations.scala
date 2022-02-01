@@ -239,9 +239,7 @@ object RemoteGithubOperations {
   }
 
   def githubRemoteExamplesChangesApply(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]): RIO[SttpClient, Iterable[RemoteExample]] = {
-    for {
-      remotes <- RIO.foreach(todos)(githubRemoteExampleChangesApply(adapterConfig)).map(_.flatten)
-    } yield remotes
+    RIO.foreach(todos)(githubRemoteExampleChangesApply(adapterConfig)).map(_.flatten)
   }
 
 }
