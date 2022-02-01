@@ -42,6 +42,7 @@ object RemoteGitlabOperations {
     avatar_url: String,
     web_url: String
   )
+
   object SnippetAuthor {
     implicit val decoder: JsonDecoder[SnippetAuthor] = DeriveJsonDecoder.gen
     implicit val encoder: JsonEncoder[SnippetAuthor] = DeriveJsonEncoder.gen
@@ -59,38 +60,57 @@ object RemoteGitlabOperations {
     web_url: String,
     raw_url: String
   )
-  object SnippetInfo {
+  object SnippetInfo   {
     implicit val decoder: JsonDecoder[SnippetInfo] = DeriveJsonDecoder.gen
     implicit val encoder: JsonEncoder[SnippetInfo] = DeriveJsonEncoder.gen
   }
 
+  case class SnippetFileAdd(
+    file_path: String,
+    content: String
+  )
+
+  object SnippetFileAdd {
+    implicit val decoder: JsonDecoder[SnippetFileAdd] = DeriveJsonDecoder.gen
+    implicit val encoder: JsonEncoder[SnippetFileAdd] = DeriveJsonEncoder.gen
+  }
 
   case class SnippetAddRequest(
     title: Option[String],
-    file_name: String,
-    content: String,
     description: String,
-    visibility: String
+    visibility: String,
+    files: List[SnippetFileAdd]
   )
+
   object SnippetAddRequest {
     implicit val decoder: JsonDecoder[SnippetAddRequest] = DeriveJsonDecoder.gen
     implicit val encoder: JsonEncoder[SnippetAddRequest] = DeriveJsonEncoder.gen
   }
 
+  case class SnippetFileChange(
+    action: String, // "create" | "update" | "delete" | "move"
+    file_path: Option[String],
+    previous_path: Option[String],
+    content: Option[String]
+  )
+
+  object SnippetFileChange {
+    implicit val decoder: JsonDecoder[SnippetFileChange] = DeriveJsonDecoder.gen
+    implicit val encoder: JsonEncoder[SnippetFileChange] = DeriveJsonEncoder.gen
+  }
+
   case class SnippetUpdateRequest(
     id: String,
     title: Option[String],
-    file_name: String,
-    content: String,
     description: String,
-    visibility: String
+    visibility: String,
+    files: List[SnippetFileChange]
   )
+
   object SnippetUpdateRequest {
     implicit val decoder: JsonDecoder[SnippetUpdateRequest] = DeriveJsonDecoder.gen
     implicit val encoder: JsonEncoder[SnippetUpdateRequest] = DeriveJsonEncoder.gen
   }
-
-
 
   def gitlabInjectAuthToken[A, B](request: Request[A, B], tokenOption: Option[String]) = {
     val base = request.header("Content-Type", "application/json")
@@ -142,10 +162,14 @@ object RemoteGitlabOperations {
 
     def requestBody(description: String): SnippetAddRequest = SnippetAddRequest(
       title = todo.example.summary,
-      file_name = remoteExampleFileRename(todo.example.filename, adapterConfig),
-      content = todo.example.content,
       description = description,
-      visibility = adapterConfig.defaultVisibility.getOrElse("public")
+      visibility = adapterConfig.defaultVisibility.getOrElse("public"),
+      files = List(
+        SnippetFileAdd(
+          file_path = remoteExampleFileRename(todo.example.filename, adapterConfig),
+          content = todo.example.content
+        )
+      )
     )
 
     for {
@@ -174,10 +198,16 @@ object RemoteGitlabOperations {
     def requestBody(description: String): SnippetUpdateRequest = SnippetUpdateRequest(
       id = todo.state.remoteId,
       title = todo.example.summary,
-      file_name = remoteExampleFileRename(todo.example.filename, adapterConfig),
-      content = todo.example.content,
       description = description,
-      visibility = adapterConfig.defaultVisibility.getOrElse("public")
+      visibility = adapterConfig.defaultVisibility.getOrElse("public"),
+      files = List(
+        SnippetFileChange(
+          action = "update",
+          file_path = Some(remoteExampleFileRename(todo.example.filename, adapterConfig)),
+          previous_path = None,
+          content = Some(todo.example.content)
+        )
+      )
     )
 
     val snippetId = todo.state.remoteId

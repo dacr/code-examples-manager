@@ -33,13 +33,15 @@ libraryDependencies ++= Seq(
   "dev.zio"                       %% "zio-test-scalacheck"           % versions.zio % Test,
   "dev.zio"                       %% "zio-nio"                       % versions.zionio,
   "dev.zio"                       %% "zio-logging"                   % versions.ziologging,
+  "dev.zio"                       %% "zio-logging-slf4j"             % versions.ziologging,
   "dev.zio"                       %% "zio-config"                    % versions.zioconfig,
   "dev.zio"                       %% "zio-config-typesafe"           % versions.zioconfig,
   "dev.zio"                       %% "zio-config-magnolia"           % versions.zioconfig,
   "com.softwaremill.sttp.client3" %% "async-http-client-backend-zio" % versions.sttp,
   "com.softwaremill.sttp.client3" %% "zio-json"                      % versions.sttp,
   "fr.janalyse"                   %% "naturalsort"                   % versions.naturalsort,
-  "org.eclipse.jgit"               % "org.eclipse.jgit"              % versions.jgit
+  "org.eclipse.jgit"               % "org.eclipse.jgit"              % versions.jgit,
+  "org.slf4j"                      % "slf4j-simple"                  % "1.7.33"
 )
 
 excludeDependencies += "org.scala-lang.modules" % "scala-collection-compat_2.13"

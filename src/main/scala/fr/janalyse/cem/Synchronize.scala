@@ -213,13 +213,8 @@ object Synchronize {
     val configLayer     = ZLayer.fromZIO(Configuration())
     val httpClientLayer = AsyncHttpClientZioBackend.layer()
 
-//    val loggingLayer =
-//      logging.console(
-//        logLevel = LogLevel.Info,
-//        format = zio.logging.LogFormat.colored
-//      ) >>> Logging.withRootLoggerName("Synchronize")
-//    )
-    val synchronizeApp = synchronizeEffect.provide(System.live, Console.live, Clock.live, configLayer, httpClientLayer) // , loggingLayer)
+    val loggingLayer = ZLayer.succeed(zio.logging.LogFormat.colored.toLogger)
+    val synchronizeApp = synchronizeEffect.provide(System.live, Console.live, Clock.live, configLayer, httpClientLayer, loggingLayer)
 
     Runtime.default.unsafeRun(synchronizeApp)
   }
