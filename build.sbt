@@ -23,6 +23,7 @@ lazy val versions = new {
   val ziologging  = "2.0.0-RC4"
   val naturalsort = "1.0.1"
   val jgit        = "6.0.0.202111291000-r"
+  val slf4j       = "1.7.33"
 }
 
 libraryDependencies ++= Seq(
@@ -41,7 +42,7 @@ libraryDependencies ++= Seq(
   "com.softwaremill.sttp.client3" %% "zio-json"                      % versions.sttp,
   "fr.janalyse"                   %% "naturalsort"                   % versions.naturalsort,
   "org.eclipse.jgit"               % "org.eclipse.jgit"              % versions.jgit,
-  "org.slf4j"                      % "slf4j-simple"                  % "1.7.33"
+  "org.slf4j"                      % "slf4j-simple"                  % versions.slf4j
 )
 
 excludeDependencies += "org.scala-lang.modules" % "scala-collection-compat_2.13"
