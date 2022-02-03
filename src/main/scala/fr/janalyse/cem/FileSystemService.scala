@@ -14,6 +14,8 @@ trait FileSystemService {
 }
 
 object FileSystemService {
-  def readFileContent(inputPath: Path): ZIO[FileSystemService, Throwable, String] = ZIO.serviceWithZIO(_.readFileContent(inputPath))
-  def searchFiles(searchRoot: Path, searchOnlyRegex: Option[Regex], ignoreMaskRegex: Option[Regex]): Task[List[Path]] =
+  def readFileContent(inputPath: Path): ZIO[FileSystemService, Throwable, String] =
+    ZIO.serviceWithZIO(_.readFileContent(inputPath))
+  def searchFiles(searchRoot: Path, searchOnlyRegex: Option[Regex], ignoreMaskRegex: Option[Regex]): ZIO[FileSystemService, Throwable, List[Path]] =
+    ZIO.serviceWithZIO(_.searchFiles(searchRoot, searchOnlyRegex, ignoreMaskRegex))
 }
