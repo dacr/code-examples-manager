@@ -13,7 +13,7 @@ scmInfo := Some(
 
 scalaVersion := "3.1.1"
 
-mainClass := Some("fr.janalyse.cem.Synchronize")
+mainClass := Some("fr.janalyse.cem.Main")
 
 lazy val versions = new {
   val sttp        = "3.4.1"
@@ -23,7 +23,7 @@ lazy val versions = new {
   val ziologging  = "2.0.0-RC4"
   val naturalsort = "1.0.1"
   val jgit        = "6.0.0.202111291000-r"
-  val slf4j       = "1.7.33"
+  val logback     = "1.2.10"
 }
 
 libraryDependencies ++= Seq(
@@ -42,7 +42,7 @@ libraryDependencies ++= Seq(
   "com.softwaremill.sttp.client3" %% "zio-json"                      % versions.sttp,
   "fr.janalyse"                   %% "naturalsort"                   % versions.naturalsort,
   "org.eclipse.jgit"               % "org.eclipse.jgit"              % versions.jgit,
-  "org.slf4j"                      % "slf4j-simple"                  % versions.slf4j
+  "ch.qos.logback"                 % "logback-classic"               % versions.logback
 )
 
 excludeDependencies += "org.scala-lang.modules" % "scala-collection-compat_2.13"

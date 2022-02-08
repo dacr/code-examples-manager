@@ -198,13 +198,4 @@ object Synchronize {
     _         <- ZIO.log(s"Code examples manager publishing operations took ${(endTime - startTime) / 1000000}ms")
   } yield ()
 
-  def main(args: Array[String]): Unit = {
-    val configLayer     = ZLayer.fromZIO(Configuration())
-    val httpClientLayer = AsyncHttpClientZioBackend.layer()
-
-    val loggingLayer   = ZLayer.succeed(zio.logging.LogFormat.colored.toLogger)
-    val synchronizeApp = synchronizeEffect.provide(System.live, Console.live, Clock.live, configLayer, httpClientLayer, loggingLayer)
-
-    Runtime.default.unsafeRun(synchronizeApp)
-  }
 }
