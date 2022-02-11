@@ -15,6 +15,7 @@
  */
 package fr.janalyse.cem.model
 
+import fr.janalyse.cem.FileSystemService
 import fr.janalyse.cem.tools.GitOps
 import fr.janalyse.cem.tools.Hashes.sha1
 import zio.*
@@ -64,13 +65,6 @@ case class CodeExample(
 
 object CodeExample {
 
-  def readFileContent(inputPath: Path): ZIO[Any, Throwable, String] = {
-    for {
-      charset <- IO.attempt(Charset.forName("UTF-8"))
-      content <- Files.readAllBytes(inputPath)
-    } yield String(content.toArray, charset.name)
-
-  }
   def exampleContentExtractValue(from: String, key: String): Option[String] = {
     val RE = ("""(?m)(?i)^(?:(?:// )|(?:## )|(?:- )|(?:-- )) *""" + key + """ *: *(.*)$""").r
     RE.findFirstIn(from).collect { case RE(value) => value.trim }.filter(_.size > 0)
@@ -98,28 +92,12 @@ object CodeExample {
   def makeExample(
     examplePath: Path,
     fromSearchPath: Path
-  ): ZIO[Any, ExampleIssue, CodeExample] = for {
-    givenContent <- readFileContent(examplePath).mapError(th => ExampleContentIssue(examplePath, th))
-    example      <- makeExample(examplePath, fromSearchPath, givenContent)
-  } yield example
-
-  def makeExample(
-    examplePath: String,
-    fromSearchPath: String,
-    givenContent: String
-  ): ZIO[Any, ExampleIssue, CodeExample] = {
-    makeExample(Path(examplePath), Path(fromSearchPath), givenContent)
-  }
-
-  def makeExample(
-    examplePath: Path,
-    fromSearchPath: Path,
-    givenContent: String
-  ): ZIO[Any, ExampleIssue, CodeExample] = {
+  ): ZIO[FileSystemService, ExampleIssue, CodeExample] = {
     for {
       filename      <- Task
                          .getOrFail(Option(examplePath.filename).map(_.toString))
                          .mapError(th => ExampleFilenameIssue(examplePath, th))
+      givenContent  <- FileSystemService.readFileContent(examplePath).mapError(th => ExampleContentIssue(examplePath, th))
       content        = givenContent.replaceAll("\r", "")
       category       = exampleContentExtractValue(content, "category").orElse(exampleCategoryFromFilepath(examplePath, fromSearchPath))
       foundId        = exampleContentExtractValue(content, "id")
@@ -159,7 +137,7 @@ object CodeExample {
         runWith = exampleContentExtractValue(content, "run-with"),
         managedBy = exampleContentExtractValue(content, "managed-by"),
         license = exampleContentExtractValue(content, "license"),
-        attachments = exampleContentExtractValueList(content, "attachments").map(filename => filename-> "").toMap
+        attachments = exampleContentExtractValueList(content, "attachments").map(filename => filename -> "").toMap
       )
     }
   }

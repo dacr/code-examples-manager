@@ -33,54 +33,39 @@ import scala.util.Success
 import scala.util.matching.Regex
 
 object Synchronize {
-  type SearchRoot  = String
+  type SearchRoot  = Path
   type ExamplePath = Path
   type FileContent = String
   type IgnoreMask  = String
 
-  def searchPredicate(
-    searchOnlyRegex: Option[Regex],
-    ignoreMaskRegex: Option[Regex]
-  )(path: Path, attrs: BasicFileAttributes): Boolean = {
-    attrs.isRegularFile && (
-      ignoreMaskRegex.isEmpty || ignoreMaskRegex.get.findFirstIn(path.toString).isEmpty
-    ) && (
-      searchOnlyRegex.isEmpty || searchOnlyRegex.get.findFirstIn(path.toString).isDefined
-    )
-  }
-
-  def findFromSearchRoot(
+  def findExamplesFromSearchRoot(
     searchRoot: SearchRoot,
     searchOnlyRegex: Option[Regex],
     ignoreMaskRegex: Option[Regex]
-  ): ZIO[Any, Throwable, ZStream[Any, Throwable, ZIO[Any, ExampleIssue, CodeExample]]] = {
+  ): ZIO[FileSystemService, Throwable, List[Either[ExampleIssue, CodeExample]]] = {
     for {
-      searchPath     <- IO.attempt(Path(searchRoot))
-      stream          = Files.find(searchPath, 10)(searchPredicate(searchOnlyRegex, ignoreMaskRegex))
-      examplesStream  = stream.map(path => CodeExample.makeExample(path, searchPath))
-    } yield examplesStream
+      foundFiles <- FileSystemService.searchFiles(searchRoot, searchOnlyRegex, ignoreMaskRegex)
+      examples   <- ZIO.foreach(foundFiles)(path => CodeExample.makeExample(path, searchRoot).either)
+    } yield examples
   }
 
   def examplesValidSearchRoots(searchRootDirectories: String): RIO[Any, List[SearchRoot]] = {
     for {
-      roots         <- Task(searchRootDirectories.split("""\s*,\s*""").toList.map(_.trim).map(r => Path(r)))
-      validRoots    <- ZIO.filter(roots)(root => Files.isDirectory(root))
-      pathsAsStrings = validRoots.map(_.toFile.getPath)
-    } yield pathsAsStrings
+      roots      <- Task(searchRootDirectories.split("""\s*,\s*""").toList.map(_.trim).map(r => Path(r)))
+      validRoots <- ZIO.filter(roots)(root => Files.isDirectory(root))
+    } yield validRoots
   }
 
-  def examplesCollectFor(searchRoots: List[SearchRoot]): ZIO[ApplicationConfig, ExampleIssue | Throwable, List[CodeExample]] = {
+  def examplesCollectFor(searchRoots: List[SearchRoot]): ZIO[ApplicationConfig & FileSystemService, ExampleIssue | Throwable, List[CodeExample]] = {
     for {
       examplesConfig      <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.examples)
       searchOnlyPattern   <- ZIO.attempt(examplesConfig.searchOnlyPattern.map(_.r))
       searchIgnorePattern <- ZIO.attempt(examplesConfig.searchIgnoreMask.map(_.r))
-      searchRootsStreams  <- ZIO.foreach(searchRoots)(fromRoot => findFromSearchRoot(fromRoot, searchOnlyPattern, searchIgnorePattern))
-      examplesStream       = searchRootsStreams.reduce(_ ++ _)
-      examples            <- examplesStream.runCollect.map(_.toList)
-      examplesEither      <- ZIO.collectAll(examples.map(_.either))
-      validExamples        = examplesEither.collect { case Right(example) => example }
-      invalidExamples      = examplesEither.collect { case Left(example) => example }
-      // _                  <- ZIO.foreach(invalidExamples)(issue => ZIO.logWarning(issue.toString))
+      foundExamplesList   <- ZIO.foreach(searchRoots)(fromRoot => findExamplesFromSearchRoot(fromRoot, searchOnlyPattern, searchIgnorePattern))
+      foundExamples        = foundExamplesList.flatten
+      validExamples        = foundExamples.collect { case Right(example) => example }
+      invalidExamples      = foundExamples.collect { case Left(example) => example }
+      _                   <- ZIO.foreach(invalidExamples)(issue => ZIO.logWarning(issue.toString))
     } yield validExamples
   }
 
@@ -179,7 +164,7 @@ object Synchronize {
       .map { case (key, examples) => key -> examples.size }
   }
 
-  def synchronizeEffect: ZIO[Clock & SttpClient & ApplicationConfig, ExampleIssue | Throwable, Unit] = for {
+  def synchronizeEffect: ZIO[Clock & SttpClient & ApplicationConfig & FileSystemService, ExampleIssue | Throwable, Unit] = for {
     startTime <- Clock.nanoTime
     metaInfo  <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.metaInfo)
     version    = metaInfo.version

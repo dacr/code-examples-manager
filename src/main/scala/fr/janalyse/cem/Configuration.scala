@@ -28,7 +28,8 @@ import java.io.File
 final case class ExamplesConfig(
   searchRootDirectories: String,
   searchOnlyPattern: Option[String],
-  searchIgnoreMask: Option[String]
+  searchIgnoreMask: Option[String],
+  charEncoding: String
 )
 
 final case class RenameRuleConfig(

@@ -34,13 +34,13 @@ class FileSystemServiceImpl(applicationConfig: ApplicationConfig) extends FileSy
 
   override def readFileContent(inputPath: Path): Task[String] =
     for
-      charset <- IO.attempt(Charset.forName("UTF-8")) // TODO move to application config
+      charset <- IO.attempt(Charset.forName(applicationConfig.codeExamplesManagerConfig.examples.charEncoding))
       content <- Files.readAllBytes(inputPath)
     yield String(content.toArray, charset.name)
 
   override def readFileLines(inputPath: Path, maxLines: Option[Int]): Task[Chunk[String]] =
     for
-      charset       <- IO.attempt(Charset.forName("UTF-8")) // TODO move to application config
+      charset       <- IO.attempt(Charset.forName(applicationConfig.codeExamplesManagerConfig.examples.charEncoding))
       stream         = Files.lines(inputPath, charset)
       selectedStream = maxLines.map(n => stream.take(n)).getOrElse(stream)
       lines         <- selectedStream.runCollect
