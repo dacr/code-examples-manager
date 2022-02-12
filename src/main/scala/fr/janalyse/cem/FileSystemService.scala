@@ -12,14 +12,14 @@ import scala.util.matching.Regex
 
 trait FileSystemService:
   def readFileContent(inputPath: Path): Task[String]
-  def readFileLines(inputPath: Path, maxLines: Option[Int] = None): Task[Chunk[String]]
+  def readFileLines(inputPath: Path, maxLines: Option[Int] = None): Task[List[String]]
   def searchFiles(searchRoot: Path, searchOnlyRegex: Option[Regex], ignoreMaskRegex: Option[Regex]): Task[List[Path]]
 
 object FileSystemService:
   def readFileContent(inputPath: Path): ZIO[FileSystemService, Throwable, String] =
     ZIO.serviceWithZIO(_.readFileContent(inputPath))
 
-  def readFileLines(inputPath: Path, maxLines: Option[Int] = None): ZIO[FileSystemService, Throwable, Chunk[String]] =
+  def readFileLines(inputPath: Path, maxLines: Option[Int] = None): ZIO[FileSystemService, Throwable, List[String]] =
     ZIO.serviceWithZIO(_.readFileLines(inputPath, maxLines))
 
   def searchFiles(searchRoot: Path, searchOnlyRegex: Option[Regex], ignoreMaskRegex: Option[Regex]): ZIO[FileSystemService, Throwable, List[Path]] =
@@ -38,13 +38,13 @@ class FileSystemServiceImpl(applicationConfig: ApplicationConfig) extends FileSy
       content <- Files.readAllBytes(inputPath)
     yield String(content.toArray, charset.name)
 
-  override def readFileLines(inputPath: Path, maxLines: Option[Int]): Task[Chunk[String]] =
+  override def readFileLines(inputPath: Path, maxLines: Option[Int]): Task[List[String]] =
     for
       charset       <- IO.attempt(Charset.forName(applicationConfig.codeExamplesManagerConfig.examples.charEncoding))
       stream         = Files.lines(inputPath, charset)
       selectedStream = maxLines.map(n => stream.take(n)).getOrElse(stream)
       lines         <- selectedStream.runCollect
-    yield lines
+    yield lines.toList
 
   def searchPredicate(searchOnlyRegex: Option[Regex], ignoreMaskRegex: Option[Regex])(path: Path, attrs: BasicFileAttributes): Boolean =
     attrs.isRegularFile &&

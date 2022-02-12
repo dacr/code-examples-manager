@@ -25,6 +25,7 @@ import fr.janalyse.cem.tools.DescriptionTools.*
 import org.junit.runner.RunWith
 import sttp.client3.asynchttpclient.zio.AsyncHttpClientZioBackend
 import sttp.client3.asynchttpclient.zio.stubbing.whenRequestMatches
+import zio.nio.file.Path
 
 //@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
 object RemoteGithubOperationsSpec extends DefaultRunnableSpec {
@@ -32,8 +33,8 @@ object RemoteGithubOperationsSpec extends DefaultRunnableSpec {
   import RemoteGithubOperations.*
 
   val zexample1 = {
-    val filename   = "test-data/sample1/fake-testing-pi.sc"
-    val searchRoot = "test-data/sample1"
+    val filename   = Path("test-data/sample1/fake-testing-pi.sc")
+    val searchRoot = Path("test-data/sample1")
     val content    =
       """// summary : Simplest scalatest test framework usage.
         |// keywords : scalatest, pi, @testable
@@ -47,7 +48,7 @@ object RemoteGithubOperationsSpec extends DefaultRunnableSpec {
         |import org.scalatest._,matchers.should.Matchers._
         |
         |math.Pi shouldBe 3.14d +- 0.01d""".stripMargin
-    CodeExample.makeExample(filename, searchRoot, content)
+    CodeExample.makeExample(filename, searchRoot).provide(FileSystemServiceStub.stubWithContents(Map(filename->content)))
   }
 
   // ----------------------------------------------------------------------------------------------

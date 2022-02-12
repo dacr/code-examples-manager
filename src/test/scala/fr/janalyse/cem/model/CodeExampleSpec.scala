@@ -15,6 +15,7 @@
  */
 package fr.janalyse.cem.model
 
+import fr.janalyse.cem.FileSystemServiceStub
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -24,8 +25,8 @@ import org.junit.runner.RunWith
 //@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
 object CodeExampleSpec extends DefaultRunnableSpec {
 
-  val exampleFakeTestingFilename   = "test-data/sample1/fake-testing-pi.sc"
-  val exampleFakeTestingSearchRoot = "test-data/sample1"
+  val exampleFakeTestingFilename   = Path("test-data/sample1/fake-testing-pi.sc")
+  val exampleFakeTestingSearchRoot = Path("test-data/sample1")
   val exampleFakeTestingPiContent  =
     """// summary : Simplest scalatest test framework usage.
       |// keywords : scalatest, pi, @testable
@@ -43,7 +44,9 @@ object CodeExampleSpec extends DefaultRunnableSpec {
   // ----------------------------------------------------------------------------------------------
   val t1 = test("make an example") {
     for {
-      example <- CodeExample.makeExample(exampleFakeTestingFilename, exampleFakeTestingSearchRoot, exampleFakeTestingPiContent)
+      example <- CodeExample
+        .makeExample(exampleFakeTestingFilename, exampleFakeTestingSearchRoot)
+        .provide(FileSystemServiceStub.stubWithContents(Map(exampleFakeTestingFilename->exampleFakeTestingPiContent)))
     } yield assertTrue(example.filename == "fake-testing-pi.sc") &&
       assertTrue(example.category.isEmpty) &&
       assertTrue(example.summary.contains("Simplest scalatest test framework usage.")) &&
