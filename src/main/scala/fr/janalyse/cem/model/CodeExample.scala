@@ -108,7 +108,7 @@ object CodeExample {
       uuid          <- Task
                          .attempt(UUID.fromString(id))
                          .mapError(th => ExampleUUIDIdentifierIssue(examplePath, id, th))
-      gitMetaData   <- Task // TODO quite slow !
+      gitMetaData   <- Task // TODO quite slow AND use a service to provide the GIT features
                          .attempt(GitOps.getGitFileMetaData(examplePath.toFile.toPath))
                          .mapError(th => ExampleGitIssue(examplePath, th))
       createdOn     <- Task
@@ -120,6 +120,8 @@ object CodeExample {
                          .mapAttempt(_.getOrElse(fileLastModified(examplePath)))
                          .mapError(th => ExampleIOIssue(examplePath, th))
       updatedCount   = gitMetaData.map(_.changesCount)
+      attachmentsNames    = exampleContentExtractValueList(content, "attachments")
+      attachmentsMap  = attachmentsNames.map(_ -> "").toMap
     } yield {
       CodeExample(
         uuid = uuid,
@@ -137,7 +139,7 @@ object CodeExample {
         runWith = exampleContentExtractValue(content, "run-with"),
         managedBy = exampleContentExtractValue(content, "managed-by"),
         license = exampleContentExtractValue(content, "license"),
-        attachments = exampleContentExtractValueList(content, "attachments").map(filename => filename -> "").toMap
+        attachments = attachmentsMap
       )
     }
   }

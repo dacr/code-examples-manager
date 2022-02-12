@@ -34,9 +34,6 @@ import scala.util.matching.Regex
 
 object Synchronize {
   type SearchRoot  = Path
-  type ExamplePath = Path
-  type FileContent = String
-  type IgnoreMask  = String
 
   def findExamplesFromSearchRoot(
     searchRoot: SearchRoot,
@@ -118,11 +115,8 @@ object Synchronize {
     }
   }
 
-  def checkCoherency(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]): RIO[Any, Unit] = {
-    for {
-      _ <- RIO.foreach(todos)(checkRemote(adapterConfig))
-    } yield ()
-  }
+  def checkCoherency(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]): RIO[Any, Unit] = 
+      RIO.foreach(todos)(checkRemote(adapterConfig)).unit
 
   def examplesPublishToGivenAdapter(
     examples: Iterable[CodeExample],
