@@ -18,6 +18,7 @@ package fr.janalyse.cem
 import zio.*
 import zio.json.*
 import zio.json.ast.{Json, JsonCursor}
+import zio.json.ast.Json.*
 import zio.logging.*
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 import sttp.model.Uri
@@ -141,34 +142,43 @@ object RemoteGithubOperations {
         description = desc,
         url = url,
         files = files.keys.toList,
-        uuid = UUID.fromString(uuid),
+        uuid = UUID.fromString(uuid), // TODO FIX IT AS IT CAN FAIL !!!!!!
         hash = hash
       )
     }
   }
 
-  def githubRemoteExampleAdd(adapterConfig: PublishAdapterConfig, todo: AddExample): RIO[SttpClient, RemoteExample] = {
-    def requestBody(description: String): Json = {
-      import Json.*
-      val filename   = remoteExampleFileRename(todo.example.filename, adapterConfig)
-      val publicBool = adapterConfig.defaultVisibility.map(_.trim.toLowerCase == "public").getOrElse(true)
-      Obj(
-        "description" -> Str(description),
-        "public"      -> Bool(publicBool),
-        "files"       -> Obj(
-          filename -> Obj(
-            "filename" -> Str(filename),
-            "content"  -> Str(todo.example.content)
-          )
-        )
+  def buildAddRequestBody(adapterConfig: PublishAdapterConfig, todo: AddExample, description: String): Json = {
+    val remoteMainFilename = remoteExampleFileRename(todo.example.filename, adapterConfig)
+    val publicBool         = adapterConfig.defaultVisibility.map(_.trim.toLowerCase == "public").getOrElse(true)
+
+    val files: List[(String, Json)] = List(
+      remoteMainFilename -> Obj(
+        "filename" -> Str(remoteMainFilename),
+        "content"  -> Str(todo.example.content)
+      )
+    ) ++ todo.example.attachments.map { case (filename, content) =>
+      val remoteFilename = remoteExampleFileRename(filename, adapterConfig)
+      remoteFilename -> Obj(
+        "filename" -> Str(remoteFilename),
+        "content"  -> Str(content)
       )
     }
 
+    Obj(
+      "description" -> Str(description),
+      "public"      -> Bool(publicBool),
+      "files"       -> Obj(files: _*)
+    )
+  }
+
+  def githubRemoteExampleAdd(adapterConfig: PublishAdapterConfig, todo: AddExample): RIO[SttpClient, RemoteExample] = {
     for {
       apiURI      <- uriParse(s"${adapterConfig.apiEndPoint}/gists")
       example      = todo.example
       description <- ZIO.getOrFail(DescriptionTools.makeDescription(example))
-      query        = basicRequest.post(apiURI).body(requestBody(description)).response(asJson[GistCreateResponse])
+      requestBody  = buildAddRequestBody(adapterConfig, todo, description)
+      query        = basicRequest.post(apiURI).body(requestBody).response(asJson[GistCreateResponse])
       response    <- send(githubInjectAuthToken(query, adapterConfig.token)).map(_.body).absolve
       id           = response.id
       url          = response.html_url
@@ -186,29 +196,40 @@ object RemoteGithubOperations {
     )
   }
 
-  def githubRemoteExampleUpdate(adapterConfig: PublishAdapterConfig, todo: UpdateRemoteExample): RIO[SttpClient, RemoteExample] = {
-    def requestBody(description: String): Json = {
-      import Json.*
-      val filename    = remoteExampleFileRename(todo.example.filename, adapterConfig)
-      val oldFilename = todo.state.files.headOption.getOrElse(filename) // TO ENHANCE
-      Obj( // TODO - find a better way
-        "description" -> Str(description),
-        "files"       -> Obj(
-          oldFilename -> Obj(
-            "filename" -> Str(filename),
-            "content"  -> Str(todo.example.content)
-          )
-        )
+  def buildUpdateRequestBody(adapterConfig: PublishAdapterConfig, todo: UpdateRemoteExample, description: String): Json = {
+    val remoteFiles        = todo.state.files.toSet
+    val remoteMainFilename = remoteExampleFileRename(todo.example.filename, adapterConfig)
+    val remoteOrphanFiles  = (remoteFiles - remoteMainFilename) -- (
+      todo.example.attachments.keys.map(f => remoteExampleFileRename(f, adapterConfig))
+    )
+
+    val files: List[(String, Json)] = List(
+      remoteMainFilename -> Obj(
+        "filename" -> Str(remoteMainFilename),
+        "content"  -> Str(todo.example.content)
       )
+    ) ++ todo.example.attachments.map { case (filename, content) =>
+      val remoteFilename = remoteExampleFileRename(filename, adapterConfig)
+      remoteFilename -> Obj(
+        "filename" -> Str(remoteFilename),
+        "content"  -> Str(content)
+      )
+    } ++ remoteOrphanFiles.map(name => name -> Obj())
 
-    }
+    Obj(
+      "description" -> Str(description),
+      "files"       -> Obj(files: _*)
+    )
+  }
 
+  def githubRemoteExampleUpdate(adapterConfig: PublishAdapterConfig, todo: UpdateRemoteExample): RIO[SttpClient, RemoteExample] = {
     val gistId = todo.state.remoteId
     for {
       apiURI      <- uriParse(s"${adapterConfig.apiEndPoint}/gists/$gistId")
       example      = todo.example
       description <- ZIO.getOrFail(DescriptionTools.makeDescription(example))
-      query        = basicRequest.post(apiURI).body(requestBody(description)).response(asJson[GistUpdateResponse])
+      requestBody  = buildUpdateRequestBody(adapterConfig, todo, description)
+      query        = basicRequest.post(apiURI).body(requestBody).response(asJson[GistUpdateResponse])
       authedQuery  = githubInjectAuthToken(query, adapterConfig.token)
       response    <- send(authedQuery).map(_.body).absolve
       id           = response.id

@@ -33,7 +33,7 @@ import scala.util.Success
 import scala.util.matching.Regex
 
 object Synchronize {
-  type SearchRoot  = Path
+  type SearchRoot = Path
 
   def findExamplesFromSearchRoot(
     searchRoot: SearchRoot,
@@ -94,11 +94,11 @@ object Synchronize {
           .map(state => (state.uuid, examplesByUUID.get(state.uuid), Some(state)))
     }
     examplesTriple.toSet.toList.collect {
-      case (uuid, None, Some(state))                                                => OrphanRemoteExample(uuid, state)
-      case (uuid, Some(example), None)                                              => AddExample(uuid, example)
+      case (uuid, None, Some(state))                                        => OrphanRemoteExample(uuid, state)
+      case (uuid, Some(example), None)                                      => AddExample(uuid, example)
       case (uuid, Some(example), Some(state)) if example.hash == state.hash => KeepRemoteExample(uuid, example, state)
       case (uuid, Some(example), Some(state)) if example.hash != state.hash => UpdateRemoteExample(uuid, example, state)
-      case (uuid, y, z)                                                             => UnsupportedOperation(uuid, y, z)
+      case (uuid, y, z)                                                     => UnsupportedOperation(uuid, y, z)
     }
   }
 
@@ -115,8 +115,8 @@ object Synchronize {
     }
   }
 
-  def checkCoherency(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]): RIO[Any, Unit] = 
-      RIO.foreach(todos)(checkRemote(adapterConfig)).unit
+  def checkCoherency(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]): RIO[Any, Unit] =
+    RIO.foreach(todos)(checkRemote(adapterConfig)).unit
 
   def examplesPublishToGivenAdapter(
     examples: Iterable[CodeExample],
