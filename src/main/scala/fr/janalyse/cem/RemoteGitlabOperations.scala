@@ -189,7 +189,7 @@ object RemoteGitlabOperations {
         url = url,
         filename = Some(todo.example.filename),
         uuid = todo.uuid,
-        checksum = example.checksum
+        checksum = example.hash
       )
     )
   }
@@ -229,7 +229,7 @@ object RemoteGitlabOperations {
         url = url,
         filename = Some(todo.example.filename),
         uuid = todo.uuid,
-        checksum = example.checksum
+        checksum = example.hash
       )
     )
   }

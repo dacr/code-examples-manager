@@ -56,7 +56,7 @@ object CodeExampleSpec extends DefaultRunnableSpec {
       assertTrue(example.keywords == List("scalatest", "pi", "@testable")) &&
       assertTrue(example.uuid.toString == "8f2e14ba-9856-4500-80ab-3b9ba2234ce2") &&
       assert(example.content)(matchesRegex("(?s).*id [:] 8f2e14ba-9856-4500-80ab-3b9ba2234ce2.*")) &&
-      assertTrue(example.checksum == "5f6dd8a2d2f813ee946542161503d61cb9a8074e")
+      assertTrue(example.hash == "5f6dd8a2d2f813ee946542161503d61cb9a8074e")
   }
 
   // ----------------------------------------------------------------------------------------------

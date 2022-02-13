@@ -96,8 +96,8 @@ object Synchronize {
     examplesTriple.toSet.toList.collect {
       case (uuid, None, Some(state))                                                => OrphanRemoteExample(uuid, state)
       case (uuid, Some(example), None)                                              => AddExample(uuid, example)
-      case (uuid, Some(example), Some(state)) if example.checksum == state.checksum => KeepRemoteExample(uuid, example, state)
-      case (uuid, Some(example), Some(state)) if example.checksum != state.checksum => UpdateRemoteExample(uuid, example, state)
+      case (uuid, Some(example), Some(state)) if example.hash == state.checksum => KeepRemoteExample(uuid, example, state)
+      case (uuid, Some(example), Some(state)) if example.hash != state.checksum => UpdateRemoteExample(uuid, example, state)
       case (uuid, y, z)                                                             => UnsupportedOperation(uuid, y, z)
     }
   }

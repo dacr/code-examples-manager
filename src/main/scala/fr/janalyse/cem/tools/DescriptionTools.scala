@@ -32,7 +32,7 @@ object DescriptionTools {
     for {
       summary <- example.summary.orElse(Some(""))
       uuid     = example.uuid
-      chksum   = example.checksum
+      chksum   = example.hash
       cemURL   = "https://github.com/dacr/code-examples-manager"
     } yield s"$summary / published by $cemURL #$uuid/$chksum"
   }

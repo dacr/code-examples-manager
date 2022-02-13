@@ -73,7 +73,7 @@ object RemoteGithubOperationsSpec extends DefaultRunnableSpec {
                     url = "https://truc/aa-bb",
                     filename = Some(example1.filename),
                     uuid = uuid1,
-                    checksum = example1.checksum
+                    checksum = example1.hash
                   )
       todos     = List(UpdateRemoteExample(uuid1, example1, state1))
       results  <- githubRemoteExamplesChangesApply(config, todos)
