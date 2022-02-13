@@ -23,5 +23,5 @@ case class RemoteExampleState(
   url: String,
   filename: Option[String],
   uuid: UUID,
-  checksum: String
+  hash: String
 )

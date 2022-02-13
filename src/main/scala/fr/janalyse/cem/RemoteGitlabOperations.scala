@@ -141,11 +141,11 @@ object RemoteGitlabOperations {
 
   def gitlabRemoteGistsToRemoteExampleState(snippets: Iterable[SnippetInfo]): Iterable[RemoteExampleState] = {
     for {
-      snippet          <- snippets
-      desc              = snippet.description
-      (uuid, checksum) <- DescriptionTools.extractMetaDataFromDescription(desc)
-      url               = snippet.web_url
-      filename          = snippet.file_name
+      snippet      <- snippets
+      desc          = snippet.description
+      (uuid, hash) <- DescriptionTools.extractMetaDataFromDescription(desc)
+      url           = snippet.web_url
+      filename      = snippet.file_name
     } yield {
       RemoteExampleState(
         remoteId = snippet.id.toString,
@@ -153,7 +153,7 @@ object RemoteGitlabOperations {
         url = url,
         filename = Some(filename),
         uuid = UUID.fromString(uuid),
-        checksum = checksum
+        hash = hash
       )
     }
   }
@@ -169,7 +169,12 @@ object RemoteGitlabOperations {
           file_path = remoteExampleFileRename(todo.example.filename, adapterConfig),
           content = todo.example.content
         )
-      )
+      ) ++ todo.example.attachments.map { case (filename, content) =>
+        SnippetFileAdd(
+          file_path = remoteExampleFileRename(filename, adapterConfig),
+          content = content
+        )
+      }
     )
 
     for {
@@ -189,7 +194,7 @@ object RemoteGitlabOperations {
         url = url,
         filename = Some(todo.example.filename),
         uuid = todo.uuid,
-        checksum = example.hash
+        hash = example.hash
       )
     )
   }
@@ -202,12 +207,19 @@ object RemoteGitlabOperations {
       visibility = adapterConfig.defaultVisibility.getOrElse("public"),
       files = List(
         SnippetFileChange(
-          action = "update",
+          action = "update", // TODO if file is renamed then we can not use update action ! we should rather use create or move ...
           file_path = Some(remoteExampleFileRename(todo.example.filename, adapterConfig)),
           previous_path = None,
           content = Some(todo.example.content)
         )
-      )
+      ) ++ todo.example.attachments.map { case (filename, content) =>
+        SnippetFileChange(
+          action = "update", // TODO if file is renamed then we can not use update action ! we should rather use create or move ...
+          file_path = Some(remoteExampleFileRename(filename, adapterConfig)),
+          previous_path = None,
+          content = Some(content)
+        )
+      }
     )
 
     val snippetId = todo.state.remoteId
@@ -229,7 +241,7 @@ object RemoteGitlabOperations {
         url = url,
         filename = Some(todo.example.filename),
         uuid = todo.uuid,
-        checksum = example.hash
+        hash = example.hash
       )
     )
   }

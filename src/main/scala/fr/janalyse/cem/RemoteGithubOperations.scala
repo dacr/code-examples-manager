@@ -142,7 +142,7 @@ object RemoteGithubOperations {
         url = url,
         filename = files.keys.headOption, // TODO
         uuid = UUID.fromString(uuid),
-        checksum = checksum
+        hash = checksum
       )
     }
   }
@@ -181,7 +181,7 @@ object RemoteGithubOperations {
         url = url,
         filename = Some(todo.example.filename),
         uuid = todo.uuid,
-        checksum = example.hash
+        hash = example.hash
       )
     )
   }
@@ -222,7 +222,7 @@ object RemoteGithubOperations {
         url = url,
         filename = Some(todo.example.filename),
         uuid = todo.uuid,
-        checksum = example.hash
+        hash = example.hash
       )
     )
   }
