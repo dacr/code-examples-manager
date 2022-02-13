@@ -130,11 +130,11 @@ object RemoteGithubOperations {
 
   def githubRemoteGistsToRemoteExampleState(gists: Iterable[GistInfo]): Iterable[RemoteExampleState] = {
     for {
-      gist             <- gists
-      desc              = gist.description
-      (uuid, checksum) <- DescriptionTools.extractMetaDataFromDescription(desc)
-      url               = gist.html_url
-      files             = gist.files
+      gist         <- gists
+      desc          = gist.description
+      (uuid, hash) <- DescriptionTools.extractMetaDataFromDescription(desc)
+      url           = gist.html_url
+      files         = gist.files
     } yield {
       RemoteExampleState(
         remoteId = gist.id,
@@ -142,7 +142,7 @@ object RemoteGithubOperations {
         url = url,
         files = files.keys.toList,
         uuid = UUID.fromString(uuid),
-        hash = checksum
+        hash = hash
       )
     }
   }
@@ -179,7 +179,7 @@ object RemoteGithubOperations {
         remoteId = id,
         description = description,
         url = url,
-        files = List(todo.example.filename)++todo.example.attachments.keys,
+        files = List(todo.example.filename) ++ todo.example.attachments.keys,
         uuid = todo.uuid,
         hash = example.hash
       )
@@ -220,7 +220,7 @@ object RemoteGithubOperations {
         remoteId = id,
         description = description,
         url = url,
-        files = List(todo.example.filename)++todo.example.attachments.keys,
+        files = List(todo.example.filename) ++ todo.example.attachments.keys,
         uuid = todo.uuid,
         hash = example.hash
       )
