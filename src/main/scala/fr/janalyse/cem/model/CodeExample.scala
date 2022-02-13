@@ -59,7 +59,7 @@ case class CodeExample(
   attachments: Map[String, String] = Map.empty // embedded
 ) {
   def fileExtension: String     = filename.split("[.]", 2).drop(1).headOption.getOrElse("")
-  def checksum: String          = sha1(content + filename + category.getOrElse(""))
+  def checksum: String          = sha1(content + filename + category.getOrElse("") + attachments.keys.mkString + attachments.values.mkString)
   def isTestable: Boolean       = keywords.contains("@testable")
   def shouldFail: Boolean       = keywords.contains("@fail")
   def isPublishable: Boolean    = !publish.isEmpty
