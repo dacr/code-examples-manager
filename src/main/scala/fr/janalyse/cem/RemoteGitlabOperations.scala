@@ -170,30 +170,30 @@ object RemoteGitlabOperations {
     }
   }
 
+  def buildAddRequestBody(adapterConfig: PublishAdapterConfig, todo: AddExample, description: String): SnippetAddRequest = SnippetAddRequest(
+    title = todo.example.summary,
+    description = description,
+    visibility = adapterConfig.defaultVisibility.getOrElse("public"),
+    files = List(
+      SnippetFileAdd(
+        file_path = remoteExampleFileRename(todo.example.filename, adapterConfig),
+        content = todo.example.content
+      )
+    ) ++ todo.example.attachments.map { case (filename, content) =>
+      SnippetFileAdd(
+        file_path = remoteExampleFileRename(filename, adapterConfig),
+        content = content
+      )
+    }
+  )
+
   def gitlabRemoteExampleAdd(adapterConfig: PublishAdapterConfig, todo: AddExample): RIO[SttpClient, RemoteExample] = {
-
-    def requestBody(description: String): SnippetAddRequest = SnippetAddRequest(
-      title = todo.example.summary,
-      description = description,
-      visibility = adapterConfig.defaultVisibility.getOrElse("public"),
-      files = List(
-        SnippetFileAdd(
-          file_path = remoteExampleFileRename(todo.example.filename, adapterConfig),
-          content = todo.example.content
-        )
-      ) ++ todo.example.attachments.map { case (filename, content) =>
-        SnippetFileAdd(
-          file_path = remoteExampleFileRename(filename, adapterConfig),
-          content = content
-        )
-      }
-    )
-
     for {
       apiURI      <- uriParse(s"${adapterConfig.apiEndPoint}/snippets")
       example      = todo.example
       description <- ZIO.getOrFail(DescriptionTools.makeDescription(example))
-      query        = basicRequest.post(apiURI).body(requestBody(description)).response(asJson[SnippetInfo])
+      requestBody  = buildAddRequestBody(adapterConfig, todo, description)
+      query        = basicRequest.post(apiURI).body(requestBody).response(asJson[SnippetInfo])
       response    <- send(gitlabInjectAuthToken(query, adapterConfig.token)).map(_.body).absolve
       id           = response.id.toString
       url          = response.web_url
@@ -211,54 +211,54 @@ object RemoteGitlabOperations {
     )
   }
 
+  def buildUpdateRequestBody(adapterConfig: PublishAdapterConfig, todo: UpdateRemoteExample, description: String): SnippetUpdateRequest = {
+    val remoteFiles        = todo.state.files.toSet
+    val remoteMainFilename = remoteExampleFileRename(todo.example.filename, adapterConfig)
+    val remoteOrphanFiles  = (remoteFiles - remoteMainFilename) -- (
+      todo.example.attachments.keys.map(f => remoteExampleFileRename(f, adapterConfig))
+    )
+
+    val updatedFiles = List(
+      SnippetFileChange(
+        action = if (remoteFiles.contains(remoteMainFilename)) "update" else "create",
+        file_path = Some(remoteMainFilename),
+        previous_path = None,
+        content = Some(todo.example.content)
+      )
+    ) ++ todo.example.attachments.map { case (filename, content) =>
+      val remoteFilename = remoteExampleFileRename(filename, adapterConfig)
+      SnippetFileChange(
+        action = if (remoteFiles.contains(remoteFilename)) "update" else "create",
+        file_path = Some(remoteFilename),
+        previous_path = None,
+        content = Some(content)
+      )
+    } ++ remoteOrphanFiles.map(name =>
+      SnippetFileChange(
+        action = "delete",
+        file_path = Some(name),
+        previous_path = None,
+        content = None
+      )
+    )
+
+    SnippetUpdateRequest(
+      id = todo.state.remoteId,
+      title = todo.example.summary,
+      description = description,
+      visibility = adapterConfig.defaultVisibility.getOrElse("public"),
+      files = updatedFiles
+    )
+  }
+
   def gitlabRemoteExampleUpdate(adapterConfig: PublishAdapterConfig, todo: UpdateRemoteExample): RIO[SttpClient, RemoteExample] = {
-    def requestBody(description: String): SnippetUpdateRequest = {
-      val remoteFiles        = todo.state.files.toSet
-      val remoteMainFilename = remoteExampleFileRename(todo.example.filename, adapterConfig)
-
-      val remoteOrphanFiles = (remoteFiles - remoteMainFilename) -- (
-        todo.example.attachments.keys.map(f => remoteExampleFileRename(f, adapterConfig))
-      )
-
-      val files = List(
-        SnippetFileChange(
-          action = if (remoteFiles.contains(remoteMainFilename)) "update" else "create",
-          file_path = Some(remoteMainFilename),
-          previous_path = None,
-          content = Some(todo.example.content)
-        )
-      ) ++ todo.example.attachments.map { case (filename, content) =>
-        val remoteFilename = remoteExampleFileRename(filename, adapterConfig)
-        SnippetFileChange(
-          action = if (remoteFiles.contains(remoteFilename)) "update" else "create",
-          file_path = Some(remoteFilename),
-          previous_path = None,
-          content = Some(content)
-        )
-      } ++ remoteOrphanFiles.map(name =>
-        SnippetFileChange(
-          action = "delete",
-          file_path = Some(name),
-          previous_path = None,
-          content = None
-        )
-      )
-
-      SnippetUpdateRequest(
-        id = todo.state.remoteId,
-        title = todo.example.summary,
-        description = description,
-        visibility = adapterConfig.defaultVisibility.getOrElse("public"),
-        files = files
-      )
-    }
-
     val snippetId = todo.state.remoteId
     for {
       apiURI      <- uriParse(s"${adapterConfig.apiEndPoint}/snippets/$snippetId")
       example      = todo.example
       description <- ZIO.getOrFail(DescriptionTools.makeDescription(example))
-      query        = basicRequest.put(apiURI).body(requestBody(description)).response(asJson[SnippetInfo])
+      requestBody  = buildUpdateRequestBody(adapterConfig, todo, description)
+      query        = basicRequest.put(apiURI).body(requestBody).response(asJson[SnippetInfo])
       authedQuery  = gitlabInjectAuthToken(query, adapterConfig.token)
       response    <- send(authedQuery).map(_.body).absolve
       id           = response.id.toString
