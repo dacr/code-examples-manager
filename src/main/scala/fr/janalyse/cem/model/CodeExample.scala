@@ -29,13 +29,16 @@ import java.util.UUID
 sealed trait ExampleIssue {
   def filepath: Path
 }
-case class ExampleContentIssue(filepath: Path, throwable: Throwable)                    extends ExampleIssue
-case class ExampleFilenameIssue(filepath: Path, throwable: Throwable)                   extends ExampleIssue
-case class ExampleIOIssue(filepath: Path, throwable: Throwable)                         extends ExampleIssue
-case class ExampleIdentifierNotFoundIssue(filepath: Path)                               extends ExampleIssue
-case class ExampleUUIDIdentifierIssue(filepath: Path, id: String, throwable: Throwable) extends ExampleIssue
-case class ExampleCreatedOnDateFormatIssue(filepath: Path, throwable: Throwable)        extends ExampleIssue
-case class ExampleGitIssue(filepath: Path, throwable: Throwable)                        extends ExampleIssue
+case class ExampleContentIssue(filepath: Path, throwable: Throwable)                                       extends ExampleIssue
+case class ExampleNoParentDirectory(filepath: Path)                                                        extends ExampleIssue
+case class ExampleFilenameIssue(filepath: Path, throwable: Throwable)                                      extends ExampleIssue
+case class ExampleIOIssue(filepath: Path, throwable: Throwable)                                            extends ExampleIssue
+case class ExampleIdentifierNotFoundIssue(filepath: Path)                                                  extends ExampleIssue
+case class ExampleUUIDIdentifierIssue(filepath: Path, id: String, throwable: Throwable)                    extends ExampleIssue
+case class ExampleCreatedOnDateFormatIssue(filepath: Path, throwable: Throwable)                           extends ExampleIssue
+case class ExampleGitIssue(filepath: Path, throwable: Throwable)                                           extends ExampleIssue
+case class ExampleInvalidAttachmentFilename(filepath: Path, attachFilename: String)                        extends ExampleIssue
+case class ExampleAttachmentContentIssue(filepath: Path, attachmentFilename: String, throwable: Throwable) extends ExampleIssue
 
 case class CodeExample(
   filepath: Option[Path],
@@ -89,39 +92,49 @@ object CodeExample {
     OffsetDateTime.ofInstant(Instant.ofEpochMilli(examplePath.toFile.lastModified), ZoneId.systemDefault())
   }
 
+  def getAttachmentContent(examplePath: Path, attachmentFilename: String) = {
+    val attachmentFilenameRE = "(?i)[-a-z0-9_][-a-z0-9_.]+"
+    for {
+      _                <- ZIO.cond(attachmentFilename.matches(attachmentFilenameRE), (), ExampleInvalidAttachmentFilename(examplePath, attachmentFilename))
+      exampleDirectory <- ZIO.fromOption(examplePath.parent).mapError(_ => ExampleNoParentDirectory(examplePath))
+      attachmentPath    = exampleDirectory / attachmentFilename
+      content          <- FileSystemService.readFileContent(attachmentPath).mapError(th => ExampleAttachmentContentIssue(examplePath, attachmentFilename, th))
+    } yield content
+  }
+
   def makeExample(
     examplePath: Path,
     fromSearchPath: Path
   ): ZIO[FileSystemService, ExampleIssue, CodeExample] = {
     for {
-      filename      <- Task
-                         .getOrFail(Option(examplePath.filename).map(_.toString))
-                         .mapError(th => ExampleFilenameIssue(examplePath, th))
-      givenContent  <- FileSystemService.readFileContent(examplePath).mapError(th => ExampleContentIssue(examplePath, th))
-      content        = givenContent.replaceAll("\r", "")
-      category       = exampleContentExtractValue(content, "category").orElse(exampleCategoryFromFilepath(examplePath, fromSearchPath))
-      foundId        = exampleContentExtractValue(content, "id")
-      foundCreatedOn = exampleContentExtractValue(content, "created-on")
-      id            <- Task
-                         .getOrFail(foundId)
-                         .mapError(th => ExampleIdentifierNotFoundIssue(examplePath))
-      uuid          <- Task
-                         .attempt(UUID.fromString(id))
-                         .mapError(th => ExampleUUIDIdentifierIssue(examplePath, id, th))
-      gitMetaData   <- Task // TODO quite slow AND use a service to provide the GIT features
-                         .attempt(GitOps.getGitFileMetaData(examplePath.toFile.toPath))
-                         .mapError(th => ExampleGitIssue(examplePath, th))
-      createdOn     <- Task
-                         .attempt(foundCreatedOn.map(OffsetDateTime.parse))
-                         .mapAttempt(_.orElse(gitMetaData.map(_.createdOn)))
-                         .mapError(th => ExampleCreatedOnDateFormatIssue(examplePath, th))
-      lastUpdated   <- Task
-                         .attempt(gitMetaData.map(_.lastUpdated))
-                         .mapAttempt(_.getOrElse(fileLastModified(examplePath)))
-                         .mapError(th => ExampleIOIssue(examplePath, th))
-      updatedCount   = gitMetaData.map(_.changesCount)
-      attachmentsNames    = exampleContentExtractValueList(content, "attachments")
-      attachmentsMap  = attachmentsNames.map(_ -> "").toMap
+      filename        <- Task
+                           .getOrFail(Option(examplePath.filename).map(_.toString))
+                           .mapError(th => ExampleFilenameIssue(examplePath, th))
+      givenContent    <- FileSystemService.readFileContent(examplePath).mapError(th => ExampleContentIssue(examplePath, th))
+      content          = givenContent.replaceAll("\r", "")
+      category         = exampleContentExtractValue(content, "category").orElse(exampleCategoryFromFilepath(examplePath, fromSearchPath))
+      foundId          = exampleContentExtractValue(content, "id")
+      foundCreatedOn   = exampleContentExtractValue(content, "created-on")
+      id              <- Task
+                           .getOrFail(foundId)
+                           .mapError(th => ExampleIdentifierNotFoundIssue(examplePath))
+      uuid            <- Task
+                           .attempt(UUID.fromString(id))
+                           .mapError(th => ExampleUUIDIdentifierIssue(examplePath, id, th))
+      gitMetaData     <- Task // TODO quite slow AND use a service to provide the GIT features
+                           .attempt(GitOps.getGitFileMetaData(examplePath.toFile.toPath))
+                           .mapError(th => ExampleGitIssue(examplePath, th))
+      createdOn       <- Task
+                           .attempt(foundCreatedOn.map(OffsetDateTime.parse))
+                           .mapAttempt(_.orElse(gitMetaData.map(_.createdOn)))
+                           .mapError(th => ExampleCreatedOnDateFormatIssue(examplePath, th))
+      lastUpdated     <- Task
+                           .attempt(gitMetaData.map(_.lastUpdated))
+                           .mapAttempt(_.getOrElse(fileLastModified(examplePath)))
+                           .mapError(th => ExampleIOIssue(examplePath, th))
+      updatedCount     = gitMetaData.map(_.changesCount)
+      attachmentsNames = exampleContentExtractValueList(content, "attachments")
+      attachments     <- ZIO.foreach(attachmentsNames)(name => getAttachmentContent(examplePath, name).map(content => name -> content))
     } yield {
       CodeExample(
         uuid = uuid,
@@ -139,7 +152,7 @@ object CodeExample {
         runWith = exampleContentExtractValue(content, "run-with"),
         managedBy = exampleContentExtractValue(content, "managed-by"),
         license = exampleContentExtractValue(content, "license"),
-        attachments = attachmentsMap
+        attachments = attachments.toMap
       )
     }
   }
