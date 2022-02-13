@@ -48,10 +48,21 @@ object RemoteGitlabOperations {
     implicit val encoder: JsonEncoder[SnippetAuthor] = DeriveJsonEncoder.gen
   }
 
+  case class SnippetFileInfo(
+    path: String,
+    raw_url: String
+  )
+
+  object SnippetFileInfo {
+    implicit val decoder: JsonDecoder[SnippetFileInfo] = DeriveJsonDecoder.gen
+    implicit val encoder: JsonEncoder[SnippetFileInfo] = DeriveJsonEncoder.gen
+  }
+
   case class SnippetInfo(
     id: Long,
     title: String,
     file_name: String,
+    files : List[SnippetFileInfo],
     description: String,
     visibility: String,
     author: SnippetAuthor,
@@ -146,12 +157,13 @@ object RemoteGitlabOperations {
       (uuid, hash) <- DescriptionTools.extractMetaDataFromDescription(desc)
       url           = snippet.web_url
       filename      = snippet.file_name
+      files         = snippet.files
     } yield {
       RemoteExampleState(
         remoteId = snippet.id.toString,
         description = desc,
         url = url,
-        filename = Some(filename),
+        files = files.map(_.path),
         uuid = UUID.fromString(uuid),
         hash = hash
       )
@@ -192,7 +204,7 @@ object RemoteGitlabOperations {
         remoteId = id,
         description = description,
         url = url,
-        filename = Some(todo.example.filename),
+        files = List(todo.example.filename) ++ todo.example.attachments.keys,
         uuid = todo.uuid,
         hash = example.hash
       )
@@ -239,7 +251,7 @@ object RemoteGitlabOperations {
         remoteId = id,
         description = description,
         url = url,
-        filename = Some(todo.example.filename),
+        files = List(todo.example.filename)++todo.example.attachments.keys,
         uuid = todo.uuid,
         hash = example.hash
       )

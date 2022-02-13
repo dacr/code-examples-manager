@@ -71,7 +71,7 @@ object RemoteGithubOperationsSpec extends DefaultRunnableSpec {
                     remoteId = "6e40f8239fa6828ab45a064b8131fdfc", // // MDQ6R2lzdDQ1NTk5OTQ= --> 04:Gist4559994 --> 4559994
                     description = "desc",
                     url = "https://truc/aa-bb",
-                    filename = Some(example1.filename),
+                    files = List(example1.filename),
                     uuid = uuid1,
                     hash = example1.hash
                   )

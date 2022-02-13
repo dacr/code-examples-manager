@@ -140,7 +140,7 @@ object RemoteGithubOperations {
         remoteId = gist.id,
         description = desc,
         url = url,
-        filename = files.keys.headOption, // TODO
+        files = files.keys.toList,
         uuid = UUID.fromString(uuid),
         hash = checksum
       )
@@ -179,7 +179,7 @@ object RemoteGithubOperations {
         remoteId = id,
         description = description,
         url = url,
-        filename = Some(todo.example.filename),
+        files = List(todo.example.filename)++todo.example.attachments.keys,
         uuid = todo.uuid,
         hash = example.hash
       )
@@ -190,7 +190,7 @@ object RemoteGithubOperations {
     def requestBody(description: String): Json = {
       import Json.*
       val filename    = remoteExampleFileRename(todo.example.filename, adapterConfig)
-      val oldFilename = todo.state.filename.getOrElse(filename)
+      val oldFilename = todo.state.files.headOption.getOrElse(filename) // TO ENHANCE
       Obj( // TODO - find a better way
         "description" -> Str(description),
         "files"       -> Obj(
@@ -220,7 +220,7 @@ object RemoteGithubOperations {
         remoteId = id,
         description = description,
         url = url,
-        filename = Some(todo.example.filename),
+        files = List(todo.example.filename)++todo.example.attachments.keys,
         uuid = todo.uuid,
         hash = example.hash
       )

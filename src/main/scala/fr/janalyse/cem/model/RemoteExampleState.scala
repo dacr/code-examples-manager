@@ -21,7 +21,7 @@ case class RemoteExampleState(
   remoteId: String,
   description: String,
   url: String,
-  filename: Option[String],
+  files: List[String],
   uuid: UUID,
   hash: String
 )
