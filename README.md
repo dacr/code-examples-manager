@@ -1,12 +1,12 @@
 # CEM - Code Examples Manager [![][CodeExamplesManagerImg]][CodeExamplesManagerLnk] ![Scala CI][scalaci-master]
 
-Code example manager (CEM) is a software tool which manage your notes and your code examples
+Code example manager (CEM) is a software managing your notes and code examples
 and provide publish mechanisms to [github.com][githubcom] (as [gists][gists]) or
 [gitlab.com][gitlabcom] (as [snippets][snippets]).
 
 All my notes and code examples (my programming knowledge base) are now managed using this tool,
 you can take a look to **[my public gists overview on github][mygists]** to illustrate the 
-publishing work achieved by CEM. 
+publishing work achieved by CEM.
 
 ![](images/cloudtags.png)
 
@@ -61,7 +61,7 @@ Instructions example with github.com publishing configuration :
   ```
 - Run the following command from your terminal (`cs` is the [coursier][cs] CLI command):
   ```
-  cs launch fr.janalyse:code-examples-manager_3:2.1.0
+  cs launch fr.janalyse:code-examples-manager_3:2.2.0
   ```
   - you can even use `cs launch fr.janalyse:code-examples-manager_3:latest.release` to always use the latest release
   - current release is : [![][CodeExamplesManagerImg]][CodeExamplesManagerLnk]
@@ -79,20 +79,28 @@ Example for languages using `//` for line comments :
 ```scala
 // summary : Simplest scalatest test framework usage.
 // keywords : scala, scalatest, pi, @testable
-// publish : gist, snippet
+// publish : gist
 // authors : David Crosson
 // license : Apache
 // id : d24d8cb3-45c0-4d88-b033-7fae2325607b
-// execution : scala ammonite script (https://ammonite.io/) - run as follow 'amm scriptname.sc'
-import $ivy.`org.scalatest::scalatest:3.2.0`
-import org.scalatest._,matchers.should.Matchers._
-math.Pi shouldBe 3.14d +- 0.01d
+// created-on : 2020-05-31T19:54:52Z
+// run-with : scala-cli $scriptFile
 
+// ---------------------
+//> using scala  "3.1.1"
+//> using lib "org.scalatest::scalatest:3.2.10"
+// ---------------------
+
+import org.scalatest._, matchers.should.Matchers._
+
+math.Pi shouldBe 3.14d +- 0.01d
 ```
 
-Request keys in description header are the following :
-- **`summary`** : example one line summary.
-- **`keywords`** : keywords describing your code features (comma separated).
+Supported keys in description header are the following :
+- **`summary`** : example summary in one line.
+- **`keywords`** : keywords describing your code features (comma separated). Some reserved keywords :
+  - `@testable` : allow automatic execution
+  - `@fail` : the example is expected to fail when executed 
 - **`publish`** : publish destination keywords (comma separated)
   - the default configuration file provide those activation keywords :
     - `gist` : for github.com
@@ -100,15 +108,16 @@ Request keys in description header are the following :
 - **`authors`** : code example authors list (comma separated).
 - **`license`** : the example license.
 - **`id`** : UUID for this code example. Generated using such commands :
-  - [this ammonite scala script][uuid-sc].
-  - This linux command (comes from package named uuid-runtime at least on debian based linux) :  
-    `uuidgen`
-  - This [ammonite][amm] oneliner :  
-    `amm -c 'println(java.util.UUID.randomUUID.toString)'`
-  - This python oneliner :  
-    `python -c "import uuid, sys;sys.stdout.write(str(uuid.uuid4()))"`
-  - Or use a dedicated UUID plugin for your IDE such as "UUID Generator" for IntelliJ IDEA
-- **execution** : how to execute the example, execution runtime release constraints, ...
+  - with linux command : `uuidgen`
+  - with [scala-cli][scl] : `scala-cli https://gist.github.com/dacr/87c9636a6d25787d7c274b036d2a8aad`
+  - with [ammonite][amm] : `amm -c 'println(java.util.UUID.randomUUID.toString)'`
+- **`created-on`** : The ISO8601 date when this example has been created. Generated using such commands :
+  - with linux command : `date -u +"%Y-%m-%dT%H:%M:%S.%3NZ"`
+  - with [scala-cli][scl] : `scala-cli https://gist.github.com/dacr/4298fce08e12ba76ab91e9766be52acb`
+  - with [ammonite][amm] : `amm -c 'println(java.time.Instant.now.toString)'`
+- **`run-with`** : command used to execute this example
+  - Only examples with `@testable` keywords are eligible for automated execution
+  - on execution the exit code is used to compute execution success or failure
 
 ## CEM operations
 
@@ -133,12 +142,12 @@ allow a simple configuration way based on environment variables which override d
 
 | env or property name       | description                                                   | default value
 |----------------------------|---------------------------------------------------------------|---------------------------
-| CEM_SEARCH_ROOTS           | Examples search roots (comma separated)                       | ""
-| CEM_SEARCH_PATTERN         | Examples files regular expression pattern                     | ".*[.].*"
-| CEM_SEARCH_IGNORE_MASK     | Ignore file regular expression                                | "(/[.]bsp)|(/[.]scala)"
-| CEM_EXAMPLES_OVERVIEW_UUID | The fixed UUID for the overview GIST which list all examples  | "cafacafe-cafecafe"
 | CEM_CONFIG_FILE            | Your custom advanced configuration file (optional)            | *undefined*
-| CEM_SUMMARY_TITLE          | Generated summary title                                       | Examples knowledge base
+| CEM_SUMMARY_TITLE          | The generated summary title for all published examples        | Examples knowledge base 
+| CEM_SEARCH_ROOTS           | Examples search roots (comma separated)                       | ""
+| CEM_SEARCH_PATTERN         | Examples files regular expression pattern                     | ".*"
+| CEM_SEARCH_IGNORE_MASK     | Ignore file regular expression                                | "(/[.]bsp)|(/[.]scala.*)|([.]png$)"
+| CEM_CHAR_ENCODING          | Chararacter encoding for your examples or notes               | "UTF-8"
 | CEM_GITHUB_ENABLED         | To enable or disable standard GITHUB support                  | true
 | CEM_GITHUB_ACTIVATION_KEY  | Example publish keyword for github                            | "gist"
 | CEM_GITHUB_TOKEN           | Github authentication token for gists API access              | *more information below*
@@ -204,6 +213,7 @@ Get an access token from gitlab.com :
 - 2021-05 - Full refactoring to use [ZIO][zio] - pure functional
 - 2021-06 - Migration to Scala3
 - 2021-12 - PoC#3 Search & Execution engines
+- 2022-01 - Migrate to ZIO2
 
 ## Acknowledgements
 
@@ -220,6 +230,7 @@ Get an access token from gitlab.com :
 [mygists]: https://gist.github.com/c071a7b7d3de633281cbe84a34be47f1
 [cem]: https://github.com/dacr/code-examples-manager
 [amm]: https://ammonite.io/
+[scl]: https://scala-cli.virtuslab.org/
 [githubcom]: https://github.com/
 [gitlabcom]: https://gitlab.com/
 [snippets]: https://docs.gitlab.com/ce/user/snippets.html
