@@ -111,6 +111,9 @@ Supported keys in description header are the following :
   - with linux command : `uuidgen`
   - with [scala-cli][scl] : `scala-cli https://gist.github.com/dacr/87c9636a6d25787d7c274b036d2a8aad`
   - with [ammonite][amm] : `amm -c 'println(java.util.UUID.randomUUID.toString)'`
+- **`attachments`** : List of secondary files (comma separated) which must be published with the current one
+  - must be placed in the same directory in your local storage
+  - secondary files do not require any headers
 - **`created-on`** : The ISO8601 date when this example has been created. Generated using such commands :
   - with linux command : `date -u +"%Y-%m-%dT%H:%M:%S.%3NZ"`
   - with [scala-cli][scl] : `scala-cli https://gist.github.com/dacr/4298fce08e12ba76ab91e9766be52acb`
@@ -213,7 +216,7 @@ Get an access token from gitlab.com :
 - 2021-05 - Full refactoring to use [ZIO][zio] - pure functional
 - 2021-06 - Migration to Scala3
 - 2021-12 - PoC#3 Search & Execution engines
-- 2022-01 - Migrate to ZIO2
+- 2022-01 - Migrate to ZIO2 and add support for attachments
 
 ## Acknowledgements
 
