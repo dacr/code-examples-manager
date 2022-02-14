@@ -121,6 +121,7 @@ Supported keys in description header are the following :
 - **`run-with`** : command used to execute this example
   - Only examples with `@testable` keywords are eligible for automated execution
   - on execution the exit code is used to compute execution success or failure
+  - Use `$file` as the example filename
 
 ## CEM operations
 
