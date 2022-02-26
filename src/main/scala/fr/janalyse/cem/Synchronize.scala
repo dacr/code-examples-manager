@@ -56,8 +56,8 @@ object Synchronize {
   def examplesCollectFor(searchRoots: List[SearchRoot]): ZIO[ApplicationConfig & FileSystemService, ExampleIssue | Throwable, List[CodeExample]] = {
     for {
       examplesConfig      <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.examples)
-      searchOnlyPattern   <- ZIO.attempt(examplesConfig.searchOnlyPattern.map(_.r))
-      searchIgnorePattern <- ZIO.attempt(examplesConfig.searchIgnoreMask.map(_.r))
+      searchOnlyPattern   <- ZIO.attempt(examplesConfig.searchOnlyPatternRegex())
+      searchIgnorePattern <- ZIO.attempt(examplesConfig.searchIgnoreMaskRegex())
       foundExamplesList   <- ZIO.foreach(searchRoots)(fromRoot => findExamplesFromSearchRoot(fromRoot, searchOnlyPattern, searchIgnorePattern))
       foundExamples        = foundExamplesList.flatten
       validExamples        = foundExamples.collect { case Right(example) => example }

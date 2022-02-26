@@ -16,6 +16,7 @@
 package fr.janalyse.cem
 
 import zio.*
+
 import scala.util.Properties.*
 import com.typesafe.config.{Config, ConfigFactory}
 import zio.config.*
@@ -24,13 +25,17 @@ import zio.config.typesafe.*
 import zio.config.ConfigDescriptor.*
 
 import java.io.File
+import scala.util.matching.Regex
 
 final case class ExamplesConfig(
   searchRootDirectories: String,
   searchOnlyPattern: Option[String],
   searchIgnoreMask: Option[String],
   charEncoding: String
-)
+) {
+  def searchOnlyPatternRegex(): Option[Regex] = searchOnlyPattern.filterNot(_.trim.isEmpty).map(_.r)
+  def searchIgnoreMaskRegex(): Option[Regex] = searchIgnoreMask.filterNot(_.trim.isEmpty).map(_.r)
+}
 
 final case class RenameRuleConfig(
   from: String,
