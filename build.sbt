@@ -16,11 +16,11 @@ scalaVersion := "3.1.1"
 mainClass := Some("fr.janalyse.cem.Main")
 
 lazy val versions = new {
-  val sttp        = "3.4.1"
-  val zio         = "2.0.0-RC1"
-  val zionio      = "2.0.0-RC1"
-  val zioconfig   = "3.0.0-RC1"
-  val ziologging  = "2.0.0-RC4"
+  val sttp        = "3.5.0"
+  val zio         = "2.0.0-RC2"
+  val zionio      = "2.0.0-RC2"
+  val zioconfig   = "3.0.0-RC2"
+  val ziologging  = "2.0.0-RC5"
   val naturalsort = "1.0.1"
   val jgit        = "6.0.0.202111291000-r"
   val logback     = "1.2.10"
