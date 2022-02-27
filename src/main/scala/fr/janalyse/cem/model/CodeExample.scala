@@ -21,6 +21,7 @@ import fr.janalyse.cem.tools.Hashes.sha1
 import zio.*
 import zio.nio.charset.Charset
 import zio.nio.file.*
+import zio.json.*
 
 import java.io.File
 import java.time.{Instant, OffsetDateTime, ZoneId}
@@ -49,7 +50,7 @@ case class CodeExample(
   createdOn: Option[OffsetDateTime] = None,    // embedded
   lastUpdated: Option[OffsetDateTime] = None,  // computed from file
   summary: Option[String] = None,              // embedded
-  keywords: List[String] = Nil,                // embedded
+  keywords: Set[String] = Set.empty,           // embedded
   publish: List[String] = Nil,                 // embedded
   authors: List[String] = Nil,                 // embedded
   runWith: Option[String] = None,              // embedded
@@ -67,6 +68,10 @@ case class CodeExample(
 }
 
 object CodeExample {
+  implicit val pathEncoder: JsonEncoder[Path]    = JsonEncoder[String].contramap(p => p.toString)
+  implicit val pathDecoder: JsonDecoder[Path]    = JsonDecoder[String].map(p => Path(p))
+  implicit val decoder: JsonDecoder[CodeExample] = DeriveJsonDecoder.gen
+  implicit val encoder: JsonEncoder[CodeExample] = DeriveJsonEncoder.gen
 
   def exampleContentExtractValue(from: String, key: String): Option[String] = {
     val RE = ("""(?m)(?i)^(?:(?:// )|(?:## )|(?:- )|(?:-- )) *""" + key + """ *: *(.*)$""").r
@@ -146,7 +151,7 @@ object CodeExample {
         lastUpdated = Some(lastUpdated),
         updatedCount = updatedCount,
         summary = exampleContentExtractValue(content, "summary"),
-        keywords = exampleContentExtractValueList(content, "keywords"),
+        keywords = exampleContentExtractValueList(content, "keywords").toSet,
         publish = exampleContentExtractValueList(content, "publish"),
         authors = exampleContentExtractValueList(content, "authors"),
         runWith = exampleContentExtractValue(content, "run-with"),

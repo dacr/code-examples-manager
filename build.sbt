@@ -19,6 +19,7 @@ lazy val versions = new {
   val sttp        = "3.5.0"
   val zio         = "2.0.0-RC2"
   val zionio      = "2.0.0-RC2"
+  val zioproc     = "0.7.0-RC2-2"
   val zioconfig   = "3.0.0-RC2"
   val ziologging  = "2.0.0-RC5"
   val naturalsort = "1.0.1"
@@ -32,7 +33,9 @@ libraryDependencies ++= Seq(
   "dev.zio"                       %% "zio-test-junit"                % versions.zio % Test,
   "dev.zio"                       %% "zio-test-sbt"                  % versions.zio % Test,
   "dev.zio"                       %% "zio-test-scalacheck"           % versions.zio % Test,
+  "dev.zio"                       %% "zio-streams"                   % versions.zio,
   "dev.zio"                       %% "zio-nio"                       % versions.zionio,
+  "dev.zio"                       %% "zio-process"                   % versions.zioproc,
   "dev.zio"                       %% "zio-logging"                   % versions.ziologging,
   "dev.zio"                       %% "zio-logging-slf4j"             % versions.ziologging,
   "dev.zio"                       %% "zio-config"                    % versions.zioconfig,

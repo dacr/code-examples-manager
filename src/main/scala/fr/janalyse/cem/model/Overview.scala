@@ -77,7 +77,7 @@ object Overview {
           filename = "index.md",
           category = None,
           summary = Some(config.summary.title),
-          keywords = Nil,
+          keywords = Set.empty,
           publish = List(adapter.activationKeyword),
           authors = Nil,
           uuid = UUID.fromString(adapter.overviewUUID),

@@ -74,7 +74,7 @@ object Synchronize {
     else Task.succeed(())
   }
 
-  val examplesCollect = for {
+  val examplesCollect:ZIO[ApplicationConfig & FileSystemService, ExampleIssue | Throwable, List[CodeExample]] = for {
     searchRootDirectories <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.examples.searchRootDirectories)
     searchRoots           <- examplesValidSearchRoots(searchRootDirectories)
     _                     <- ZIO.log(s"Searching examples in ${searchRoots.mkString(",")}")
