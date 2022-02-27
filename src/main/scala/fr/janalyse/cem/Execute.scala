@@ -78,7 +78,7 @@ object Execute {
       runStatuses    <- ZIO.foreachExec(runnableExamples)(execStrategy)(example => runExample(example, runSessionDate, runSessionUUID))
       successes       = runStatuses.filter(_.success)
       failures        = runStatuses.filterNot(_.success)
-      _              <- ZIO.log(
+      _              <- ZIO.logError(
                           failures // runStatuses
                             .sortBy(s => (s.success, s.example.filepath.map(_.toString)))
                             .map(state => s"""${if (state.success) "OK" else "KO"} : ${state.example.filepath.get} : ${state.example.summary.getOrElse("")}""")
