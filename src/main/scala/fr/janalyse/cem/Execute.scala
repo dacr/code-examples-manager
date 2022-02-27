@@ -84,9 +84,9 @@ object Execute {
                             .map(state => s"""${if (state.success) "OK" else "KO"} : ${state.example.filepath.get} : ${state.example.summary.getOrElse("")}""")
                             .mkString("\n")
                         )
-      _              <- ZIO.log("%d runnable examples (with scala-cli)".formatted(runStatuses.size))
-      _              <- ZIO.log("%d successes".formatted(successes.size))
-      _              <- ZIO.log("%d failures".formatted(failures.size))
+      _              <- ZIO.log(s"${runStatuses.size} runnable examples (with scala-cli)")
+      _              <- ZIO.log(s"${successes.size} successes")
+      _              <- ZIO.log(s"${failures.size} failures")
     } yield runStatuses
   }
 
