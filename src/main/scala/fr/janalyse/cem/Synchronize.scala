@@ -74,7 +74,7 @@ object Synchronize {
     else Task.succeed(())
   }
 
-  val examplesCollect:ZIO[ApplicationConfig & FileSystemService, ExampleIssue | Throwable, List[CodeExample]] = for {
+  val examplesCollect: ZIO[ApplicationConfig & FileSystemService, ExampleIssue | Throwable, List[CodeExample]] = for {
     searchRootDirectories <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.examples.searchRootDirectories)
     searchRoots           <- examplesValidSearchRoots(searchRootDirectories)
     _                     <- ZIO.log(s"Searching examples in ${searchRoots.mkString(",")}")
@@ -158,23 +158,52 @@ object Synchronize {
       .map { case (key, examples) => key -> examples.size }
   }
 
+  def statsEffect(examples: List[CodeExample]) =
+    for {
+      _            <- ZIO.log(s"Found ${examples.size} available locally for synchronization purpose")
+      _            <- ZIO.log(s"Found ${examples.count(_.publish.size > 0)} distinct publishable examples")
+      oldestCreated = examples.filter(_.createdOn.isDefined).minBy(_.createdOn)
+      latestCreated = examples.filter(_.createdOn.isDefined).maxBy(_.createdOn)
+      latestUpdated = examples.filter(_.lastUpdated.isDefined).maxBy(_.lastUpdated)
+      message       =
+        s"""Oldest example : ${oldestCreated.createdOn.get} ${oldestCreated.filename}
+           |Latest example : ${latestCreated.createdOn.get} ${latestCreated.filename}
+           |Latest updated : ${latestUpdated.lastUpdated.get} ${latestUpdated.filename}
+           |Available by publishing targets : ${countExamplesByPublishKeyword(examples).toList.sorted.map { case (k, n) => s"$k:$n" }.mkString(", ")}
+           |Defined keywords count : ${examples.flatMap(_.keywords).toSet.size}
+           |Defined keywords : ${examples.flatMap(_.keywords).distinct.sorted.mkString(",")}
+           |""".stripMargin
+    } yield message
+
+  val versionEffect =
+    for {
+      metaInfo  <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.metaInfo)
+      version    = metaInfo.version
+      appName    = metaInfo.name
+      appCode    = metaInfo.code
+      projectURL = metaInfo.projectURL
+      message    =
+        s"""$appCode $appName version $version
+           |$appCode project page $projectURL
+           |$appCode contact email = ${metaInfo.contactEmail}
+           |$appCode build Version = ${metaInfo.buildVersion}
+           |$appCode build DateTime = ${metaInfo.buildDateTime}
+           |$appCode build UUID = ${metaInfo.buildUUID}
+           |""".stripMargin
+    } yield message
+
   def synchronizeEffect: ZIO[Clock & SttpClient & ApplicationConfig & FileSystemService, ExampleIssue | Throwable, Unit] = for {
     startTime <- Clock.nanoTime
     metaInfo  <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.metaInfo)
-    version    = metaInfo.version
     appName    = metaInfo.name
-    appCode    = metaInfo.code
-    projectURL = metaInfo.projectURL
-    _         <- ZIO.log(s"$appName application is starting")
-    _         <- ZIO.log(s"$appCode version $version")
-    _         <- ZIO.log(s"$appCode project page $projectURL (with configuration documentation) ")
+    version   <- versionEffect
+    _         <- ZIO.log(s"\n$version")
     examples  <- examplesCollect
-    _         <- ZIO.log(s"Found ${examples.size} available locally for synchronization purpose")
-    _         <- ZIO.log(s"Found ${examples.count(_.publish.size > 0)} distinct publishable examples")
-    _         <- ZIO.log("Available by publishing targets : " + countExamplesByPublishKeyword(examples).toList.sorted.map { case (k, n) => s"$k:$n" }.mkString(", "))
+    stats     <- statsEffect(examples)
+    _         <- ZIO.log(s"\n$stats")
     _         <- examplesPublish(examples)
     endTime   <- Clock.nanoTime
-    _         <- ZIO.log(s"Code examples manager publishing operations took ${(endTime - startTime) / 1000000}ms")
+    _         <- ZIO.log(s"$appName publishing operations took ${(endTime - startTime) / 1000000}ms")
   } yield ()
 
 }

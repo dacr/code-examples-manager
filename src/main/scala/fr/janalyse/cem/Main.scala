@@ -19,22 +19,6 @@ object Main extends ZIOAppDefault:
   val httpClientLayer = AsyncHttpClientZioBackend.layer()
 
 
-  val versionEffect =
-    for {
-      metaInfo  <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.metaInfo)
-      version    = metaInfo.version
-      appName    = metaInfo.name
-      appCode    = metaInfo.code
-      projectURL = metaInfo.projectURL
-      _         <- Console.printLine(s"$appCode version $version")
-      _         <- Console.printLine(s"$appCode project page $projectURL")
-      _         <- Console.printLine(s"$appCode contact email = ${metaInfo.contactEmail}")
-      _         <- Console.printLine(s"$appCode build Version = ${metaInfo.buildVersion}")
-      _         <- Console.printLine(s"$appCode build DateTime = ${metaInfo.buildDateTime}")
-      _         <- Console.printLine(s"$appCode build UUID = ${metaInfo.buildUUID}")
-    }  yield ()
-
-
   override def run = getArgs
     .flatMap(args =>
       args.toList match {
@@ -45,8 +29,18 @@ object Main extends ZIOAppDefault:
             .unit
 
         case "version":: _ =>
-          versionEffect
+          Synchronize
+            .versionEffect
+            .flatMap(versionInfo => Console.printLine(versionInfo))
             .provideCustom(configLayer)
+            .unit
+
+        case "stats":: _ =>
+          Synchronize
+            .examplesCollect
+            .flatMap(examples => Synchronize.statsEffect(examples))
+            .flatMap(statsInfo => Console.printLine(statsInfo))
+            .provideCustom(configLayer, FileSystemService.live)
             .unit
 
         case "publish"::_ | _ =>

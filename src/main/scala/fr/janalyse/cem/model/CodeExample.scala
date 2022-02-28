@@ -151,7 +151,7 @@ object CodeExample {
         lastUpdated = Some(lastUpdated),
         updatedCount = updatedCount,
         summary = exampleContentExtractValue(content, "summary"),
-        keywords = exampleContentExtractValueList(content, "keywords").toSet,
+        keywords = exampleContentExtractValueList(content, "keywords").map(_.trim).filter(_.size>0).toSet,
         publish = exampleContentExtractValueList(content, "publish"),
         authors = exampleContentExtractValueList(content, "authors"),
         runWith = exampleContentExtractValue(content, "run-with"),
