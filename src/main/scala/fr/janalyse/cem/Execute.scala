@@ -82,7 +82,7 @@ object Execute {
                           failures // runStatuses
                             .sortBy(s => (s.success, s.example.filepath.map(_.toString)))
                             .map(state => s"""${if (state.success) "OK" else "KO"} : ${state.example.filepath.get} : ${state.example.summary.getOrElse("")}""")
-                            .mkString("\n")
+                            .mkString("\n","\n", "")
                         )
       _              <- ZIO.log(s"${runStatuses.size} runnable examples (with scala-cli)")
       _              <- ZIO.log(s"${successes.size} successes")

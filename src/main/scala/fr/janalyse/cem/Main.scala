@@ -25,6 +25,8 @@ object Main extends ZIOAppDefault:
         case "run" :: keywords =>
           Execute
             .executeEffect(keywords.toSet)
+            .flatMap(status => ZIO.cond(status.forall(_.success), "All examples are successful", "Some examples has failed"))
+            .flatMap(message => ZIO.log(message))
             .provideCustom(configLayer, FileSystemService.live)
             .unit
 
