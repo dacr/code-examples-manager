@@ -160,13 +160,18 @@ object Synchronize {
 
   def statsEffect(examples: List[CodeExample]) =
     for {
-      _            <- ZIO.log(s"Found ${examples.size} available locally for synchronization purpose")
-      _            <- ZIO.log(s"Found ${examples.count(_.publish.size > 0)} distinct publishable examples")
+      metaInfo     <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.metaInfo)
+      version       = metaInfo.version
+      appCode       = metaInfo.code
+      appName       = metaInfo.name
       oldestCreated = examples.filter(_.createdOn.isDefined).minBy(_.createdOn)
       latestCreated = examples.filter(_.createdOn.isDefined).maxBy(_.createdOn)
       latestUpdated = examples.filter(_.lastUpdated.isDefined).maxBy(_.lastUpdated)
       message       =
-        s"""Oldest example : ${oldestCreated.createdOn.get} ${oldestCreated.filename}
+        s"""$appCode $appName version $version
+           |Found ${examples.size} available locally for synchronization purpose
+           |Found ${examples.count(_.publish.size > 0)} distinct publishable examples
+           |Oldest example : ${oldestCreated.createdOn.get} ${oldestCreated.filename}
            |Latest example : ${latestCreated.createdOn.get} ${latestCreated.filename}
            |Latest updated : ${latestUpdated.lastUpdated.get} ${latestUpdated.filename}
            |Available by publishing targets : ${countExamplesByPublishKeyword(examples).toList.sorted.map { case (k, n) => s"$k:$n" }.mkString(", ")}
