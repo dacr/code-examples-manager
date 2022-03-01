@@ -62,7 +62,7 @@ object Synchronize {
       foundExamples        = foundExamplesList.flatten
       validExamples        = foundExamples.collect { case Right(example) => example }
       invalidExamples      = foundExamples.collect { case Left(example) => example }
-      _                   <- ZIO.foreach(invalidExamples)(issue => ZIO.logWarning(issue.toString))
+      //_                   <- ZIO.foreach(invalidExamples)(issue => ZIO.logWarning(issue.toString))
     } yield validExamples
   }
 

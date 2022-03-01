@@ -29,7 +29,7 @@ object Execute {
                                 .map(_.split("\\s+").toList)
                             )
                             .orElseFail(Exception(s"Example ${example.uuid} as no run-with directive"))
-      _                <- ZIO.log(s"Running $exampleFilePath")
+      // _                <- ZIO.log(s"Running $exampleFilePath")
       startTimestamp   <- Clock.currentDateTime
       executable       <- ZIO.fromOption(command.headOption).orElseFail(Exception(s"Example $uuid command is invalid : ${command}"))
       arguments         = command.drop(1)
@@ -74,6 +74,7 @@ object Execute {
     val execStrategy     = ExecutionStrategy.ParallelN(8) // TODO Take the number of CPU core
     for {
       runSessionDate <- Clock.currentDateTime
+      startEpoch     <- Clock.instant.map(_.toEpochMilli)
       runSessionUUID  = UUID.randomUUID()
       runStatuses    <- ZIO.foreachExec(runnableExamples)(execStrategy)(example => runExample(example, runSessionDate, runSessionUUID))
       successes       = runStatuses.filter(_.success)
@@ -82,9 +83,11 @@ object Execute {
                           failures // runStatuses
                             .sortBy(s => (s.success, s.example.filepath.map(_.toString)))
                             .map(state => s"""${if (state.success) "OK" else "KO"} : ${state.example.filepath.get} : ${state.example.summary.getOrElse("")}""")
-                            .mkString("\n","\n", "")
+                            .mkString("\n", "\n", "")
                         )
-      _              <- ZIO.log(s"${runStatuses.size} runnable examples (with scala-cli)")
+      endEpoch       <- Clock.instant.map(_.toEpochMilli)
+      durationSeconds = (endEpoch - startEpoch) / 1000
+      _              <- ZIO.log(s"${runStatuses.size} runnable examples (with scala-cli) in ${durationSeconds}s")
       _              <- ZIO.log(s"${successes.size} successes")
       _              <- ZIO.log(s"${failures.size} failures")
     } yield runStatuses
