@@ -84,7 +84,7 @@ Example for languages using `//` for line comments :
 // license : Apache
 // id : d24d8cb3-45c0-4d88-b033-7fae2325607b
 // created-on : 2020-05-31T19:54:52Z
-// run-with : scala-cli $scriptFile
+// run-with : scala-cli $file
 
 // ---------------------
 //> using scala  "3.1.1"
@@ -121,7 +121,7 @@ Supported keys in description header are the following :
 - **`run-with`** : command used to execute this example
   - Only examples with `@testable` keywords are eligible for automated execution
   - on execution the exit code is used to compute execution success or failure
-  - Use `$file` as the example filename
+  - Use `$file` (or `$scriptFile`) for example filename substitution
 
 ## CEM operations
 
