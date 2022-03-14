@@ -95,8 +95,9 @@ object Execute {
 
   def executeEffect(keywords: Set[String] = Set.empty): ZIO[Console & Clock & ApplicationConfig & FileSystemService, Throwable | ExampleIssue, List[RunStatus]] = {
     for {
-      _               <- ZIO.log("Running examples...")
+      _               <- ZIO.log("Searching examples...")
       examples        <- Synchronize.examplesCollect
+      _               <- ZIO.log("Running selected examples...")
       filteredExamples = examples.filter(example => keywords.isEmpty || example.keywords.intersect(keywords) == keywords)
       results         <- runTestableExamples(filteredExamples)
     } yield results
