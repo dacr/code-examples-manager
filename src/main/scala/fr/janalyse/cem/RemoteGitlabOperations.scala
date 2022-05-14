@@ -128,7 +128,7 @@ object RemoteGitlabOperations {
     tokenOption.fold(base)(token => base.header("Authorization", s"Bearer $token"))
   }
 
-  def gitlabRemoteExamplesStatesFetch(adapterConfig: PublishAdapterConfig): RIO[SttpClient, Iterable[RemoteExampleState]] = {
+  def gitlabRemoteExamplesStatesFetch(adapterConfig: PublishAdapterConfig): RIO[SttpClient & Clock & Random, Iterable[RemoteExampleState]] = {
     import adapterConfig.apiEndPoint
 
     def worker(uri: Uri): RIO[SttpClient, Iterable[SnippetInfo]] = {
@@ -146,7 +146,7 @@ object RemoteGitlabOperations {
     val perPage = 100
     for {
       uri      <- uriParse(s"$apiEndPoint/snippets?page=1&per_page=$perPage")
-      snippets <- worker(uri)
+      snippets <- worker(uri).retry(Schedule.exponential(100.millis, 2).jittered && Schedule.recurs(6))
     } yield gitlabRemoteGistsToRemoteExampleState(snippets)
   }
 

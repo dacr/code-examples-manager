@@ -106,7 +106,7 @@ object RemoteGithubOperations {
     } yield responseBody
   }
 
-  def githubRemoteExamplesStatesFetch(adapterConfig: PublishAdapterConfig): RIO[SttpClient, Iterable[RemoteExampleState]] = {
+  def githubRemoteExamplesStatesFetch(adapterConfig: PublishAdapterConfig): RIO[SttpClient & Random & Clock, Iterable[RemoteExampleState]] = {
 
     def worker(uri: Uri): RIO[SttpClient, Iterable[GistInfo]] = {
       val query = basicRequest.get(uri).response(asJson[Vector[GistInfo]])
@@ -125,7 +125,7 @@ object RemoteGithubOperations {
       userLogin <- githubUser(adapterConfig).map(_.login)
       link       = s"${adapterConfig.apiEndPoint}/users/$userLogin/gists?page=1&per_page=$perPage"
       uri       <- uriParse(link)
-      gists     <- worker(uri)
+      gists     <- worker(uri).retry(Schedule.exponential(100.millis, 2).jittered && Schedule.recurs(6))
     } yield githubRemoteGistsToRemoteExampleState(gists)
   }
 

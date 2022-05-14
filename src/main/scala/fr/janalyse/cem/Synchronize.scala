@@ -121,7 +121,7 @@ object Synchronize {
   def examplesPublishToGivenAdapter(
     examples: Iterable[CodeExample],
     adapterConfig: PublishAdapterConfig
-  ): RIO[ApplicationConfig & SttpClient, Unit] = {
+  ): RIO[ApplicationConfig & SttpClient & Clock & Random, Unit] = {
     val examplesToSynchronize = examples.filter(_.publish.contains(adapterConfig.activationKeyword))
     if (!adapterConfig.enabled || examplesToSynchronize.isEmpty || adapterConfig.token.isEmpty) RIO.unit
     else {
@@ -142,7 +142,7 @@ object Synchronize {
     }
   }
 
-  def examplesPublish(examples: Iterable[CodeExample]): RIO[SttpClient & ApplicationConfig, Unit] = {
+  def examplesPublish(examples: Iterable[CodeExample]): RIO[SttpClient & ApplicationConfig & Clock & Random, Unit] = {
     for {
       adapters <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.publishAdapters)
       _        <- RIO.foreachPar(adapters.toList) { case (adapterName, adapterConfig) =>
@@ -197,7 +197,7 @@ object Synchronize {
            |""".stripMargin
     } yield message
 
-  def synchronizeEffect: ZIO[Clock & SttpClient & ApplicationConfig & FileSystemService, ExampleIssue | Throwable, Unit] = for {
+  def synchronizeEffect: ZIO[Clock & SttpClient & ApplicationConfig & FileSystemService & Random, ExampleIssue | Throwable, Unit] = for {
     startTime <- Clock.nanoTime
     metaInfo  <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.metaInfo)
     appName    = metaInfo.name

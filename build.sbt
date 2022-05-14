@@ -11,7 +11,7 @@ scmInfo := Some(
   )
 )
 
-scalaVersion := "3.1.1"
+scalaVersion := "3.1.2"
 
 mainClass := Some("fr.janalyse.cem.Main")
 

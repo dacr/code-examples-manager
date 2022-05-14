@@ -22,7 +22,7 @@ import zio.*
 
 object RemoteOperations {
 
-  def remoteExampleStatesFetch(adapterConfig: PublishAdapterConfig): RIO[SttpClient, Iterable[RemoteExampleState]] = {
+  def remoteExampleStatesFetch(adapterConfig: PublishAdapterConfig): RIO[SttpClient & Clock & Random, Iterable[RemoteExampleState]] = {
     for {
       _      <- ZIO.log(s"${adapterConfig.targetName} : Fetching already published examples")
       states <-
