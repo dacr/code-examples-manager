@@ -39,8 +39,8 @@ object RemoteGitlabOperations {
     name: String,
     username: String,
     state: String,
-    avatar_url: String,
-    web_url: String
+    avatar_url: Option[String],
+    web_url: Option[String]
   )
 
   object SnippetAuthor {
