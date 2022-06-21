@@ -97,14 +97,14 @@ final case class ApplicationConfig(
 )
 
 object Configuration {
-  def apply(): RIO[System & Console, ApplicationConfig] = {
+  def apply(): Task[ApplicationConfig] = {
     val metaConfigResourceName = "cem-meta.conf"
 
     for {
       configFileEnvOption  <- System.env("CEM_CONFIG_FILE")
       configFilePropOption <- System.property("CEM_CONFIG_FILE")
       configFileOption      = configFileEnvOption.orElse(configFilePropOption)
-      typesafeConfig       = IO(loadTypesafeBasedConfigData(metaConfigResourceName, configFileOption))
+      typesafeConfig       = ZIO.attempt(loadTypesafeBasedConfigData(metaConfigResourceName, configFileOption))
       configSource         = TypesafeConfigSource.fromTypesafeConfig(typesafeConfig)
       config               <- zio.config.read(descriptor[ApplicationConfig].mapKey(toKebabCase) from configSource)
     } yield config

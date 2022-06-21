@@ -112,7 +112,7 @@ object CodeExample {
     fromSearchPath: Path
   ): ZIO[FileSystemService, ExampleIssue, CodeExample] = {
     for {
-      filename        <- Task
+      filename        <- ZIO
                            .getOrFail(Option(examplePath.filename).map(_.toString))
                            .mapError(th => ExampleFilenameIssue(examplePath, th))
       givenContent    <- FileSystemService.readFileContent(examplePath).mapError(th => ExampleContentIssue(examplePath, th))
@@ -120,20 +120,20 @@ object CodeExample {
       category         = exampleContentExtractValue(content, "category").orElse(exampleCategoryFromFilepath(examplePath, fromSearchPath))
       foundId          = exampleContentExtractValue(content, "id")
       foundCreatedOn   = exampleContentExtractValue(content, "created-on")
-      id              <- Task
+      id              <- ZIO
                            .getOrFail(foundId)
                            .mapError(th => ExampleIdentifierNotFoundIssue(examplePath))
-      uuid            <- Task
+      uuid            <- ZIO
                            .attempt(UUID.fromString(id))
                            .mapError(th => ExampleUUIDIdentifierIssue(examplePath, id, th))
-      gitMetaData     <- Task // TODO quite slow AND use a service to provide the GIT features
+      gitMetaData     <- ZIO // TODO quite slow AND use a service to provide the GIT features
                            .attempt(GitOps.getGitFileMetaData(examplePath.toFile.toPath))
                            .mapError(th => ExampleGitIssue(examplePath, th))
-      createdOn       <- Task
+      createdOn       <- ZIO
                            .attempt(foundCreatedOn.map(OffsetDateTime.parse))
                            .mapAttempt(_.orElse(gitMetaData.map(_.createdOn)))
                            .mapError(th => ExampleCreatedOnDateFormatIssue(examplePath, th))
-      lastUpdated     <- Task
+      lastUpdated     <- ZIO
                            .attempt(gitMetaData.map(_.lastUpdated))
                            .mapAttempt(_.getOrElse(fileLastModified(examplePath)))
                            .mapError(th => ExampleIOIssue(examplePath, th))

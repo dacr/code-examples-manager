@@ -22,8 +22,8 @@ import zio.test.Assertion.*
 import zio.nio.file.Path
 import org.junit.runner.RunWith
 
-//@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
-object CodeExampleSpec extends DefaultRunnableSpec {
+@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
+object CodeExampleSpec extends ZIOSpecDefault {
 
   val exampleFakeTestingFilename   = Path("test-data/sample1/fake-testing-pi.sc")
   val exampleFakeTestingSearchRoot = Path("test-data/sample1")

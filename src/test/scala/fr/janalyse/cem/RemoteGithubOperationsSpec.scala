@@ -27,8 +27,8 @@ import sttp.client3.asynchttpclient.zio.AsyncHttpClientZioBackend
 import sttp.client3.asynchttpclient.zio.stubbing.whenRequestMatches
 import zio.nio.file.Path
 
-//@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
-object RemoteGithubOperationsSpec extends DefaultRunnableSpec {
+@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
+object RemoteGithubOperationsSpec extends ZIOSpecDefault {
 
   import RemoteGithubOperations.*
 
@@ -66,7 +66,7 @@ object RemoteGithubOperationsSpec extends DefaultRunnableSpec {
 
     val logic = for {
       example1 <- zexample1
-      uuid1    <- Task(example1.uuid)
+      uuid1    = example1.uuid
       state1    = RemoteExampleState(
                     remoteId = "6e40f8239fa6828ab45a064b8131fdfc", // // MDQ6R2lzdDQ1NTk5OTQ= --> 04:Gist4559994 --> 4559994
                     description = "desc",

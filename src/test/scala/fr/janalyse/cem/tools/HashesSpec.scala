@@ -21,15 +21,15 @@ import zio.test.Assertion.*
 import org.junit.runner.RunWith
 import fr.janalyse.cem.tools.Hashes.*
 
-//@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
-object HashesSpec extends DefaultRunnableSpec {
+@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
+object HashesSpec extends ZIOSpecDefault {
 
   object Generators {
     import zio.test.Gen._
-    val someContent :Gen[Random with Sized, String] = anyString
+    val someContent :Gen[Random with Sized, String] = Gen.string
   }
 
-  def spec: ZSpec[TestEnvironment, TestResult] = {
+  def spec = {
     suite("Hash function tests")(
       // ----------------------------------------------------------------------------------------------
       test("sha1 compute the right hash value") {
@@ -42,12 +42,12 @@ object HashesSpec extends DefaultRunnableSpec {
         assertTrue(sha1(null) == "da39a3ee5e6b4b0d3255bfef95601890afd80709")
       },
       // ----------------------------------------------------------------------------------------------
-      testM("sha1 hashes are never empty") {
+      test("sha1 hashes are never empty") {
         check(Generators.someContent) { content =>
           assert(sha1(content))(isNonEmptyString)
         }
       },
-      testM("sha1 hashes are different if their content are differents") {
+      test("sha1 hashes are different if their content are differents") {
         check(Generators.someContent, Generators.someContent) { (content1, content2)  =>
           assertTrue(content1 != content2 && sha1(content1) != sha1(content2)) ||
           assertTrue(content1 == content2 && sha1(content1) == sha1(content2))

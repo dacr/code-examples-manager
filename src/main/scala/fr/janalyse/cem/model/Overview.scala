@@ -39,7 +39,7 @@ case class ExamplesForCategoryContext(category: String, categoryExamples: Seq[Ex
 object Overview {
 
   def makeOverview(publishedExamples: Iterable[RemoteExample], adapter: PublishAdapterConfig): RIO[ApplicationConfig, Option[CodeExample]] = {
-    if (publishedExamples.isEmpty) RIO.none
+    if (publishedExamples.isEmpty) ZIO.none
     else {
       import fr.janalyse.tools.NaturalSort.ord
       val exampleContexts           = for {
@@ -70,7 +70,7 @@ object Overview {
                              version = config.metaInfo.version,
                              lastUpdated = Instant.now().toString
                            )
-        overviewContent <- Task.attempt(ExamplesOverviewTemplate.render(overviewContext).body)
+        overviewContent <- ZIO.attempt(ExamplesOverviewTemplate.render(overviewContext).body)
       } yield {
         CodeExample(
           filepath = None,

@@ -34,13 +34,13 @@ class FileSystemServiceImpl(applicationConfig: ApplicationConfig) extends FileSy
 
   override def readFileContent(inputPath: Path): Task[String] =
     for
-      charset <- IO.attempt(Charset.forName(applicationConfig.codeExamplesManagerConfig.examples.charEncoding))
+      charset <- ZIO.attempt(Charset.forName(applicationConfig.codeExamplesManagerConfig.examples.charEncoding))
       content <- Files.readAllBytes(inputPath)
     yield String(content.toArray, charset.name)
 
   override def readFileLines(inputPath: Path, maxLines: Option[Int]): Task[List[String]] =
     for
-      charset       <- IO.attempt(Charset.forName(applicationConfig.codeExamplesManagerConfig.examples.charEncoding))
+      charset       <- ZIO.attempt(Charset.forName(applicationConfig.codeExamplesManagerConfig.examples.charEncoding))
       stream         = Files.lines(inputPath, charset)
       selectedStream = maxLines.map(n => stream.take(n)).getOrElse(stream)
       lines         <- selectedStream.runCollect
@@ -53,7 +53,7 @@ class FileSystemServiceImpl(applicationConfig: ApplicationConfig) extends FileSy
 
   override def searchFiles(searchRoot: Path, searchOnlyRegex: Option[Regex], ignoreRegex: Option[Regex]): Task[List[Path]] =
     for {
-      searchPath <- IO.attempt(searchRoot)
+      searchPath <- ZIO.attempt(searchRoot)
       stream      = Files.find(searchPath, 10)(searchPredicate(searchOnlyRegex, ignoreRegex))
       foundFiles <- stream.runCollect
     } yield foundFiles.toList

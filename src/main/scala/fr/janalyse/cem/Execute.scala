@@ -14,11 +14,11 @@ import zio.nio.file.Path
 
 object Execute {
 
-  def runExample(example: CodeExample, runSessionDate: OffsetDateTime, runSessionUUID: UUID): ZIO[Clock & Console, Throwable, RunStatus] = {
+  def runExample(example: CodeExample, runSessionDate: OffsetDateTime, runSessionUUID: UUID) = {
     val timeoutDuration = Duration(100, TimeUnit.SECONDS)
     val uuid            = example.uuid
 
-    val result: ZIO[Clock & Console, Throwable, RunStatus] = for {
+    val result = for {
       exampleFilePath  <- ZIO.fromOption(example.filepath).orElseFail(Exception(s"Example $uuid has no path to its content"))
       absoluteFileName <- exampleFilePath.toAbsolutePath
       command          <- ZIO
@@ -67,7 +67,7 @@ object Execute {
       .tapError(err => ZIO.logError(s"Example $uuid (${example.filename}) has failed with $err"))
   }
 
-  def runTestableExamples(examples: List[CodeExample]): ZIO[Console & Clock, Throwable, List[RunStatus]] = {
+  def runTestableExamples(examples: List[CodeExample]) = {
     val runnableExamples = examples
       .filter(_.runWith.isDefined)
       .filter(_.isTestable)
@@ -93,7 +93,7 @@ object Execute {
     } yield runStatuses
   }
 
-  def executeEffect(keywords: Set[String] = Set.empty): ZIO[Console & Clock & ApplicationConfig & FileSystemService, Throwable | ExampleIssue, List[RunStatus]] = {
+  def executeEffect(keywords: Set[String] = Set.empty): ZIO[ApplicationConfig & FileSystemService, Throwable | ExampleIssue, List[RunStatus]] = {
     for {
       _               <- ZIO.log("Searching examples...")
       examples        <- Synchronize.examplesCollect

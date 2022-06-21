@@ -22,13 +22,13 @@ import zio.*
 
 object RemoteOperations {
 
-  def remoteExampleStatesFetch(adapterConfig: PublishAdapterConfig): RIO[SttpClient & Clock & Random, Iterable[RemoteExampleState]] = {
+  def remoteExampleStatesFetch(adapterConfig: PublishAdapterConfig): RIO[SttpClient, Iterable[RemoteExampleState]] = {
     for {
       _      <- ZIO.log(s"${adapterConfig.targetName} : Fetching already published examples")
       states <-
         if (adapterConfig.kind == "github") RemoteGithubOperations.githubRemoteExamplesStatesFetch(adapterConfig)
         else if (adapterConfig.kind == "gitlab") RemoteGitlabOperations.gitlabRemoteExamplesStatesFetch(adapterConfig)
-        else RIO.fail(new Exception(s"${adapterConfig.targetName} : Unsupported adapter kind ${adapterConfig.kind}"))
+        else ZIO.fail(new Exception(s"${adapterConfig.targetName} : Unsupported adapter kind ${adapterConfig.kind}"))
     } yield states
   }
 
@@ -41,7 +41,7 @@ object RemoteOperations {
       remoteExamples <-
         if (adapterConfig.kind == "github") RemoteGithubOperations.githubRemoteExamplesChangesApply(adapterConfig, todos)
         else if (adapterConfig.kind == "gitlab") RemoteGitlabOperations.gitlabRemoteExamplesChangesApply(adapterConfig, todos)
-        else RIO.fail(new Exception(s"${adapterConfig.targetName} : Unsupported adapter kind ${adapterConfig.kind}"))
+        else ZIO.fail(new Exception(s"${adapterConfig.targetName} : Unsupported adapter kind ${adapterConfig.kind}"))
     } yield remoteExamples
   }
 

@@ -48,7 +48,7 @@ object Synchronize {
 
   def examplesValidSearchRoots(searchRootDirectories: String): RIO[Any, List[SearchRoot]] = {
     for {
-      roots      <- Task(searchRootDirectories.split("""\s*,\s*""").toList.map(_.trim).map(r => Path(r)))
+      roots      <- ZIO.attempt(searchRootDirectories.split("""\s*,\s*""").toList.map(_.trim).map(r => Path(r)))
       validRoots <- ZIO.filter(roots)(root => Files.isDirectory(root))
     } yield validRoots
   }
@@ -70,8 +70,8 @@ object Synchronize {
     val uuids      = examples.map(_.uuid)
     val duplicated = uuids.groupBy(u => u).filter { case (_, duplicated) => duplicated.size > 1 }.keys
     if (duplicated.nonEmpty)
-      Task.fail(new Error("Found duplicated UUIDs : " + duplicated.mkString(",")))
-    else Task.succeed(())
+      ZIO.fail(new Error("Found duplicated UUIDs : " + duplicated.mkString(",")))
+    else ZIO.succeed(())
   }
 
   val examplesCollect: ZIO[ApplicationConfig & FileSystemService, ExampleIssue | Throwable, List[CodeExample]] = for {
@@ -116,14 +116,14 @@ object Synchronize {
   }
 
   def checkCoherency(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]): RIO[Any, Unit] =
-    RIO.foreach(todos)(checkRemote(adapterConfig)).unit
+    ZIO.foreach(todos)(checkRemote(adapterConfig)).unit
 
   def examplesPublishToGivenAdapter(
     examples: Iterable[CodeExample],
     adapterConfig: PublishAdapterConfig
-  ): RIO[ApplicationConfig & SttpClient & Clock & Random, Unit] = {
+  ): RIO[ApplicationConfig & SttpClient, Unit] = {
     val examplesToSynchronize = examples.filter(_.publish.contains(adapterConfig.activationKeyword))
-    if (!adapterConfig.enabled || examplesToSynchronize.isEmpty || adapterConfig.token.isEmpty) RIO.unit
+    if (!adapterConfig.enabled || examplesToSynchronize.isEmpty || adapterConfig.token.isEmpty) ZIO.unit
     else {
       for {
         remoteStates   <- RemoteOperations.remoteExampleStatesFetch(adapterConfig)
@@ -137,15 +137,15 @@ object Synchronize {
         // _            <- ZIO.log(s"${adapterConfig.targetName} : Publish examples summary")
         overviewTodo    = computeWorkToDo(overviewOption, remoteStates)
         remoteOverview <- RemoteOperations.remoteExamplesChangesApply(adapterConfig, overviewTodo)
-        _              <- RIO.foreach(remoteOverview.headOption)(publishedOverview => ZIO.log(s"${adapterConfig.targetName} : Summary available at ${publishedOverview.state.url}"))
+        _              <- ZIO.foreach(remoteOverview.headOption)(publishedOverview => ZIO.log(s"${adapterConfig.targetName} : Summary available at ${publishedOverview.state.url}"))
       } yield ()
     }
   }
 
-  def examplesPublish(examples: Iterable[CodeExample]): RIO[SttpClient & ApplicationConfig & Clock & Random, Unit] = {
+  def examplesPublish(examples: Iterable[CodeExample]): RIO[SttpClient & ApplicationConfig, Unit] = {
     for {
       adapters <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.publishAdapters)
-      _        <- RIO.foreachPar(adapters.toList) { case (adapterName, adapterConfig) =>
+      _        <- ZIO.foreachPar(adapters.toList) { case (adapterName, adapterConfig) =>
                     examplesPublishToGivenAdapter(examples, adapterConfig)
                   }
     } yield ()
@@ -197,7 +197,7 @@ object Synchronize {
            |""".stripMargin
     } yield message
 
-  def synchronizeEffect: ZIO[Clock & SttpClient & ApplicationConfig & FileSystemService & Random, ExampleIssue | Throwable, Unit] = for {
+  def synchronizeEffect: ZIO[SttpClient & ApplicationConfig & FileSystemService, ExampleIssue | Throwable, Unit] = for {
     startTime <- Clock.nanoTime
     metaInfo  <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.metaInfo)
     appName    = metaInfo.name

@@ -128,7 +128,7 @@ object RemoteGitlabOperations {
     tokenOption.fold(base)(token => base.header("Authorization", s"Bearer $token"))
   }
 
-  def gitlabRemoteExamplesStatesFetch(adapterConfig: PublishAdapterConfig): RIO[SttpClient & Clock & Random, Iterable[RemoteExampleState]] = {
+  def gitlabRemoteExamplesStatesFetch(adapterConfig: PublishAdapterConfig): RIO[SttpClient, Iterable[RemoteExampleState]] = {
     import adapterConfig.apiEndPoint
 
     def worker(uri: Uri): RIO[SttpClient, Iterable[SnippetInfo]] = {
@@ -136,10 +136,10 @@ object RemoteGitlabOperations {
       for {
         _             <- ZIO.log(s"${adapterConfig.targetName} : Fetching from $uri")
         response      <- send(gitlabInjectAuthToken(query, adapterConfig.token))
-        snippets      <- RIO.fromEither(response.body)
+        snippets      <- ZIO.fromEither(response.body)
         nextLinkOption = response.header("Link").flatMap(webLinkingExtractNext)
-        nextUriOption <- RIO.foreach(nextLinkOption)(link => uriParse(link))
-        nextSnippets  <- RIO.foreach(nextUriOption)(uri => worker(uri)).map(_.getOrElse(Iterable.empty))
+        nextUriOption <- ZIO.foreach(nextLinkOption)(link => uriParse(link))
+        nextSnippets  <- ZIO.foreach(nextUriOption)(uri => worker(uri)).map(_.getOrElse(Iterable.empty))
       } yield snippets ++ nextSnippets
     }
 
@@ -289,7 +289,7 @@ object RemoteGitlabOperations {
   }
 
   def gitlabRemoteExamplesChangesApply(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]): RIO[SttpClient, Iterable[RemoteExample]] = {
-    RIO.foreach(todos)(gitlabRemoteExampleChangesApply(adapterConfig)).map(_.flatten)
+    ZIO.foreach(todos)(gitlabRemoteExampleChangesApply(adapterConfig)).map(_.flatten)
   }
 
 }

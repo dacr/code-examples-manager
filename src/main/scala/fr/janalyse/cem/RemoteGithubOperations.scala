@@ -106,17 +106,17 @@ object RemoteGithubOperations {
     } yield responseBody
   }
 
-  def githubRemoteExamplesStatesFetch(adapterConfig: PublishAdapterConfig): RIO[SttpClient & Random & Clock, Iterable[RemoteExampleState]] = {
+  def githubRemoteExamplesStatesFetch(adapterConfig: PublishAdapterConfig): RIO[SttpClient, Iterable[RemoteExampleState]] = {
 
     def worker(uri: Uri): RIO[SttpClient, Iterable[GistInfo]] = {
       val query = basicRequest.get(uri).response(asJson[Vector[GistInfo]])
       for {
         _             <- ZIO.log(s"${adapterConfig.targetName} : Fetching from $uri")
         response      <- send(githubInjectAuthToken(query, adapterConfig.token))
-        gists         <- RIO.fromEither(response.body)
+        gists         <- ZIO.fromEither(response.body)
         nextLinkOption = response.header("Link").flatMap(webLinkingExtractNext)
-        nextUriOption <- RIO.foreach(nextLinkOption)(link => uriParse(link))
-        nextGists     <- RIO.foreach(nextUriOption)(uri => worker(uri)).map(_.getOrElse(Iterable.empty))
+        nextUriOption <- ZIO.foreach(nextLinkOption)(link => uriParse(link))
+        nextGists     <- ZIO.foreach(nextUriOption)(uri => worker(uri)).map(_.getOrElse(Iterable.empty))
       } yield gists ++ nextGists
     }
 
@@ -260,7 +260,7 @@ object RemoteGithubOperations {
   }
 
   def githubRemoteExamplesChangesApply(adapterConfig: PublishAdapterConfig, todos: Iterable[WhatToDo]): RIO[SttpClient, Iterable[RemoteExample]] = {
-    RIO.foreach(todos)(githubRemoteExampleChangesApply(adapterConfig)).map(_.flatten)
+    ZIO.foreach(todos)(githubRemoteExampleChangesApply(adapterConfig)).map(_.flatten)
   }
 
 }

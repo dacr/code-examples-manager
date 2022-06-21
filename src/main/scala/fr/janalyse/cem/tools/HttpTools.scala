@@ -16,11 +16,11 @@
 package fr.janalyse.cem.tools
 
 import sttp.model.Uri
-import zio.{RIO, Task}
+import zio.*
 
 object HttpTools {
   def uriParse(link: String): Task[Uri] = {
-    RIO.fromEither(Uri.parse(link).swap.map(msg => new Error(msg)).swap)
+    ZIO.from(Uri.parse(link)).mapError(msg => new Error(msg))
   }
 
   def webLinkingExtractNext(link: String): Option[String] = {

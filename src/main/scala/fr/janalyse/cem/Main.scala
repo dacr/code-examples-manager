@@ -8,12 +8,10 @@ import sttp.client3.asynchttpclient.zio.{AsyncHttpClientZioBackend, SttpClient}
 
 object Main extends ZIOAppDefault:
 
-  val aspect: RuntimeConfigAspect = SLF4J.slf4j(
+  override val bootstrap = SLF4J.slf4j(
     LogLevel.Debug,
     format = LogFormat.colored
   )
-
-  override def hook = aspect
 
   val configLayer     = ZLayer.fromZIO(Configuration())
   val httpClientLayer = AsyncHttpClientZioBackend.layer()
@@ -27,14 +25,14 @@ object Main extends ZIOAppDefault:
             .executeEffect(keywords.toSet)
             .flatMap(status => ZIO.cond(status.forall(_.success), "All examples are successful", "Some examples has failed"))
             .flatMap(message => ZIO.log(message))
-            .provideCustom(configLayer, FileSystemService.live)
+            .provide(configLayer, FileSystemService.live)
             .unit
 
         case "version":: _ =>
           Synchronize
             .versionEffect
             .flatMap(versionInfo => Console.printLine(versionInfo))
-            .provideCustom(configLayer)
+            .provide(configLayer)
             .unit
 
         case "stats":: _ =>
@@ -42,13 +40,13 @@ object Main extends ZIOAppDefault:
             .examplesCollect
             .flatMap(examples => Synchronize.statsEffect(examples))
             .flatMap(statsInfo => Console.printLine(statsInfo))
-            .provideCustom(configLayer, FileSystemService.live)
+            .provide(configLayer, FileSystemService.live)
             .unit
 
         case "publish"::_ | _ =>
           Synchronize
             .synchronizeEffect
-            .provideCustom(configLayer, httpClientLayer, FileSystemService.live)
+            .provide(configLayer, httpClientLayer, FileSystemService.live)
             .unit
       }
     )

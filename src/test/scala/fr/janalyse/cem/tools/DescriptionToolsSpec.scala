@@ -22,8 +22,8 @@ import fr.janalyse.cem.tools.DescriptionTools.*
 import java.util.UUID
 import org.junit.runner.RunWith
 
-//@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
-object DescriptionToolsSpec extends DefaultRunnableSpec {
+@RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
+object DescriptionToolsSpec extends ZIOSpecDefault {
 
   override def spec = {
     suite("RemoteOperationsTools tests")(
