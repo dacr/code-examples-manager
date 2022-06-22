@@ -28,7 +28,7 @@ import sttp.client3.asynchttpclient.zio.stubbing.whenRequestMatches
 import zio.nio.file.Path
 
 @RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
-object RemoteGithubOperationsSpec extends ZIOSpecDefault {
+class RemoteGithubOperationsSpec extends ZIOSpecDefault {
 
   import RemoteGithubOperations.*
 

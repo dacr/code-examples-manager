@@ -17,17 +17,14 @@ package fr.janalyse.cem.tools
 
 import zio.*
 import zio.test.*
+import zio.test.TestAspect.*
+import zio.test.Gen.*
 import zio.test.Assertion.*
 import org.junit.runner.RunWith
 import fr.janalyse.cem.tools.Hashes.*
 
 @RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
-object HashesSpec extends ZIOSpecDefault {
-
-  object Generators {
-    import zio.test.Gen._
-    val someContent :Gen[Random with Sized, String] = Gen.string
-  }
+class HashesSpec extends ZIOSpecDefault {
 
   def spec = {
     suite("Hash function tests")(
@@ -43,12 +40,12 @@ object HashesSpec extends ZIOSpecDefault {
       },
       // ----------------------------------------------------------------------------------------------
       test("sha1 hashes are never empty") {
-        check(Generators.someContent) { content =>
+        check(Gen.string) { content =>
           assert(sha1(content))(isNonEmptyString)
         }
       },
       test("sha1 hashes are different if their content are differents") {
-        check(Generators.someContent, Generators.someContent) { (content1, content2)  =>
+        check(Gen.string, Gen.string) { (content1, content2)  =>
           assertTrue(content1 != content2 && sha1(content1) != sha1(content2)) ||
           assertTrue(content1 == content2 && sha1(content1) == sha1(content2))
         }

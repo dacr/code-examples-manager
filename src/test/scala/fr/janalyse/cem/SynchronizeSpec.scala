@@ -23,7 +23,7 @@ import fr.janalyse.cem.model.CodeExample
 import java.util.UUID
 
 @RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
-object SynchronizeSpec extends ZIOSpecDefault {
+class SynchronizeSpec extends ZIOSpecDefault {
   // ----------------------------------------------------------------------------------------------
   val t1 = test("check examples coherency success with valid examples") {
     val examplesWithIssues = List(
@@ -38,7 +38,8 @@ object SynchronizeSpec extends ZIOSpecDefault {
       CodeExample(filepath = None, filename = "pi-1.sc", content = "42", uuid = UUID.fromString("e7f1879c-c893-4b3d-bac1-f11f641e90bd")),
       CodeExample(filepath = None, filename = "pi-2.sc", content = "42", uuid = UUID.fromString("e7f1879c-c893-4b3d-bac1-f11f641e90bd"))
     )
-    assertZIO(Synchronize.examplesCheckCoherency(examplesWithIssues))(isFailure(hasMessage(containsString("duplicated UUIDs"))))
+    //assertZIO(Synchronize.examplesCheckCoherency(examplesWithIssues).exit)(fails(isSubtype[Exception](anything)))
+    assertZIO(Synchronize.examplesCheckCoherency(examplesWithIssues).exit)(fails(hasMessage(containsString("duplicated UUIDs"))))
   }
 
   // ----------------------------------------------------------------------------------------------
