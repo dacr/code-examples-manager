@@ -26,14 +26,14 @@ object Main extends ZIOAppDefault:
             .executeEffect(keywords.toSet)
             .flatMap(status => ZIO.cond(status.forall(_.success), "All examples are successful", "Some examples has failed"))
             .flatMap(message => ZIO.log(message))
-            .provide(configLayer, FileSystemService.live)
+            .provide(configLayer, FileSystemService.live, removeDefaultLoggers)
             .unit
 
         case "version":: _ =>
           Synchronize
             .versionEffect
             .flatMap(versionInfo => Console.printLine(versionInfo))
-            .provide(configLayer)
+            .provide(configLayer, removeDefaultLoggers)
             .unit
 
         case "stats":: _ =>
@@ -41,7 +41,7 @@ object Main extends ZIOAppDefault:
             .examplesCollect
             .flatMap(examples => Synchronize.statsEffect(examples))
             .flatMap(statsInfo => Console.printLine(statsInfo))
-            .provide(configLayer, FileSystemService.live)
+            .provide(configLayer, FileSystemService.live, removeDefaultLoggers)
             .unit
 
         case "publish"::_ | _ =>
