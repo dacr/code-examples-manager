@@ -2,7 +2,7 @@ package fr.janalyse.cem
 
 import zio.*
 import zio.config.*
-import zio.logging.LogFormat
+import zio.logging.{LogFormat, removeDefaultLoggers}
 import zio.logging.backend.SLF4J
 import sttp.client3.asynchttpclient.zio.{AsyncHttpClientZioBackend, SttpClient}
 
@@ -17,8 +17,9 @@ object Main extends ZIOAppDefault:
   val httpClientLayer = AsyncHttpClientZioBackend.layer()
 
 
-  override def run = getArgs
-    .flatMap(args =>
+  override def run =
+    getArgs
+      .flatMap(args =>
       args.toList match {
         case "run" :: keywords =>
           Execute
@@ -46,7 +47,7 @@ object Main extends ZIOAppDefault:
         case "publish"::_ | _ =>
           Synchronize
             .synchronizeEffect
-            .provide(configLayer, httpClientLayer, FileSystemService.live)
+            .provide(configLayer, httpClientLayer, FileSystemService.live, removeDefaultLoggers)
             .unit
       }
     )
