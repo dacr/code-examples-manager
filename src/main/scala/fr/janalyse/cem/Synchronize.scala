@@ -25,7 +25,8 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{FileVisitOption, OpenOption, StandardOpenOption}
 import java.util.UUID
 import zio.nio.file.Files
-import sttp.client3.asynchttpclient.zio.{AsyncHttpClientZioBackend, SttpClient}
+import sttp.client3.asynchttpclient.zio.AsyncHttpClientZioBackend
+import sttp.client3.SttpBackend
 import fr.janalyse.cem.model.*
 import fr.janalyse.cem.model.WhatToDo.*
 
@@ -33,6 +34,7 @@ import scala.util.Success
 import scala.util.matching.Regex
 
 object Synchronize {
+  type SttpClient = SttpBackend[Task, Any]
   type SearchRoot = Path
 
   def findExamplesFromSearchRoot(

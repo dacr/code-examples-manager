@@ -15,12 +15,13 @@
  */
 package fr.janalyse.cem
 
+import zio.*
+import sttp.client3.SttpBackend
 import fr.janalyse.cem.model.*
 import fr.janalyse.cem.model.WhatToDo.*
-import sttp.client3.asynchttpclient.zio.SttpClient
-import zio.*
 
 object RemoteOperations {
+  type SttpClient = SttpBackend[Task, Any]
 
   def remoteExampleStatesFetch(adapterConfig: PublishAdapterConfig): RIO[SttpClient, Iterable[RemoteExampleState]] = {
     for {

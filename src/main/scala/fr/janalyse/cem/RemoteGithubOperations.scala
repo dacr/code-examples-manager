@@ -23,9 +23,8 @@ import zio.logging.*
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 import sttp.model.Uri
 import sttp.client3.*
+import sttp.client3.SttpBackend
 import sttp.client3.ziojson.*
-import sttp.client3.asynchttpclient.zio.SttpClient
-import sttp.client3.asynchttpclient.zio.*
 import java.util.UUID
 
 import fr.janalyse.cem.model.*
@@ -35,6 +34,7 @@ import fr.janalyse.cem.tools.DescriptionTools.remoteExampleFileRename
 import fr.janalyse.cem.tools.HttpTools.{uriParse, webLinkingExtractNext}
 
 object RemoteGithubOperations {
+  type SttpClient = SttpBackend[Task, Any]
 
   case class GithubUser(
     login: String, // user name in APIs
@@ -100,19 +100,21 @@ object RemoteGithubOperations {
   def githubUser(adapterConfig: PublishAdapterConfig): RIO[SttpClient, GithubUser] = {
     import adapterConfig.apiEndPoint
     for {
+      backend      <- ZIO.service[SttpBackend[Task, Any]]
       apiURI       <- uriParse(s"$apiEndPoint/user")
       query         = basicRequest.get(apiURI).response(asJson[GithubUser])
-      responseBody <- send(githubInjectAuthToken(query, adapterConfig.token)).map(_.body).absolve
+      responseBody <- backend.send(githubInjectAuthToken(query, adapterConfig.token)).map(_.body).absolve
     } yield responseBody
   }
 
   def githubRemoteExamplesStatesFetch(adapterConfig: PublishAdapterConfig): RIO[SttpClient, Iterable[RemoteExampleState]] = {
 
     def worker(uri: Uri): RIO[SttpClient, Iterable[GistInfo]] = {
-      val query = basicRequest.get(uri).response(asJson[Vector[GistInfo]])
       for {
+        backend       <- ZIO.service[SttpBackend[Task, Any]]
+        query          = basicRequest.get(uri).response(asJson[Vector[GistInfo]])
         _             <- ZIO.log(s"${adapterConfig.targetName} : Fetching from $uri")
-        response      <- send(githubInjectAuthToken(query, adapterConfig.token))
+        response      <- backend.send(githubInjectAuthToken(query, adapterConfig.token))
         gists         <- ZIO.fromEither(response.body)
         nextLinkOption = response.header("Link").flatMap(webLinkingExtractNext)
         nextUriOption <- ZIO.foreach(nextLinkOption)(link => uriParse(link))
@@ -174,12 +176,13 @@ object RemoteGithubOperations {
 
   def githubRemoteExampleAdd(adapterConfig: PublishAdapterConfig, todo: AddExample): RIO[SttpClient, RemoteExample] = {
     for {
+      backend     <- ZIO.service[SttpBackend[Task, Any]]
       apiURI      <- uriParse(s"${adapterConfig.apiEndPoint}/gists")
       example      = todo.example
       description <- ZIO.getOrFail(DescriptionTools.makeDescription(example))
       requestBody  = buildAddRequestBody(adapterConfig, todo, description)
       query        = basicRequest.post(apiURI).body(requestBody).response(asJson[GistCreateResponse])
-      response    <- send(githubInjectAuthToken(query, adapterConfig.token)).map(_.body).absolve
+      response    <- backend.send(githubInjectAuthToken(query, adapterConfig.token)).map(_.body).absolve
       id           = response.id
       url          = response.html_url
       _           <- ZIO.log(s"""${adapterConfig.targetName} : ADDED ${todo.uuid} - ${example.summary.getOrElse("")} - $url""")
@@ -223,15 +226,16 @@ object RemoteGithubOperations {
   }
 
   def githubRemoteExampleUpdate(adapterConfig: PublishAdapterConfig, todo: UpdateRemoteExample): RIO[SttpClient, RemoteExample] = {
-    val gistId = todo.state.remoteId
     for {
+      backend     <- ZIO.service[SttpBackend[Task, Any]]
+      gistId       = todo.state.remoteId
       apiURI      <- uriParse(s"${adapterConfig.apiEndPoint}/gists/$gistId")
       example      = todo.example
       description <- ZIO.getOrFail(DescriptionTools.makeDescription(example))
       requestBody  = buildUpdateRequestBody(adapterConfig, todo, description)
       query        = basicRequest.post(apiURI).body(requestBody).response(asJson[GistUpdateResponse])
       authedQuery  = githubInjectAuthToken(query, adapterConfig.token)
-      response    <- send(authedQuery).map(_.body).absolve
+      response    <- backend.send(authedQuery).map(_.body).absolve
       id           = response.id
       url          = response.html_url
       _           <- ZIO.log(s"""${adapterConfig.targetName} : UPDATED ${todo.uuid} - ${example.summary.getOrElse("")} - $url""")

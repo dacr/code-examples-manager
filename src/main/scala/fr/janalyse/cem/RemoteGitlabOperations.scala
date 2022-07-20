@@ -19,9 +19,8 @@ import zio.*
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 import sttp.model.Uri
 import sttp.client3.*
+import sttp.client3.SttpBackend
 import sttp.client3.ziojson.*
-import sttp.client3.asynchttpclient.zio.SttpClient
-import sttp.client3.asynchttpclient.zio.*
 import java.util.UUID
 
 import fr.janalyse.cem.model.*
@@ -33,6 +32,7 @@ import fr.janalyse.cem.tools.HttpTools.{uriParse, webLinkingExtractNext}
 import java.time.OffsetDateTime
 
 object RemoteGitlabOperations {
+  type SttpClient = SttpBackend[Task, Any]
 
   case class SnippetAuthor(
     id: Long,
@@ -132,10 +132,11 @@ object RemoteGitlabOperations {
     import adapterConfig.apiEndPoint
 
     def worker(uri: Uri): RIO[SttpClient, Iterable[SnippetInfo]] = {
-      val query = basicRequest.get(uri).response(asJson[Vector[SnippetInfo]])
       for {
+        backend       <- ZIO.service[SttpBackend[Task, Any]]
+        query          = basicRequest.get(uri).response(asJson[Vector[SnippetInfo]])
         _             <- ZIO.log(s"${adapterConfig.targetName} : Fetching from $uri")
-        response      <- send(gitlabInjectAuthToken(query, adapterConfig.token))
+        response      <- backend.send(gitlabInjectAuthToken(query, adapterConfig.token))
         snippets      <- ZIO.fromEither(response.body)
         nextLinkOption = response.header("Link").flatMap(webLinkingExtractNext)
         nextUriOption <- ZIO.foreach(nextLinkOption)(link => uriParse(link))
@@ -189,12 +190,13 @@ object RemoteGitlabOperations {
 
   def gitlabRemoteExampleAdd(adapterConfig: PublishAdapterConfig, todo: AddExample): RIO[SttpClient, RemoteExample] = {
     for {
+      backend     <- ZIO.service[SttpBackend[Task, Any]]
       apiURI      <- uriParse(s"${adapterConfig.apiEndPoint}/snippets")
       example      = todo.example
       description <- ZIO.getOrFail(DescriptionTools.makeDescription(example))
       requestBody  = buildAddRequestBody(adapterConfig, todo, description)
       query        = basicRequest.post(apiURI).body(requestBody).response(asJson[SnippetInfo])
-      response    <- send(gitlabInjectAuthToken(query, adapterConfig.token)).map(_.body).absolve
+      response    <- backend.send(gitlabInjectAuthToken(query, adapterConfig.token)).map(_.body).absolve
       id           = response.id.toString
       url          = response.web_url
       _           <- ZIO.log(s"""${adapterConfig.targetName} : ADDED ${todo.uuid} - ${example.summary.getOrElse("")} - $url""")
@@ -252,15 +254,16 @@ object RemoteGitlabOperations {
   }
 
   def gitlabRemoteExampleUpdate(adapterConfig: PublishAdapterConfig, todo: UpdateRemoteExample): RIO[SttpClient, RemoteExample] = {
-    val snippetId = todo.state.remoteId
     for {
+      backend     <- ZIO.service[SttpBackend[Task, Any]]
+      snippetId    = todo.state.remoteId
       apiURI      <- uriParse(s"${adapterConfig.apiEndPoint}/snippets/$snippetId")
       example      = todo.example
       description <- ZIO.getOrFail(DescriptionTools.makeDescription(example))
       requestBody  = buildUpdateRequestBody(adapterConfig, todo, description)
       query        = basicRequest.put(apiURI).body(requestBody).response(asJson[SnippetInfo])
       authedQuery  = gitlabInjectAuthToken(query, adapterConfig.token)
-      response    <- send(authedQuery).map(_.body).absolve
+      response    <- backend.send(authedQuery).map(_.body).absolve
       id           = response.id.toString
       url          = response.web_url
       _           <- ZIO.log(s"""${adapterConfig.targetName} : UPDATED ${todo.uuid} - ${example.summary.getOrElse("")} - $url""")

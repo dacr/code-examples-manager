@@ -24,7 +24,6 @@ import fr.janalyse.cem.model.WhatToDo.*
 import fr.janalyse.cem.tools.DescriptionTools.*
 import org.junit.runner.RunWith
 import sttp.client3.asynchttpclient.zio.AsyncHttpClientZioBackend
-import sttp.client3.asynchttpclient.zio.stubbing.whenRequestMatches
 import zio.nio.file.Path
 
 @RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
@@ -48,7 +47,7 @@ class RemoteGithubOperationsSpec extends ZIOSpecDefault {
         |import org.scalatest._,matchers.should.Matchers._
         |
         |math.Pi shouldBe 3.14d +- 0.01d""".stripMargin
-    CodeExample.makeExample(filename, searchRoot).provide(FileSystemServiceStub.stubWithContents(Map(filename->content)))
+    CodeExample.makeExample(filename, searchRoot).provide(FileSystemServiceStub.stubWithContents(Map(filename -> content)))
   }
 
   // ----------------------------------------------------------------------------------------------
@@ -66,7 +65,7 @@ class RemoteGithubOperationsSpec extends ZIOSpecDefault {
 
     val logic = for {
       example1 <- zexample1
-      uuid1    = example1.uuid
+      uuid1     = example1.uuid
       state1    = RemoteExampleState(
                     remoteId = "6e40f8239fa6828ab45a064b8131fdfc", // // MDQ6R2lzdDQ1NTk5OTQ= --> 04:Gist4559994 --> 4559994
                     description = "desc",
@@ -79,16 +78,13 @@ class RemoteGithubOperationsSpec extends ZIOSpecDefault {
       results  <- githubRemoteExamplesChangesApply(config, todos)
     } yield results
 
-    val stub = for {
-      _ <-
-        whenRequestMatches(_.uri.toString() == "https://api.github.com/gists/6e40f8239fa6828ab45a064b8131fdfc")
-          .thenRespond("""{"id":"aa-bb", "html_url":"https://truc/aa-bb"}""")
-    } yield ()
+    val stubbedLayer = ZLayer.succeed(
+      AsyncHttpClientZioBackend.stub
+        .whenRequestMatches(_.uri.toString() == "https://api.github.com/gists/6e40f8239fa6828ab45a064b8131fdfc")
+        .thenRespond("""{"id":"aa-bb", "html_url":"https://truc/aa-bb"}""")
+    )
 
-    val httpClientLayer = AsyncHttpClientZioBackend.stubLayer
-    val stubbedLogic    = stub *> logic
-
-    stubbedLogic.provide(httpClientLayer).map(result => assertTrue(true))
+    logic.provide(stubbedLayer).map(result => assertTrue(true))
   }
 
   // ----------------------------------------------------------------------------------------------

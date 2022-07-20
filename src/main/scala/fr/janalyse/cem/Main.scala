@@ -4,7 +4,7 @@ import zio.*
 import zio.config.*
 import zio.logging.{LogFormat, removeDefaultLoggers}
 import zio.logging.backend.SLF4J
-import sttp.client3.asynchttpclient.zio.{AsyncHttpClientZioBackend, SttpClient}
+import sttp.client3.asynchttpclient.zio.AsyncHttpClientZioBackend
 
 object Main extends ZIOAppDefault:
 
