@@ -16,7 +16,7 @@ scalaVersion := "3.1.3"
 mainClass := Some("fr.janalyse.cem.Main")
 
 lazy val versions = new {
-  val sttp        = "3.7.0"
+  val sttp        = "3.7.1"
   val zio         = "2.0.0"
   val zionio      = "2.0.0"
   val zioproc     = "0.7.1"
