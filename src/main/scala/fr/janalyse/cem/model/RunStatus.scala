@@ -7,7 +7,7 @@ import java.time.OffsetDateTime
 case class RunStatus(
   example: CodeExample,
   exitCodeOption: Option[Int],
-  Stdout: String,
+  stdout: String,
   startedTimestamp: OffsetDateTime,
   duration: Long,
   runSessionDate: OffsetDateTime,

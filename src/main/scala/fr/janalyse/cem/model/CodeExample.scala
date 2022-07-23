@@ -54,6 +54,7 @@ case class CodeExample(
   publish: List[String] = Nil,                 // embedded
   authors: List[String] = Nil,                 // embedded
   runWith: Option[String] = None,              // embedded
+  testWith: Option[String] = None,             // embedded
   managedBy: Option[String] = None,            // embedded
   license: Option[String] = None,              // embedded
   updatedCount: Option[Int] = None,            // computed from GIT history
@@ -155,6 +156,7 @@ object CodeExample {
         publish = exampleContentExtractValueList(content, "publish"),
         authors = exampleContentExtractValueList(content, "authors"),
         runWith = exampleContentExtractValue(content, "run-with"),
+        testWith = exampleContentExtractValue(content, "test-with"),
         managedBy = exampleContentExtractValue(content, "managed-by"),
         license = exampleContentExtractValue(content, "license"),
         attachments = attachments.toMap

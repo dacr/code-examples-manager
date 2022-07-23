@@ -122,6 +122,10 @@ Supported keys in description header are the following :
   - Only examples with `@testable` keywords are eligible for automated execution
   - on execution the exit code is used to compute execution success or failure
   - Use `$file` (or `$scriptFile`) for example filename substitution
+- **`test-with`** : Command to test the example
+  - When `@testable` is set as keyword
+  - When your example is a "blocking service", you can specify an external command to test it
+    - for example : `test-with : curl http://127.0.0.1:8080/docs`
 
 ## CEM operations
 
