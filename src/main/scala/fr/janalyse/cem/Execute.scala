@@ -106,7 +106,7 @@ object Execute {
         runState = runState
       )
 
-    result
+    ZIO.logAnnotate("file",example.filename)(result)
   }
 
   def runTestableExamples(examples: List[CodeExample]) = {
