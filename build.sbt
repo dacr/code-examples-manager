@@ -11,20 +11,20 @@ scmInfo := Some(
   )
 )
 
-scalaVersion := "3.2.0"
+scalaVersion := "3.2.1"
 
 mainClass := Some("fr.janalyse.cem.Main")
 
 lazy val versions = new {
-  val sttp        = "3.8.2"
-  val zio         = "2.0.2"
+  val sttp        = "3.8.9"
+  val zio         = "2.0.6"
   val zionio      = "2.0.0"
   val zioproc     = "0.7.1"
-  val zioconfig   = "3.0.2"
-  val ziologging  = "2.1.2"
+  val zioconfig   = "3.0.7"
+  val ziologging  = "2.1.8"
   val naturalsort = "1.0.1"
-  val jgit        = "6.3.0.202209071007-r"
-  val logback     = "1.4.3"
+  val jgit        = "6.4.0.202211300538-r"
+  val logback     = "1.4.5"
 }
 
 libraryDependencies ++= Seq(
