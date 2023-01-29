@@ -28,7 +28,7 @@ object Execute {
 
   def makeCommandProcess(command: List[String], workingDir: Path) = {
     val results = for {
-      executable       <- ZIO.from(command.headOption).orElseFail(RunFailure(s"Example command is invalid"))
+      executable       <- ZIO.from(command.headOption).orElseFail(RunFailure("Example command is invalid"))
       arguments         = command.drop(1)
       process          <- ZIO.acquireRelease(
                             Command(executable, arguments*)
@@ -48,9 +48,9 @@ object Execute {
 
   def makeRunCommandProcess(example: CodeExample) = {
     for {
-      exampleFilePath  <- ZIO.fromOption(example.filepath).orElseFail(RunFailure(s"Example has no path for its content"))
-      workingDir       <- ZIO.fromOption(exampleFilePath.parent).orElseFail(RunFailure(s"Example file path content has no parent directory"))
-      absoluteFileName <- exampleFilePath.toAbsolutePath.orElseFail(RunFailure(s"Example absolute file path error"))
+      exampleFilePath  <- ZIO.fromOption(example.filepath).orElseFail(RunFailure("Example has no path for its content"))
+      workingDir       <- ZIO.fromOption(exampleFilePath.parent).orElseFail(RunFailure("Example file path content has no parent directory"))
+      absoluteFileName <- exampleFilePath.toAbsolutePath.orElseFail(RunFailure("Example absolute file path error"))
       command          <- ZIO
                             .from(
                               example.runWith
@@ -65,8 +65,8 @@ object Execute {
 
   def makeTestCommandProcess(example: CodeExample) = {
     for {
-      exampleFilePath <- ZIO.fromOption(example.filepath).orElseFail(RunFailure(s"Example has no path for its content"))
-      workingDir      <- ZIO.fromOption(exampleFilePath.parent).orElseFail(RunFailure(s"Example file path content has no parent directory"))
+      exampleFilePath <- ZIO.fromOption(example.filepath).orElseFail(RunFailure("Example has no path for its content"))
+      workingDir      <- ZIO.fromOption(exampleFilePath.parent).orElseFail(RunFailure("Example file path content has no parent directory"))
       command         <- ZIO.succeed(example.testWith.getOrElse(s"sleep ${timeoutDuration.getSeconds()}").trim.split("\\s+").toList)
       results         <- makeCommandProcess(command, workingDir) @@ annotated("example-test-command" -> command.mkString(" "))
     } yield results
@@ -79,7 +79,7 @@ object Execute {
         runEffect       = makeRunCommandProcess(example).disconnect
                             .timeout(timeoutDuration)
         testEffect      = makeTestCommandProcess(example)
-                            .filterOrFail(result => result.exitCode == 0)(RunFailure(s"test code is failing"))
+                            .filterOrFail(result => result.exitCode == 0)(RunFailure("test code is failing"))
                             .retry(Schedule.exponential(100.millis, 2).jittered && Schedule.recurs(5))
                             .delay(testStartDelay)
                             .disconnect
@@ -92,7 +92,7 @@ object Execute {
         success         = exitCodeOption.exists(_ == 0) || (example.shouldFail && exitCodeOption.exists(_ != 0))
         runState        = if timeout then "timeout" else if success then "success" else "failure"
         _              <- if (results.isLeft) ZIO.logError(s"""Couldn't execute either run or test part\n${results.swap.toOption.getOrElse("")}""") else ZIO.succeed(())
-        _              <- if (!success) ZIO.logWarning(s"example run $runState\nFailed cause:\n$output") else ZIO.log(s"example run success")
+        _              <- if (!success) ZIO.logWarning(s"example run $runState\nFailed cause:\n$output") else ZIO.log("example run success")
       } yield RunStatus(
         example = example,
         exitCodeOption = exitCodeOption,

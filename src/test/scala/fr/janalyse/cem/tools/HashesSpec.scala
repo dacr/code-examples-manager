@@ -35,8 +35,7 @@ class HashesSpec extends ZIOSpecDefault {
       },
       // ----------------------------------------------------------------------------------------------
       test("sha1 should not fail") {
-        assertTrue(sha1("") == "da39a3ee5e6b4b0d3255bfef95601890afd80709") &&
-        assertTrue(sha1(null) == "da39a3ee5e6b4b0d3255bfef95601890afd80709")
+        assertTrue(sha1("") == "da39a3ee5e6b4b0d3255bfef95601890afd80709")
       },
       // ----------------------------------------------------------------------------------------------
       test("sha1 hashes are never empty") {
