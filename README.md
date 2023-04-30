@@ -222,7 +222,8 @@ Get an access token from gitlab.com :
 - 2021-06 - Migration to Scala3
 - 2021-12 - PoC#3 Search & Execution engines
 - 2022-01 - Migrate to ZIO2 and add support for attachments
-- 2023-03 - TODO Add ZIO LMDB for local storage cache 
+- 2023-04 - Use ZIO standard configuration
+- 2023-05 - Add ZIO LMDB for local storage cache (in progress) 
 
 ## Acknowledgements
 
