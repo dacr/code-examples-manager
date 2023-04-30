@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 David Crosson
+ * Copyright 2023 David Crosson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import zio.test.*
 import zio.test.Assertion.*
 import zio.nio.file.Path
 import org.junit.runner.RunWith
+import zio.lmdb.LMDB
 
 @RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
 class CodeExampleSpec extends ZIOSpecDefault {
@@ -45,8 +46,12 @@ class CodeExampleSpec extends ZIOSpecDefault {
   val t1 = test("make an example") {
     for {
       example <- CodeExample
-        .makeExample(exampleFakeTestingFilename, exampleFakeTestingSearchRoot)
-        .provide(FileSystemServiceStub.stubWithContents(Map(exampleFakeTestingFilename->exampleFakeTestingPiContent)))
+                   .makeExample(exampleFakeTestingFilename, exampleFakeTestingSearchRoot)
+                   .provide(
+                     FileSystemServiceStub.stubWithContents(Map(exampleFakeTestingFilename -> exampleFakeTestingPiContent)),
+                     Scope.default,
+                     LMDB.live // TODO - Replace with TestLMDB when available
+                   )
     } yield assertTrue(example.filename == "fake-testing-pi.sc") &&
       assertTrue(example.category.isEmpty) &&
       assertTrue(example.summary.contains("Simplest scalatest test framework usage.")) &&
@@ -77,7 +82,7 @@ class CodeExampleSpec extends ZIOSpecDefault {
   }
 
   // ----------------------------------------------------------------------------------------------
-  val t3 = test("meta data single value extraction") {
+  val t3            = test("meta data single value extraction") {
     import CodeExample.{exampleContentExtractValue => extractor}
     assertTrue(extractor("// summary : hello", "summary") == Option("hello")) &&
     assert(extractor("// summary :", "summary"))(isNone) &&
@@ -86,7 +91,7 @@ class CodeExampleSpec extends ZIOSpecDefault {
     assert(extractor("// truc : \n// summary :\n// machin : \n", "summary"))(isNone)
   }
   // ----------------------------------------------------------------------------------------------
-  val t4 = test("meta data list value extraction") {
+  val t4            = test("meta data list value extraction") {
     import CodeExample.{exampleContentExtractValueList => extractor}
     assertTrue(extractor("// publish : toto", "publish") == List("toto")) &&
     assertTrue(extractor("// publish :", "publish").isEmpty) &&

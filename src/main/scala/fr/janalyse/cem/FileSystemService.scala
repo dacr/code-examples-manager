@@ -25,9 +25,10 @@ object FileSystemService:
   def searchFiles(searchRoot: Path, searchOnlyRegex: Option[Regex], ignoreMaskRegex: Option[Regex]): ZIO[FileSystemService, Throwable, List[Path]] =
     ZIO.serviceWithZIO(_.searchFiles(searchRoot, searchOnlyRegex, ignoreMaskRegex))
 
-  def live: URLayer[ApplicationConfig, FileSystemService] = ZLayer(
-    for applicationConfig <- ZIO.service[ApplicationConfig]
-    yield FileSystemServiceImpl(applicationConfig)
+  def live = ZLayer.fromZIO(
+    for {
+      applicationConfig <- ZIO.config(ApplicationConfig.config)
+    } yield FileSystemServiceImpl(applicationConfig)
   )
 
 class FileSystemServiceImpl(applicationConfig: ApplicationConfig) extends FileSystemService:

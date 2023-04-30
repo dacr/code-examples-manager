@@ -222,6 +222,7 @@ Get an access token from gitlab.com :
 - 2021-06 - Migration to Scala3
 - 2021-12 - PoC#3 Search & Execution engines
 - 2022-01 - Migrate to ZIO2 and add support for attachments
+- 2023-03 - TODO Add ZIO LMDB for local storage cache 
 
 ## Acknowledgements
 
@@ -233,7 +234,7 @@ Get an access token from gitlab.com :
 
 [CodeExamplesManager]:    https://github.com/dacr/code-examples-manager
 [CodeExamplesManagerImg]: https://img.shields.io/maven-central/v/fr.janalyse/code-examples-manager_3.svg
-[CodeExamplesManagerLnk]: https://search.maven.org/#search%7Cga%7C1%7Cfr.janalyse.code-examples-manager
+[CodeExamplesManagerLnk]: https://mvnrepository.com/artifact/fr.janalyse/code-examples-manager
 [scalaci-master]: https://github.com/dacr/code-examples-manager/workflows/Scala%20CI/badge.svg
 [mygists]: https://gist.github.com/c071a7b7d3de633281cbe84a34be47f1
 [cem]: https://github.com/dacr/code-examples-manager

@@ -16,15 +16,16 @@ scalaVersion := "3.2.2"
 mainClass := Some("fr.janalyse.cem.Main")
 
 lazy val versions = new {
-  val sttp        = "3.8.13"
-  val zio         = "2.0.10"
+  val sttp        = "3.8.15"
+  val zio         = "2.0.13"
   val zionio      = "2.0.1"
   val zioproc     = "0.7.2"
-  val zioconfig   = "3.0.7"
-  val ziologging  = "2.1.10"
-  val naturalsort = "1.0.1"
+  val zioconfig   = "4.0.0-RC14"
+  val ziologging  = "2.1.12"
+  val ziolmdb     = "1.1.0"
+  val naturalsort = "1.0.2"
   val jgit        = "6.5.0.202303070854-r"
-  val logback     = "1.4.5"
+  val logback     = "1.4.7"
 }
 
 libraryDependencies ++= Seq(
@@ -41,6 +42,7 @@ libraryDependencies ++= Seq(
   "dev.zio"                       %% "zio-config"                    % versions.zioconfig,
   "dev.zio"                       %% "zio-config-typesafe"           % versions.zioconfig,
   "dev.zio"                       %% "zio-config-magnolia"           % versions.zioconfig,
+  "fr.janalyse"                   %% "zio-lmdb"                      % versions.ziolmdb,
   "com.softwaremill.sttp.client3" %% "async-http-client-backend-zio" % versions.sttp,
   "com.softwaremill.sttp.client3" %% "zio-json"                      % versions.sttp,
   "fr.janalyse"                   %% "naturalsort"                   % versions.naturalsort,
@@ -48,7 +50,7 @@ libraryDependencies ++= Seq(
   "ch.qos.logback"                 % "logback-classic"               % versions.logback
 )
 
-excludeDependencies += "org.scala-lang.modules" % "scala-collection-compat_2.13"
+//excludeDependencies += "org.scala-lang.modules" % "scala-collection-compat_2.13"
 
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
@@ -61,3 +63,7 @@ libraryDependencies := libraryDependencies.value.map {
 }
 
 TwirlKeys.templateImports += "fr.janalyse.cem.model._"
+
+// ZIO-LMDB requires special authorization at JVM level
+ThisBuild / fork := true
+ThisBuild / javaOptions ++= Seq("--add-opens", "java.base/java.nio=ALL-UNNAMED", "--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED")

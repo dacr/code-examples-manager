@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 David Crosson
+ * Copyright 2023 David Crosson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,16 +18,14 @@ package fr.janalyse.cem
 import zio.*
 
 import scala.util.Properties.*
-import com.typesafe.config.{Config, ConfigFactory}
 import zio.config.*
 import zio.config.magnolia.*
 import zio.config.typesafe.*
-import zio.config.ConfigDescriptor.*
 
 import java.io.File
 import scala.util.matching.Regex
 
-final case class ExamplesConfig(
+case class ExamplesConfig(
   searchRootDirectories: String,
   searchOnlyPattern: Option[String],
   searchIgnoreMask: Option[String],
@@ -37,7 +35,7 @@ final case class ExamplesConfig(
   def searchIgnoreMaskRegex(): Option[Regex] = searchIgnoreMask.filterNot(_.trim.isEmpty).map(_.r)
 }
 
-final case class RenameRuleConfig(
+case class RenameRuleConfig(
   from: String,
   to: String
 ) {
@@ -48,7 +46,7 @@ final case class RenameRuleConfig(
   }
 }
 
-final case class PublishAdapterConfig(
+case class PublishAdapterConfig(
   enabled: Boolean,
   kind: String,
   activationKeyword: String,
@@ -62,7 +60,7 @@ final case class PublishAdapterConfig(
 }
 
 // Automatically populated by the build process from a generated config file
-final case class MetaConfig(
+case class MetaConfig(
   projectName: Option[String],
   projectGroup: Option[String],
   projectPage: Option[String],
@@ -81,44 +79,21 @@ final case class MetaConfig(
   def contact: String    = contactEmail.getOrElse("crosson.david@gmail.com")
 }
 
-final case class SummaryConfig(
+case class SummaryConfig(
   title: String
 )
 
-final case class CodeExampleManagerConfig(
+case class CodeExampleManagerConfig(
   examples: ExamplesConfig,
   publishAdapters: Map[String, PublishAdapterConfig],
   metaInfo: MetaConfig,
   summary: SummaryConfig
 )
 
-final case class ApplicationConfig(
+case class ApplicationConfig(
   codeExamplesManagerConfig: CodeExampleManagerConfig
 )
 
-object Configuration {
-  def apply(): Task[ApplicationConfig] = {
-    val metaConfigResourceName = "cem-meta.conf"
-
-    for {
-      configFileEnvOption  <- System.env("CEM_CONFIG_FILE")
-      configFilePropOption <- System.property("CEM_CONFIG_FILE")
-      configFileOption      = configFileEnvOption.orElse(configFilePropOption)
-      typesafeConfig       = ZIO.attempt(loadTypesafeBasedConfigData(metaConfigResourceName, configFileOption))
-      configSource         = TypesafeConfigSource.fromTypesafeConfig(typesafeConfig)
-      config               <- zio.config.read(descriptor[ApplicationConfig].mapKey(toKebabCase) from configSource)
-    } yield config
-  }
-
-  private def loadTypesafeBasedConfigData(metaConfigResourceName: String, configFileOption: Option[String]) = {
-    val metaDataConfig    = ConfigFactory.load(metaConfigResourceName)
-    val applicationConfig = configFileOption
-      .map(f => ConfigFactory.parseFile(new File(f)))
-      .getOrElse(ConfigFactory.load())
-    ConfigFactory
-      .empty()
-      .withFallback(applicationConfig)
-      .withFallback(metaDataConfig)
-      .resolve()
-  }
+object ApplicationConfig {
+  val config : Config[ApplicationConfig] = deriveConfig[ApplicationConfig].mapKey(toKebabCase)
 }

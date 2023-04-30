@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 David Crosson
+ * Copyright 2023 David Crosson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,10 @@
 package fr.janalyse.cem.model
 
 import fr.janalyse.cem.FileSystemService
-import fr.janalyse.cem.tools.GitOps
+import fr.janalyse.cem.tools.*
 import fr.janalyse.cem.tools.Hashes.sha1
 import zio.*
+import zio.lmdb.*
 import zio.nio.charset.Charset
 import zio.nio.file.*
 import zio.json.*
@@ -111,8 +112,9 @@ object CodeExample {
   def makeExample(
     examplePath: Path,
     fromSearchPath: Path
-  ): ZIO[FileSystemService, ExampleIssue, CodeExample] = {
+  ): ZIO[FileSystemService & LMDB, ExampleIssue, CodeExample] = {
     for {
+      lmdb            <- ZIO.service[LMDB]
       filename        <- ZIO
                            .getOrFail(Option(examplePath.filename).map(_.toString))
                            .mapError(th => ExampleFilenameIssue(examplePath, th))
@@ -152,7 +154,7 @@ object CodeExample {
         lastUpdated = Some(lastUpdated),
         updatedCount = updatedCount,
         summary = exampleContentExtractValue(content, "summary"),
-        keywords = exampleContentExtractValueList(content, "keywords").map(_.trim).filter(_.size>0).toSet,
+        keywords = exampleContentExtractValueList(content, "keywords").map(_.trim).filter(_.size > 0).toSet,
         publish = exampleContentExtractValueList(content, "publish"),
         authors = exampleContentExtractValueList(content, "authors"),
         runWith = exampleContentExtractValue(content, "run-with"),

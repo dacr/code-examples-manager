@@ -15,9 +15,5 @@ case class RunStatus(
   success: Boolean,
   timeout: Boolean,
   runState: String
-)
+) derives JsonCodec
 
-object RunStatus {
-  implicit val decoder: JsonDecoder[RunStatus] = DeriveJsonDecoder.gen
-  implicit val encoder: JsonEncoder[RunStatus] = DeriveJsonEncoder.gen
-}

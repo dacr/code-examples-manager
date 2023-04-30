@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 David Crosson
+ * Copyright 2023 David Crosson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import fr.janalyse.cem.tools.DescriptionTools.*
 import org.junit.runner.RunWith
 import sttp.client3.asynchttpclient.zio.AsyncHttpClientZioBackend
 import zio.nio.file.Path
+import zio.lmdb.LMDB
 
 @RunWith(classOf[zio.test.junit.ZTestJUnitRunner])
 class RemoteGithubOperationsSpec extends ZIOSpecDefault {
@@ -47,7 +48,13 @@ class RemoteGithubOperationsSpec extends ZIOSpecDefault {
         |import org.scalatest._,matchers.should.Matchers._
         |
         |math.Pi shouldBe 3.14d +- 0.01d""".stripMargin
-    CodeExample.makeExample(filename, searchRoot).provide(FileSystemServiceStub.stubWithContents(Map(filename -> content)))
+    CodeExample
+      .makeExample(filename, searchRoot)
+      .provide(
+        FileSystemServiceStub.stubWithContents(Map(filename -> content)),
+        Scope.default,
+        LMDB.live // TODO - Replace with TestLMDB when available
+      )
   }
 
   // ----------------------------------------------------------------------------------------------

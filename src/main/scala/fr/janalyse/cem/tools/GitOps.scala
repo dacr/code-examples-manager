@@ -31,8 +31,6 @@ object GitOps {
   def commitTimeInstant(revCommit: RevCommit): OffsetDateTime =
     OffsetDateTime.ofInstant(Instant.ofEpochSecond(revCommit.getCommitTime), ZoneId.systemDefault())
 
-  case class GitMetaData(changesCount: Int, createdOn: OffsetDateTime, lastUpdated: OffsetDateTime)
-
   def getGitFileMetaData(git: Git, filePath: Path): Option[GitMetaData] =
     val targetFileLogs = getFileLog(git, filePath.toFile)
     val changesCount   = targetFileLogs.size

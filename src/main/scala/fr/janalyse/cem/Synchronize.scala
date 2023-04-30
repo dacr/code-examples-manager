@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 David Crosson
+ * Copyright 2023 David Crosson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import zio.stream.*
 import zio.config.*
 import zio.nio.file.*
 import zio.nio.charset.Charset
+import zio.lmdb.LMDB
 
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{FileVisitOption, OpenOption, StandardOpenOption}
@@ -41,7 +42,7 @@ object Synchronize {
     searchRoot: SearchRoot,
     searchOnlyRegex: Option[Regex],
     ignoreMaskRegex: Option[Regex]
-  ): ZIO[FileSystemService, Throwable, List[Either[ExampleIssue, CodeExample]]] = {
+  ): ZIO[FileSystemService & LMDB, Throwable, List[Either[ExampleIssue, CodeExample]]] = {
     for {
       foundFiles <- FileSystemService.searchFiles(searchRoot, searchOnlyRegex, ignoreMaskRegex)
       examples   <- ZIO.foreach(foundFiles)(path => CodeExample.makeExample(path, searchRoot).either)
@@ -55,9 +56,9 @@ object Synchronize {
     } yield validRoots
   }
 
-  def examplesCollectFor(searchRoots: List[SearchRoot]): ZIO[ApplicationConfig & FileSystemService, ExampleIssue | Throwable, List[CodeExample]] = {
+  def examplesCollectFor(searchRoots: List[SearchRoot]): ZIO[FileSystemService & LMDB, ExampleIssue | Throwable, List[CodeExample]] = {
     for {
-      examplesConfig      <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.examples)
+      examplesConfig      <- ZIO.config(ApplicationConfig.config).map(_.codeExamplesManagerConfig.examples)
       searchOnlyPattern   <- ZIO.attempt(examplesConfig.searchOnlyPatternRegex())
       searchIgnorePattern <- ZIO.attempt(examplesConfig.searchIgnoreMaskRegex())
       foundExamplesList   <- ZIO.foreach(searchRoots)(fromRoot => findExamplesFromSearchRoot(fromRoot, searchOnlyPattern, searchIgnorePattern))
@@ -76,8 +77,8 @@ object Synchronize {
     else ZIO.succeed(())
   }
 
-  val examplesCollect: ZIO[ApplicationConfig & FileSystemService, ExampleIssue | Throwable, List[CodeExample]] = for {
-    searchRootDirectories <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.examples.searchRootDirectories)
+  val examplesCollect: ZIO[FileSystemService & LMDB, ExampleIssue | Throwable, List[CodeExample]] = for {
+    searchRootDirectories <- ZIO.config(ApplicationConfig.config).map(_.codeExamplesManagerConfig.examples.searchRootDirectories)
     searchRoots           <- examplesValidSearchRoots(searchRootDirectories)
     _                     <- ZIO.log(s"Searching examples in ${searchRoots.mkString(",")}")
     localExamples         <- examplesCollectFor(searchRoots)
@@ -123,7 +124,7 @@ object Synchronize {
   def examplesPublishToGivenAdapter(
     examples: Iterable[CodeExample],
     adapterConfig: PublishAdapterConfig
-  ): RIO[ApplicationConfig & SttpClient, Unit] = {
+  ): RIO[SttpClient, Unit] = {
     val examplesToSynchronize = examples.filter(_.publish.contains(adapterConfig.activationKeyword))
     if (!adapterConfig.enabled || examplesToSynchronize.isEmpty || adapterConfig.token.isEmpty) ZIO.unit
     else {
@@ -144,9 +145,9 @@ object Synchronize {
     }
   }
 
-  def examplesPublish(examples: Iterable[CodeExample]): RIO[SttpClient & ApplicationConfig, Unit] = {
+  def examplesPublish(examples: Iterable[CodeExample]): RIO[SttpClient, Unit] = {
     for {
-      adapters <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.publishAdapters)
+      adapters <- ZIO.config(ApplicationConfig.config).map(_.codeExamplesManagerConfig.publishAdapters)
       _        <- ZIO.foreachPar(adapters.toList) { case (adapterName, adapterConfig) =>
                     examplesPublishToGivenAdapter(examples, adapterConfig)
                   }
@@ -162,7 +163,7 @@ object Synchronize {
 
   def statsEffect(examples: List[CodeExample]) =
     for {
-      metaInfo     <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.metaInfo)
+      metaInfo     <- ZIO.config(ApplicationConfig.config).map(_.codeExamplesManagerConfig.metaInfo)
       version       = metaInfo.version
       appCode       = metaInfo.code
       appName       = metaInfo.name
@@ -184,7 +185,7 @@ object Synchronize {
 
   val versionEffect =
     for {
-      metaInfo  <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.metaInfo)
+      metaInfo  <- ZIO.config(ApplicationConfig.config).map(_.codeExamplesManagerConfig.metaInfo)
       version    = metaInfo.version
       appName    = metaInfo.name
       appCode    = metaInfo.code
@@ -199,9 +200,9 @@ object Synchronize {
            |""".stripMargin
     } yield message
 
-  def synchronizeEffect: ZIO[SttpClient & ApplicationConfig & FileSystemService, ExampleIssue | Throwable, Unit] = for {
+  def synchronizeEffect: ZIO[SttpClient & FileSystemService & LMDB, ExampleIssue | Throwable, Unit] = for {
     startTime <- Clock.nanoTime
-    metaInfo  <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig.metaInfo)
+    metaInfo  <- ZIO.config(ApplicationConfig.config).map(_.codeExamplesManagerConfig.metaInfo)
     appName    = metaInfo.name
     version   <- versionEffect
     _         <- ZIO.log(s"\n$version")

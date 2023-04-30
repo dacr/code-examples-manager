@@ -1,6 +1,7 @@
 package fr.janalyse.cem
 
 import zio.*
+import zio.lmdb.LMDB
 import zio.stream.*
 import zio.stream.ZPipeline.{splitLines, utf8Decode}
 import zio.process.*
@@ -140,7 +141,7 @@ object Execute {
     } yield runStatuses
   }
 
-  def executeEffect(keywords: Set[String] = Set.empty): ZIO[ApplicationConfig & FileSystemService, Throwable | ExampleIssue, List[RunStatus]] = {
+  def executeEffect(keywords: Set[String] = Set.empty): ZIO[FileSystemService & LMDB, Throwable | ExampleIssue, List[RunStatus]] = {
     for {
       _               <- ZIO.log("Searching examples...")
       examples        <- Synchronize.examplesCollect

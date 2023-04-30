@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 David Crosson
+ * Copyright 2023 David Crosson
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package fr.janalyse.cem.model
 
 import fr.janalyse.cem.templates.txt.*
 import fr.janalyse.cem.{ApplicationConfig, CodeExampleManagerConfig, PublishAdapterConfig}
-import zio.config.getConfig
+import zio.config.*
 import zio.*
 
 import java.util.UUID
@@ -38,7 +38,7 @@ case class ExamplesForCategoryContext(category: String, categoryExamples: Seq[Ex
 
 object Overview {
 
-  def makeOverview(publishedExamples: Iterable[RemoteExample], adapter: PublishAdapterConfig): RIO[ApplicationConfig, Option[CodeExample]] = {
+  def makeOverview(publishedExamples: Iterable[RemoteExample], adapter: PublishAdapterConfig): Task[Option[CodeExample]] = {
     if (publishedExamples.isEmpty) ZIO.none
     else {
       import fr.janalyse.tools.NaturalSort.ord
@@ -59,7 +59,7 @@ object Overview {
           .sortBy(_.category)
 
       val templateLogic = for {
-        config          <- getConfig[ApplicationConfig].map(_.codeExamplesManagerConfig)
+        config          <- ZIO.config(ApplicationConfig.config).map(_.codeExamplesManagerConfig)
         overviewContext  = OverviewContext(
                              title = config.summary.title,
                              examplesCount = exampleContexts.size,
