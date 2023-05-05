@@ -6,9 +6,5 @@ import java.time.{Instant, OffsetDateTime, ZoneId}
 case class GitMetaData(
   changesCount: Int,
   createdOn: OffsetDateTime,
-  lastUpdated: OffsetDateTime
-)
-
-object GitMetaData {
-  given JsonCodec[GitMetaData] = DeriveJsonCodec.gen
-}
+  lastUpdated: OffsetDateTime,
+) derives JsonCodec

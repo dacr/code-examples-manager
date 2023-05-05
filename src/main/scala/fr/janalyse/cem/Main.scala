@@ -49,22 +49,19 @@ object Main extends ZIOAppDefault {
               .executeEffect(keywords.toSet)
               .flatMap(status => ZIO.cond(status.forall(_.success), "All examples are successful", "Some examples has failed"))
               .flatMap(message => ZIO.log(message))
-              .unit
 
           case "version" :: _ =>
             Synchronize.versionEffect
               .flatMap(versionInfo => Console.printLine(versionInfo))
-              .unit
 
           case "stats" :: _ =>
             Synchronize.examplesCollect
               .flatMap(examples => Synchronize.statsEffect(examples))
               .flatMap(statsInfo => Console.printLine(statsInfo))
-              .unit
 
           case "publish" :: _ | _ =>
             Synchronize.synchronizeEffect.unit
         }
-        chosenBehavior.provide(httpClientLayer, FileSystemService.live, removeDefaultLoggers, LMDB.live, Scope.default)
+        chosenBehavior.unit.provide(httpClientLayer, FileSystemService.live, LMDB.live, Scope.default)
       )
 }

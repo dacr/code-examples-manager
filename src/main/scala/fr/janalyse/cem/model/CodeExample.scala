@@ -41,6 +41,7 @@ case class ExampleCreatedOnDateFormatIssue(filepath: Path, throwable: Throwable)
 case class ExampleGitIssue(filepath: Path, throwable: Throwable)                                           extends ExampleIssue
 case class ExampleInvalidAttachmentFilename(filepath: Path, attachFilename: String)                        extends ExampleIssue
 case class ExampleAttachmentContentIssue(filepath: Path, attachmentFilename: String, throwable: Throwable) extends ExampleIssue
+case class ExampleStorageIssue(filepath: Path, message: String)                                            extends ExampleIssue
 
 case class CodeExample(
   filepath: Option[Path],
@@ -109,6 +110,38 @@ object CodeExample {
     } yield content
   }
 
+  def getGitMetaData(examplePath: Path, content: String): ZIO[LMDB, ExampleIssue, Option[GitMetaData]] = {
+    val collectionName = "code-examples-metadata"
+    val exampleKey     = sha1(examplePath.toString)
+    val contentHash    = sha1(content)
+
+    val usingGitLogic =
+      ZIO
+        .attempt(GitOps.getGitFileMetaData(examplePath.toFile.toPath))
+        .mapError(th => ExampleGitIssue(examplePath, th))
+
+    for {
+      collection          <- LMDB
+                               .collectionGet[CodeExampleMetaData](collectionName)
+                               .orElse(LMDB.collectionCreate[CodeExampleMetaData](collectionName))
+                               .mapError(th => ExampleStorageIssue(examplePath, "Storage issue"))
+      foundMetaData       <- collection
+                               .fetch(exampleKey)
+                               .map(_.filter(_.metaDataFileContentHash == contentHash))
+                               .mapError(th => ExampleStorageIssue(examplePath, "Couldn't fetch anything"))
+      gitMetaData         <- ZIO.from(foundMetaData.map(_.gitMetaData)).orElse(usingGitLogic)
+      currentDateTime     <- Clock.currentDateTime
+      updatedFoundMetaData = CodeExampleMetaData(
+                               gitMetaData = gitMetaData,
+                               metaDataFileContentHash = contentHash,
+                               metaDataLastUsed = currentDateTime
+                             )
+      _                   <- collection
+                               .upsertOverwrite(exampleKey, updatedFoundMetaData)
+                               .mapError(th => ExampleStorageIssue(examplePath, "Couldn't upsert anything"))
+    } yield gitMetaData
+  }
+
   def makeExample(
     examplePath: Path,
     fromSearchPath: Path
@@ -129,9 +162,7 @@ object CodeExample {
       uuid            <- ZIO
                            .attempt(UUID.fromString(id))
                            .mapError(th => ExampleUUIDIdentifierIssue(examplePath, id, th))
-      gitMetaData     <- ZIO // TODO quite slow AND use a service to provide the GIT features
-                           .attempt(GitOps.getGitFileMetaData(examplePath.toFile.toPath))
-                           .mapError(th => ExampleGitIssue(examplePath, th))
+      gitMetaData     <- getGitMetaData(examplePath, givenContent)
       createdOn       <- ZIO
                            .attempt(foundCreatedOn.map(OffsetDateTime.parse))
                            .mapAttempt(_.orElse(gitMetaData.map(_.createdOn)))
