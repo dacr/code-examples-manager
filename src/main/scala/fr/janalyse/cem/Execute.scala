@@ -107,14 +107,15 @@ object Execute {
         runState = runState
       )
 
-    ZIO.logAnnotate("file",example.filename)(result)
+    ZIO.logAnnotate("file", example.filename)(result)
   }
 
   def runTestableExamples(examples: List[CodeExample]) = {
     val runnableExamples = examples
       .filter(_.runWith.isDefined)
       .filter(_.isTestable)
-    val execStrategy     = ExecutionStrategy.ParallelN(8) // TODO Take the number of CPU core
+    val execStrategy     = ExecutionStrategy.ParallelN(1) // TODO some code example are opening the same http port !!
+    // val execStrategy     = ExecutionStrategy.ParallelN(8) // TODO Take the number of CPU core
     for {
       runSessionDate <- Clock.currentDateTime
       startEpoch     <- Clock.instant.map(_.toEpochMilli)
