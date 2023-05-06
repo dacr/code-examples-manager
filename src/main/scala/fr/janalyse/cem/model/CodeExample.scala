@@ -47,20 +47,21 @@ case class CodeExample(
   filepath: Option[Path],
   filename: String,
   content: String,
-  uuid: UUID,                                  // embedded
-  category: Option[String] = None,             // optionally embedded - default value is containing directory
-  createdOn: Option[OffsetDateTime] = None,    // embedded
-  lastUpdated: Option[OffsetDateTime] = None,  // computed from file
-  summary: Option[String] = None,              // embedded
-  keywords: Set[String] = Set.empty,           // embedded
-  publish: List[String] = Nil,                 // embedded
-  authors: List[String] = Nil,                 // embedded
-  runWith: Option[String] = None,              // embedded
-  testWith: Option[String] = None,             // embedded
-  managedBy: Option[String] = None,            // embedded
-  license: Option[String] = None,              // embedded
-  updatedCount: Option[Int] = None,            // computed from GIT history
-  attachments: Map[String, String] = Map.empty // embedded
+  uuid: UUID,                                   // embedded
+  category: Option[String] = None,              // optionally embedded - default value is containing directory
+  createdOn: Option[OffsetDateTime] = None,     // embedded
+  lastUpdated: Option[OffsetDateTime] = None,   // computed from file
+  summary: Option[String] = None,               // embedded
+  keywords: Set[String] = Set.empty,            // embedded
+  publish: List[String] = Nil,                  // embedded
+  authors: List[String] = Nil,                  // embedded
+  runWith: Option[String] = None,               // embedded
+  testWith: Option[String] = None,              // embedded
+  managedBy: Option[String] = None,             // embedded
+  license: Option[String] = None,               // embedded
+  updatedCount: Option[Int] = None,             // computed from GIT history
+  attachments: Map[String, String] = Map.empty, // embedded
+  lastSeen: Option[OffsetDateTime] = None       // last seen/used date, useful for database garbage collection purposes
 ) {
   def fileExtension: String     = filename.split("[.]", 2).drop(1).headOption.getOrElse("")
   def hash: String              = sha1(content + filename + category.getOrElse("") + attachments.keys.mkString + attachments.values.mkString)
@@ -124,11 +125,11 @@ object CodeExample {
       collection          <- LMDB
                                .collectionGet[CodeExampleMetaData](collectionName)
                                .orElse(LMDB.collectionCreate[CodeExampleMetaData](collectionName))
-                               .mapError(th => ExampleStorageIssue(examplePath, "Storage issue"))
+                               .mapError(th => ExampleStorageIssue(examplePath, s"Storage issue with collection $collectionName"))
       foundMetaData       <- collection
                                .fetch(exampleKey)
                                .map(_.filter(_.metaDataFileContentHash == contentHash))
-                               .mapError(th => ExampleStorageIssue(examplePath, "Couldn't fetch anything"))
+                               .mapError(th => ExampleStorageIssue(examplePath, s"Couldn't fetch anything from $collectionName"))
       gitMetaData         <- ZIO.from(foundMetaData.map(_.gitMetaData)).orElse(usingGitLogic)
       currentDateTime     <- Clock.currentDateTime
       updatedFoundMetaData = CodeExampleMetaData(
@@ -138,8 +139,22 @@ object CodeExample {
                              )
       _                   <- collection
                                .upsertOverwrite(exampleKey, updatedFoundMetaData)
-                               .mapError(th => ExampleStorageIssue(examplePath, "Couldn't upsert anything"))
+                               .mapError(th => ExampleStorageIssue(examplePath, s"Couldn't upsert anything in collection $collectionName"))
     } yield gitMetaData
+  }
+
+  def upsertExample(examplePath: Path, example: CodeExample) = {
+    val collectionName = "code-examples"
+    val exampleKey     = example.uuid.toString
+    for {
+      collection <- LMDB
+                      .collectionGet[CodeExample](collectionName)
+                      .orElse(LMDB.collectionCreate[CodeExample](collectionName))
+                      .mapError(th => ExampleStorageIssue(examplePath, s"Storage issue with collection $collectionName"))
+      _          <- collection
+                      .upsertOverwrite(exampleKey, example)
+                      .mapError(th => ExampleStorageIssue(examplePath, s"Couldn't upsert anything in collection $collectionName"))
+    } yield ()
   }
 
   def makeExample(
@@ -174,27 +189,29 @@ object CodeExample {
       updatedCount     = gitMetaData.map(_.changesCount)
       attachmentsNames = exampleContentExtractValueList(content, "attachments")
       attachments     <- ZIO.foreach(attachmentsNames)(name => getAttachmentContent(examplePath, name).map(content => name -> content))
-    } yield {
-      CodeExample(
-        uuid = uuid,
-        content = content,
-        filename = filename,
-        filepath = Some(examplePath),
-        category = category,
-        createdOn = createdOn,
-        lastUpdated = Some(lastUpdated),
-        updatedCount = updatedCount,
-        summary = exampleContentExtractValue(content, "summary"),
-        keywords = exampleContentExtractValueList(content, "keywords").map(_.trim).filter(_.size > 0).toSet,
-        publish = exampleContentExtractValueList(content, "publish"),
-        authors = exampleContentExtractValueList(content, "authors"),
-        runWith = exampleContentExtractValue(content, "run-with"),
-        testWith = exampleContentExtractValue(content, "test-with"),
-        managedBy = exampleContentExtractValue(content, "managed-by"),
-        license = exampleContentExtractValue(content, "license"),
-        attachments = attachments.toMap
-      )
-    }
+      currentDate     <- Clock.currentDateTime
+      example          = CodeExample(
+                           uuid = uuid,
+                           content = content,
+                           filename = filename,
+                           filepath = Some(examplePath),
+                           category = category,
+                           createdOn = createdOn,
+                           lastUpdated = Some(lastUpdated),
+                           updatedCount = updatedCount,
+                           summary = exampleContentExtractValue(content, "summary"),
+                           keywords = exampleContentExtractValueList(content, "keywords").map(_.trim).filter(_.size > 0).toSet,
+                           publish = exampleContentExtractValueList(content, "publish"),
+                           authors = exampleContentExtractValueList(content, "authors"),
+                           runWith = exampleContentExtractValue(content, "run-with"),
+                           testWith = exampleContentExtractValue(content, "test-with"),
+                           managedBy = exampleContentExtractValue(content, "managed-by"),
+                           license = exampleContentExtractValue(content, "license"),
+                           attachments = attachments.toMap,
+                           lastSeen = Some(currentDate)
+                         )
+      _               <- upsertExample(examplePath, example)
+    } yield example
   }
 
 }
