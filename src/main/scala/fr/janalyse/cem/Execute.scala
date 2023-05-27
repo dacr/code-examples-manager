@@ -13,6 +13,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 import fr.janalyse.cem.model.{CodeExample, RunStatus, ExampleIssue}
 import zio.nio.file.Path
+import zio.Schedule.Decision
 
 case class RunFailure(
   message: String
@@ -40,7 +41,9 @@ object Execute {
                               .mapError(err => RunFailure(s"Command error ${err.toString}"))
                           )(process => process.killTreeForcibly.tapError(err => ZIO.logError(err.toString)).ignore)
       stream            = process.stdout.stream.via(utf8Decode >>> splitLines)
-      mayBeOutputLines <- stream.runCollect.disconnect.timeout(timeoutDuration).mapError(err => RunFailure(s"Couldn't collect outputs\n${err.toString}"))
+      mayBeOutputLines <- stream.runCollect.disconnect
+                            .timeout(timeoutDuration)
+                            .mapError(err => RunFailure(s"Couldn't collect outputs\n${err.toString}"))
       outputText        = mayBeOutputLines.map(chunks => chunks.mkString("\n")).getOrElse("")
       exitCode         <- process.exitCode.mapError(err => RunFailure(outputText + "\n" + err.toString))
     } yield RunResults(command, exitCode.code, outputText)
@@ -81,9 +84,17 @@ object Execute {
         runEffect       = makeRunCommandProcess(example).disconnect
                             .timeout(timeoutDuration)
         testEffect      = makeTestCommandProcess(example)
-                            .filterOrFail(result => result.exitCode == 0)(RunFailure("test code is failing"))
-                            .retry(Schedule.exponential(100.millis, 2).jittered && Schedule.recurs(5))
                             .delay(testStartDelay)
+                            .filterOrElseWith(result => result.exitCode == 0)(result => ZIO.fail(RunFailure(s"test code is failing + ${result.output}")))
+                            .retry(
+                              (Schedule.exponential(1.second) && Schedule.recurs(6))
+                                .onDecision((state, out, decision) =>
+                                  decision match {
+                                    case Decision.Done               => ZIO.logError("No more retry attempt !")
+                                    case Decision.Continue(interval) => ZIO.logWarning(s"Failed, will retry at ${interval.start}")
+                                  }
+                                )
+                            )
                             .disconnect
                             .timeout(timeoutDuration)
         results        <- runEffect.raceFirst(testEffect).either
@@ -98,7 +109,7 @@ object Execute {
       } yield RunStatus(
         example = example,
         exitCodeOption = exitCodeOption,
-        //stdout = output,
+        // stdout = output,
         stdout = output.take(1024), // truncate the output as some scripts may generate a lot of data !!!
         startedTimestamp = startTimestamp,
         duration = duration,
@@ -120,7 +131,8 @@ object Execute {
       runSessionUUID  = UUID.randomUUID()
       // runStatuses    <- ZIO.foreachExec(runnableExamples)(execStrategy)(example => runExample(example, runSessionDate, runSessionUUID))
       runStatuses    <- ZIO.foreachExec(runnableExamples)(execStrategy) { example =>
-                          runExample(example, runSessionDate, runSessionUUID) @@ annotated("example-uuid" -> example.uuid.toString, "example-filename" -> example.filename)
+                          runExample(example, runSessionDate, runSessionUUID)
+                            @@ annotated("example-uuid" -> example.uuid.toString, "example-filename" -> example.filename)
                         }
       successes       = runStatuses.filter(_.success)
       failures        = runStatuses.filterNot(_.success)

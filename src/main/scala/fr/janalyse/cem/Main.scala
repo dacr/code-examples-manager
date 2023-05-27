@@ -36,7 +36,8 @@ object Main extends ZIOAppDefault {
   }
 
   override val bootstrap =
-    removeDefaultLoggers ++ SLF4J.slf4j(format = LogFormat.colored) ++ ZLayer.fromZIO(configProviderLogic.map(provider => Runtime.setConfigProvider(provider))).flatten
+    //removeDefaultLoggers ++ SLF4J.slf4j(format = LogFormat.colored) ++ ZLayer.fromZIO(configProviderLogic.map(provider => Runtime.setConfigProvider(provider))).flatten
+    SLF4J.slf4j(format = LogFormat.colored) ++ ZLayer.fromZIO(configProviderLogic.map(provider => Runtime.setConfigProvider(provider))).flatten
 
   val httpClientLayer = AsyncHttpClientZioBackend.layer()
 
