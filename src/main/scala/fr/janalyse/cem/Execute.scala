@@ -24,8 +24,9 @@ case class RunResults(
 )
 
 object Execute {
-  val timeoutDuration = Duration(100, TimeUnit.SECONDS)
-  val testStartDelay  = Duration(500, TimeUnit.MILLISECONDS)
+  val timeoutDuration         = Duration(120, TimeUnit.SECONDS)
+  val testStartDelay          = Duration(500, TimeUnit.MILLISECONDS)
+  val defaultParallelismLevel = 8
 
   def makeCommandProcess(command: List[String], workingDir: Path) = {
     val results = for {
@@ -110,18 +111,14 @@ object Execute {
     ZIO.logAnnotate("file", example.filename)(result)
   }
 
-  def runTestableExamples(examples: List[CodeExample]) = {
-    val runnableExamples = examples
-      .filter(_.runWith.isDefined)
-      .filter(_.isTestable)
-    val execStrategy     = ExecutionStrategy.ParallelN(1) // TODO some code example are opening the same http port !!
-    // val execStrategy     = ExecutionStrategy.ParallelN(8) // TODO Take the number of CPU core
+  def runTestableExamples(runnableExamples: List[CodeExample], parallelism: Int) = {
+    val execStrategy = ExecutionStrategy.ParallelN(parallelism)
     for {
       runSessionDate <- Clock.currentDateTime
       startEpoch     <- Clock.instant.map(_.toEpochMilli)
       runSessionUUID  = UUID.randomUUID()
       // runStatuses    <- ZIO.foreachExec(runnableExamples)(execStrategy)(example => runExample(example, runSessionDate, runSessionUUID))
-      runStatuses    <- ZIO.foreach(runnableExamples) { example =>
+      runStatuses    <- ZIO.foreachExec(runnableExamples)(execStrategy) { example =>
                           runExample(example, runSessionDate, runSessionUUID) @@ annotated("example-uuid" -> example.uuid.toString, "example-filename" -> example.filename)
                         }
       successes       = runStatuses.filter(_.success)
@@ -144,12 +141,17 @@ object Execute {
 
   def executeEffect(keywords: Set[String] = Set.empty): ZIO[FileSystemService & LMDB, Throwable | ExampleIssue, List[RunStatus]] = {
     for {
-      _               <- ZIO.log("Searching examples...")
-      examples        <- Synchronize.examplesCollect
-      _               <- ZIO.log("Running selected examples...")
-      filteredExamples = examples.filter(example => keywords.isEmpty || example.keywords.intersect(keywords) == keywords)
-      results         <- runTestableExamples(filteredExamples)
-    } yield results
+      _                                            <- ZIO.log("Searching examples...")
+      examples                                     <- Synchronize.examplesCollect
+      _                                            <- ZIO.log("Running selected examples...")
+      filteredExamples                              = examples.filter(example => keywords.isEmpty || example.keywords.intersect(keywords) == keywords)
+      testableExamples                              = examples.filter(_.runWith.isDefined).filter(_.isTestable)
+      (exclusiveRunnableExamples, runnableExamples) = testableExamples.partition(_.isExclusive)
+      exclusiveRunnableResultsFiber                <- runTestableExamples(exclusiveRunnableExamples, 1).fork
+      runnableResultsFiber                         <- runTestableExamples(runnableExamples, defaultParallelismLevel).fork
+      exclusiveRunnableResults                     <- exclusiveRunnableResultsFiber.join
+      runnableResults                              <- runnableResultsFiber.join
+    } yield exclusiveRunnableResults ++ runnableResults
   }
 
 }

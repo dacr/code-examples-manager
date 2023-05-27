@@ -66,6 +66,7 @@ case class CodeExample(
   def fileExtension: String     = filename.split("[.]", 2).drop(1).headOption.getOrElse("")
   def hash: String              = sha1(content + filename + category.getOrElse("") + attachments.keys.mkString + attachments.values.mkString)
   def isTestable: Boolean       = keywords.contains("@testable")
+  def isExclusive: Boolean      = keywords.contains("@exclusive") // exclusive examples are executed sequentially
   def shouldFail: Boolean       = keywords.contains("@fail")
   def isPublishable: Boolean    = !publish.isEmpty
   override def toString: String = s"$category $filename $uuid $summary"
