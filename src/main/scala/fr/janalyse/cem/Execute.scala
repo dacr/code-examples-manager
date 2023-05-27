@@ -98,7 +98,8 @@ object Execute {
       } yield RunStatus(
         example = example,
         exitCodeOption = exitCodeOption,
-        stdout = output,
+        //stdout = output,
+        stdout = output.take(1024), // truncate the output as some scripts may generate a lot of data !!!
         startedTimestamp = startTimestamp,
         duration = duration,
         runSessionDate = runSessionDate,
@@ -123,20 +124,29 @@ object Execute {
                         }
       successes       = runStatuses.filter(_.success)
       failures        = runStatuses.filterNot(_.success)
-      _              <- if (failures.size > 0)
-                          ZIO.logError(
-                            failures // runStatuses
-                              .sortBy(s => (s.success, s.example.filepath.map(_.toString)))
-                              .map(state => s"""${if (state.success) "OK" else "KO"} : ${state.example.filepath.get} : ${state.example.summary.getOrElse("")}""")
-                              .mkString("\n", "\n", "")
-                          )
-                        else ZIO.log("ALL example executed with success :)")
       endEpoch       <- Clock.instant.map(_.toEpochMilli)
       durationSeconds = (endEpoch - startEpoch) / 1000
-      _              <- ZIO.log(s"${runStatuses.size} runnable examples (with scala-cli) in ${durationSeconds}s")
-      _              <- ZIO.log(s"${successes.size} successes")
-      _              <- ZIO.log(s"${failures.size} failures")
+      _              <- reportInLog(runStatuses, durationSeconds)
     } yield runStatuses
+  }
+
+  def reportInLog(results: List[RunStatus], durationSeconds: Long) = {
+    val successes = results.filter(_.success)
+    val failures  = results.filterNot(_.success)
+    for {
+      _ <- if (failures.size > 0)
+             ZIO.logError(
+               failures // runStatuses
+                 .sortBy(s => (s.success, s.example.filepath.map(_.toString)))
+                 .map(state => s"""${if (state.success) "OK" else "KO"} : ${state.example.filepath.get} : ${state.example.summary.getOrElse("")}""")
+                 .mkString("\n", "\n", "")
+             )
+           else ZIO.log("ALL examples executed with success :)")
+      _ <- ZIO.log(s"${successes.size} successes")
+      _ <- ZIO.log(s"${failures.size} failures")
+      _ <- ZIO.log(s"${results.size} runnable examples (with scala-cli) in ${durationSeconds}s")
+
+    } yield ()
   }
 
   def executeEffect(keywords: Set[String] = Set.empty): ZIO[FileSystemService & LMDB, Throwable | ExampleIssue, List[RunStatus]] = {
@@ -147,11 +157,16 @@ object Execute {
       filteredExamples                              = examples.filter(example => keywords.isEmpty || example.keywords.intersect(keywords) == keywords)
       testableExamples                              = examples.filter(_.runWith.isDefined).filter(_.isTestable)
       (exclusiveRunnableExamples, runnableExamples) = testableExamples.partition(_.isExclusive)
+      startEpoch                                   <- Clock.instant.map(_.toEpochMilli)
       exclusiveRunnableResultsFiber                <- runTestableExamples(exclusiveRunnableExamples, 1).fork
       runnableResultsFiber                         <- runTestableExamples(runnableExamples, defaultParallelismLevel).fork
       exclusiveRunnableResults                     <- exclusiveRunnableResultsFiber.join
       runnableResults                              <- runnableResultsFiber.join
-    } yield exclusiveRunnableResults ++ runnableResults
+      endEpoch                                     <- Clock.instant.map(_.toEpochMilli)
+      durationSeconds                               = (endEpoch - startEpoch) / 1000
+      results                                       = exclusiveRunnableResults ++ runnableResults
+      _                                            <- reportInLog(results, durationSeconds)
+    } yield results
   }
 
 }
