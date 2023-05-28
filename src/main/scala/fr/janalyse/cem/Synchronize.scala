@@ -45,7 +45,7 @@ object Synchronize {
   ): ZIO[FileSystemService & LMDB, Throwable, List[Either[ExampleIssue, CodeExample]]] = {
     for {
       foundFiles <- FileSystemService.searchFiles(searchRoot, searchOnlyRegex, ignoreMaskRegex)
-      examples   <- ZIO.foreach(foundFiles)(path => CodeExample.makeExample(path, searchRoot).either)
+      examples   <- ZIO.foreach(foundFiles)(path => CodeExample.buildFromFile(path, searchRoot).either)
     } yield examples
   }
 
@@ -65,7 +65,7 @@ object Synchronize {
       foundExamples        = foundExamplesList.flatten
       validExamples        = foundExamples.collect { case Right(example) => example }
       invalidExamples      = foundExamples.collect { case Left(example) => example }
-      //_                   <- ZIO.foreach(invalidExamples)(issue => ZIO.logWarning(issue.toString))
+      _                   <- ZIO.foreach(invalidExamples)(issue => ZIO.logWarning(issue.toString))
     } yield validExamples
   }
 

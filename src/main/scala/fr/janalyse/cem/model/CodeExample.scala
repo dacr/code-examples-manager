@@ -47,6 +47,7 @@ case class CodeExample(
   filepath: Option[Path],
   filename: String,
   content: String,
+  hash: String,
   uuid: UUID,                                   // embedded
   category: Option[String] = None,              // optionally embedded - default value is containing directory
   createdOn: Option[OffsetDateTime] = None,     // embedded
@@ -64,7 +65,6 @@ case class CodeExample(
   lastSeen: Option[OffsetDateTime] = None       // last seen/used date, useful for database garbage collection purposes
 ) {
   def fileExtension: String     = filename.split("[.]", 2).drop(1).headOption.getOrElse("")
-  def hash: String              = sha1(content + filename + category.getOrElse("") + attachments.keys.mkString + attachments.values.mkString)
   def isTestable: Boolean       = keywords.contains("@testable")
   def isExclusive: Boolean      = keywords.contains("@exclusive") // exclusive examples are executed sequentially
   def shouldFail: Boolean       = keywords.contains("@fail")
@@ -73,10 +73,10 @@ case class CodeExample(
 }
 
 object CodeExample {
-  implicit val pathEncoder: JsonEncoder[Path]    = JsonEncoder[String].contramap(p => p.toString)
-  implicit val pathDecoder: JsonDecoder[Path]    = JsonDecoder[String].map(p => Path(p))
-  implicit val decoder: JsonDecoder[CodeExample] = DeriveJsonDecoder.gen
-  implicit val encoder: JsonEncoder[CodeExample] = DeriveJsonEncoder.gen
+  given JsonEncoder[Path]        = JsonEncoder[String].contramap(p => p.toString)
+  given JsonDecoder[Path]        = JsonDecoder[String].map(p => Path(p))
+  given JsonDecoder[CodeExample] = DeriveJsonDecoder.gen
+  given JsonEncoder[CodeExample] = DeriveJsonEncoder.gen
 
   def exampleContentExtractValue(from: String, key: String): Option[String] = {
     val RE = ("""(?m)(?i)^(?:(?:// )|(?:## )|(?:- )|(?:-- )) *""" + key + """ *: *(.*)$""").r
@@ -154,16 +154,60 @@ object CodeExample {
                       .mapError(th => ExampleStorageIssue(examplePath, s"Storage issue with collection $collectionName"))
       _          <- collection
                       .upsertOverwrite(exampleKey, example)
+                      .tapError(th => ZIO.logError(th.toString))
                       .mapError(th => ExampleStorageIssue(examplePath, s"Couldn't upsert anything in collection $collectionName"))
     } yield ()
   }
 
-  def makeExample(
+  def build(
+    filepath: Option[Path],
+    filename: String,
+    content: String,
+    uuid: UUID,                                   // embedded
+    category: Option[String] = None,              // optionally embedded - default value is containing directory
+    createdOn: Option[OffsetDateTime] = None,     // embedded
+    lastUpdated: Option[OffsetDateTime] = None,   // computed from file
+    summary: Option[String] = None,               // embedded
+    keywords: Set[String] = Set.empty,            // embedded
+    publish: List[String] = Nil,                  // embedded
+    authors: List[String] = Nil,                  // embedded
+    runWith: Option[String] = None,               // embedded
+    testWith: Option[String] = None,              // embedded
+    managedBy: Option[String] = None,             // embedded
+    license: Option[String] = None,               // embedded
+    updatedCount: Option[Int] = None,             // computed from GIT history
+    attachments: Map[String, String] = Map.empty, // embedded
+    lastSeen: Option[OffsetDateTime] = None       // last seen/used date, useful for database garbage collection purposes
+  ): CodeExample = {
+    val hash = sha1(content + filename + category.getOrElse("") + attachments.keys.mkString + attachments.values.mkString)
+    CodeExample(
+      uuid = uuid,
+      hash = hash,
+      content = content,
+      filename = filename,
+      filepath = filepath,
+      category = category,
+      createdOn = createdOn,
+      lastUpdated = lastUpdated,
+      updatedCount = updatedCount,
+      summary = summary,
+      keywords = keywords,
+      publish = publish,
+      authors = authors,
+      runWith = runWith,
+      testWith = testWith,
+      managedBy = managedBy,
+      license = license,
+      attachments = attachments,
+      lastSeen = lastSeen
+    )
+  }
+
+  def buildFromFile(
     examplePath: Path,
     fromSearchPath: Path
   ): ZIO[FileSystemService & LMDB, ExampleIssue, CodeExample] = {
     for {
-      lmdb            <- ZIO.service[LMDB]
       filename        <- ZIO
                            .getOrFail(Option(examplePath.filename).map(_.toString))
                            .mapError(th => ExampleFilenameIssue(examplePath, th))
@@ -189,9 +233,9 @@ object CodeExample {
                            .mapError(th => ExampleIOIssue(examplePath, th))
       updatedCount     = gitMetaData.map(_.changesCount)
       attachmentsNames = exampleContentExtractValueList(content, "attachments")
-      attachments     <- ZIO.foreach(attachmentsNames)(name => getAttachmentContent(examplePath, name).map(content => name -> content))
+      attachments     <- ZIO.foreach(attachmentsNames)(name => getAttachmentContent(examplePath, name).map(content => name -> content)).map(_.toMap)
       currentDate     <- Clock.currentDateTime
-      example          = CodeExample(
+      example          = build(
                            uuid = uuid,
                            content = content,
                            filename = filename,
@@ -208,7 +252,7 @@ object CodeExample {
                            testWith = exampleContentExtractValue(content, "test-with"),
                            managedBy = exampleContentExtractValue(content, "managed-by"),
                            license = exampleContentExtractValue(content, "license"),
-                           attachments = attachments.toMap,
+                           attachments = attachments,
                            lastSeen = Some(currentDate)
                          )
       _               <- upsertExample(examplePath, example)

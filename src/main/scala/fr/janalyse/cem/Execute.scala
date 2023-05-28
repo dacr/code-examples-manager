@@ -11,7 +11,7 @@ import zio.ZIOAspect.*
 import java.util.concurrent.TimeUnit
 import java.time.OffsetDateTime
 import java.util.UUID
-import fr.janalyse.cem.model.{CodeExample, RunStatus, ExampleIssue}
+import fr.janalyse.cem.model.*
 import zio.nio.file.Path
 import zio.Schedule.Decision
 
@@ -25,7 +25,7 @@ case class RunResults(
 )
 
 object Execute {
-  val timeoutDuration         = Duration(120, TimeUnit.SECONDS)
+  val timeoutDuration         = Duration(60, TimeUnit.SECONDS)
   val testStartDelay          = Duration(500, TimeUnit.MILLISECONDS)
   val defaultParallelismLevel = 8
 
@@ -84,7 +84,6 @@ object Execute {
         runEffect       = makeRunCommandProcess(example).disconnect
                             .timeout(timeoutDuration)
         testEffect      = makeTestCommandProcess(example)
-                            .delay(testStartDelay)
                             .filterOrElseWith(result => result.exitCode == 0)(result => ZIO.fail(RunFailure(s"test code is failing + ${result.output}")))
                             .retry(
                               (Schedule.exponential(1.second) && Schedule.recurs(6))
@@ -96,6 +95,7 @@ object Execute {
                                 )
                             )
                             .disconnect
+                            .delay(testStartDelay)
                             .timeout(timeoutDuration)
         results        <- runEffect.raceFirst(testEffect).either
         duration       <- Clock.instant.map(i => i.toEpochMilli - startTimestamp.toInstant.toEpochMilli)
@@ -106,19 +106,21 @@ object Execute {
         runState        = if timeout then "timeout" else if success then "success" else "failure"
         _              <- if (results.isLeft) ZIO.logError(s"""Couldn't execute either run or test part\n${results.swap.toOption.getOrElse("")}""") else ZIO.succeed(())
         _              <- if (!success) ZIO.logWarning(s"example run $runState\nFailed cause:\n$output") else ZIO.log("example run success")
-      } yield RunStatus(
-        example = example,
-        exitCodeOption = exitCodeOption,
-        // stdout = output,
-        stdout = output.take(1024), // truncate the output as some scripts may generate a lot of data !!!
-        startedTimestamp = startTimestamp,
-        duration = duration,
-        runSessionDate = runSessionDate,
-        runSessionUUID = runSessionUUID,
-        success = success,
-        timeout = timeout,
-        runState = runState
-      )
+        runStatus       = RunStatus(
+                            example = example,
+                            exitCodeOption = exitCodeOption,
+                            // stdout = output,
+                            stdout = output.take(1024), // truncate the output as some scripts may generate a lot of data !!!
+                            startedTimestamp = startTimestamp,
+                            duration = duration,
+                            runSessionDate = runSessionDate,
+                            runSessionUUID = runSessionUUID,
+                            success = success,
+                            timeout = timeout,
+                            runState = runState
+                          )
+        _              <- upsertRunStatus(runStatus)
+      } yield runStatus
 
     ZIO.logAnnotate("file", example.filename)(result)
   }
@@ -161,14 +163,29 @@ object Execute {
     } yield ()
   }
 
+  def upsertRunStatus(result: RunStatus) = {
+    val collectionName = "run-statuses"
+    val key            = result.example.uuid.toString
+    val examplePath    = result.example.filepath.getOrElse(Path(result.example.filename))
+    for {
+      collection <- LMDB
+                      .collectionGet[RunStatus](collectionName)
+                      .orElse(LMDB.collectionCreate[RunStatus](collectionName))
+                      .mapError(th => ExampleStorageIssue(examplePath, s"Storage issue with collection $collectionName"))
+      _          <- collection
+                      .upsertOverwrite(key, result)
+                      .mapError(th => ExampleStorageIssue(examplePath, s"Couldn't upsert anything in collection $collectionName"))
+    } yield ()
+  }
+
   def executeEffect(keywords: Set[String] = Set.empty): ZIO[FileSystemService & LMDB, Throwable | ExampleIssue, List[RunStatus]] = {
     for {
       _                                            <- ZIO.log("Searching examples...")
       examples                                     <- Synchronize.examplesCollect
-      _                                            <- ZIO.log("Running selected examples...")
       filteredExamples                              = examples.filter(example => keywords.isEmpty || example.keywords.intersect(keywords) == keywords)
-      testableExamples                              = examples.filter(_.runWith.isDefined).filter(_.isTestable)
+      testableExamples                              = filteredExamples.filter(_.runWith.isDefined).filter(_.isTestable)
       (exclusiveRunnableExamples, runnableExamples) = testableExamples.partition(_.isExclusive)
+      _                                            <- ZIO.log(s"Found ${examples.size} examples with ${testableExamples.size} marked as testable")
       startEpoch                                   <- Clock.instant.map(_.toEpochMilli)
       exclusiveRunnableResultsFiber                <- runTestableExamples(exclusiveRunnableExamples, 1).fork
       runnableResultsFiber                         <- runTestableExamples(runnableExamples, defaultParallelismLevel).fork
@@ -177,6 +194,7 @@ object Execute {
       endEpoch                                     <- Clock.instant.map(_.toEpochMilli)
       durationSeconds                               = (endEpoch - startEpoch) / 1000
       results                                       = exclusiveRunnableResults ++ runnableResults
+      // _                                            <- ZIO.foreach(results)(result => upsertRunStatus(result))
       _                                            <- reportInLog(results, durationSeconds)
     } yield results
   }

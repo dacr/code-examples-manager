@@ -49,7 +49,7 @@ class RemoteGithubOperationsSpec extends ZIOSpecDefault {
         |
         |math.Pi shouldBe 3.14d +- 0.01d""".stripMargin
     CodeExample
-      .makeExample(filename, searchRoot)
+      .buildFromFile(filename, searchRoot)
       .provide(
         FileSystemServiceStub.stubWithContents(Map(filename -> content)),
         Scope.default,

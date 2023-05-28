@@ -39,7 +39,7 @@ class DescriptionToolsSpec extends ZIOSpecDefault {
       },
       // ----------------------------------------------------------------------------------------------
       test("makeDescription should return a description for ready to publish code examples") {
-        val example = CodeExample(filepath = None, filename = "truc.sc", uuid = UUID.fromString("049e6849-0c93-4b96-a914-f694f6982f5e"), content = "blah")
+        val example = CodeExample.build(filepath = None, filename = "truc.sc", uuid = UUID.fromString("049e6849-0c93-4b96-a914-f694f6982f5e"), content = "blah")
         assert(makeDescription(example))(
           isSome(
             endsWithString(s"#049e6849-0c93-4b96-a914-f694f6982f5e/${example.hash}")

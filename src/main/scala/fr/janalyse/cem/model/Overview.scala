@@ -71,17 +71,21 @@ object Overview {
                              lastUpdated = Instant.now().toString
                            )
         overviewContent <- ZIO.attempt(ExamplesOverviewTemplate.render(overviewContext).body)
+        filename         = "index.md"
+        category         = Option.empty[String]
+        attachments      = Map.empty[String, String]
       } yield {
-        CodeExample(
+        CodeExample.build(
           filepath = None,
-          filename = "index.md",
-          category = None,
+          filename = filename,
+          category = category,
           summary = Some(config.summary.title),
           keywords = Set.empty,
           publish = List(adapter.activationKeyword),
           authors = Nil,
           uuid = UUID.fromString(adapter.overviewUUID),
-          content = overviewContent
+          content = overviewContent,
+          attachments = attachments
         )
       }
       templateLogic.asSome

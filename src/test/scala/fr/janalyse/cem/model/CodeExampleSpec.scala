@@ -46,7 +46,7 @@ class CodeExampleSpec extends ZIOSpecDefault {
   val t1 = test("make an example") {
     for {
       example <- CodeExample
-                   .makeExample(exampleFakeTestingFilename, exampleFakeTestingSearchRoot)
+                   .buildFromFile(exampleFakeTestingFilename, exampleFakeTestingSearchRoot)
                    .provide(
                      FileSystemServiceStub.stubWithContents(Map(exampleFakeTestingFilename -> exampleFakeTestingPiContent)),
                      Scope.default,
