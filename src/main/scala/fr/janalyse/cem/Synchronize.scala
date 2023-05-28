@@ -66,15 +66,42 @@ object Synchronize {
       validExamples        = foundExamples.collect { case Right(example) => example }
       invalidExamples      = foundExamples.collect { case Left(example) => example }
       _                   <- ZIO.foreach(invalidExamples)(issue => ZIO.logWarning(issue.toString))
+      _                     <- examplesCheckCoherency(foundExamples)
     } yield validExamples
   }
 
-  def examplesCheckCoherency(examples: Iterable[CodeExample]): Task[Unit] = {
-    val uuids      = examples.map(_.uuid)
-    val duplicated = uuids.groupBy(u => u).filter { case (_, duplicated) => duplicated.size > 1 }.keys
-    if (duplicated.nonEmpty)
-      ZIO.fail(new Error("Found duplicated UUIDs : " + duplicated.mkString(",")))
-    else ZIO.succeed(())
+  def examplesCheckCoherency(candidates: List[Either[ExampleIssue, CodeExample]]): Task[Unit] = {
+    val examples                 = candidates.collect { case Right(example) => example }
+    val invalidExamples          = candidates.collect { case Left(issue) => issue }
+    val invalidContent           = invalidExamples.collect { case issue: ExampleContentIssue => issue }
+    val groupedInvalid           = invalidExamples.groupBy(_.getClass.getName)
+    val publishable              = examples.filter(_.isPublishable)
+    val duplicatedUUIDs          = examples.groupBy(_.uuid).filter((_, found) => found.size > 1)
+    val duplicatedSummaries      = examples.groupBy(_.summary).collect { case (summary, examples) if summary.isDefined && examples.size > 1 => summary.get -> examples }
+    val testable                 = examples.filter(example => example.isTestable && example.runWith.isDefined)
+    val publishTargets           = examples.flatMap(_.publish).distinct
+    val missingRunWith           = examples.filter(ex => ex.isTestable && ex.runWith.isEmpty)
+    val examplesByPublishTargets =
+      publishTargets
+        .map(target => target -> publishable.filter(_.publish.contains(target)))
+        .groupMapReduce { case (target, v) => target } { case (target, v) => v.toSet } { case (l, r) => r ++ l }
+    for {
+      _ <- ZIO.logInfo(s"found ${candidates.size} examples candidates")
+      _ <- ZIO.logInfo(s"found ${examples.size} valid examples")
+      _ <- ZIO.logInfo(s"found ${publishTargets.size} publishing targets : ${publishTargets.mkString(", ")}")
+      _ <- ZIO.logInfo(s"found ${examplesByPublishTargets.map((k, v) => s"$k:${v.size}").mkString(", ")} examples by targets")
+      _ <- ZIO.logInfo(s"found ${duplicatedUUIDs.size} duplicated UUIDs in valid examples")
+      _ <- ZIO.logInfo(s"found issues count : ${groupedInvalid.map((kind, errs) => kind + ":" + errs.size).mkString(", ")}")
+      _ <- ZIO.logInfo(s"found invalid content for ${invalidContent.size} examples : ${invalidContent.map(_.filepath).mkString(",")}")
+      _ <- ZIO.logInfo(s"found ${publishable.size} publishable distinct examples ")
+      _ <- ZIO.logInfo(s"found ${examples.map(_.publish.distinct.size).sum} publishable examples (1 example can be published several times)")
+      _ <- ZIO.logInfo(s"found ${examples.filter(_.createdOn.isEmpty).size} without explicit created-on field")
+      _ <- ZIO.logInfo(s"found ${testable.size} testable and executable examples using run-with directive")
+      _ <- ZIO.logInfo(s"found ${missingRunWith.size} testable examples without run-with instruction")
+      _ <- ZIO.logInfo(s"add runWith to those examples${missingRunWith.mkString("\n -", "\n -", "")}")
+      _ <- ZIO.cond(duplicatedUUIDs.size == 0, (), RuntimeException(s"Duplicated UUIDs ${duplicatedUUIDs.keys.mkString(",")}")) // TODO enhance error management
+      _ <- ZIO.cond(duplicatedSummaries.size == 0, (), RuntimeException(s"Duplicated summaries ${duplicatedSummaries.keys.mkString(",")}")) // TODO enhance error management
+    } yield ()
   }
 
   val examplesCollect: ZIO[FileSystemService & LMDB, ExampleIssue | Throwable, List[CodeExample]] = for {
@@ -82,7 +109,6 @@ object Synchronize {
     searchRoots           <- examplesValidSearchRoots(searchRootDirectories)
     _                     <- ZIO.log(s"Searching examples in ${searchRoots.mkString(",")}")
     localExamples         <- examplesCollectFor(searchRoots)
-    _                     <- examplesCheckCoherency(localExamples)
   } yield localExamples
 
   def computeWorkToDo(examples: Iterable[CodeExample], states: Iterable[RemoteExampleState]): List[WhatToDo] = {
