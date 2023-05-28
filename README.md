@@ -1,10 +1,11 @@
 # CEM - Code Examples Manager [![][CodeExamplesManagerImg]][CodeExamplesManagerLnk] ![Scala CI][scalaci-master]
 
-Code example manager (CEM) is a software managing your notes and code examples
-and provide publish mechanisms to [github.com][githubcom] (as [gists][gists]) or
-[gitlab.com][gitlabcom] (as [snippets][snippets]).
+Code example manager (CEM) is a software managing your notes, scripts and code examples.
+It provides publish mechanisms to [github.com][githubcom] (as [gists][gists]) or
+[gitlab.com][gitlabcom] (as [snippets][snippets]). It also automates execution for
+testable examples this is a quite useful when you have to deal with many examples.
 
-All my notes and code examples (my programming knowledge base) are now managed using this tool,
+All my notes, scripts and code examples (my programming knowledge base) are now managed using this tool,
 you can take a look to **[my public gists overview on github][mygists]** to illustrate the 
 publishing work achieved by CEM.
 
@@ -100,7 +101,8 @@ Supported keys in description header are the following :
 - **`summary`** : example summary in one line.
 - **`keywords`** : keywords describing your code features (comma separated). Some reserved keywords :
   - `@testable` : allow automatic execution
-  - `@fail` : the example is expected to fail when executed 
+  - `@fail` : the example is expected to fail when executed
+  - `@exclusive` : all testable examples with this flag will be run sequentially (for scripts which open server sockets for example)
 - **`publish`** : publish destination keywords (comma separated)
   - the default configuration file provide those activation keywords :
     - `gist` : for github.com
@@ -223,15 +225,7 @@ Get an access token from gitlab.com :
 - 2021-12 - PoC#3 Search & Execution engines
 - 2022-01 - Migrate to ZIO2 and add support for attachments
 - 2023-04 - Use ZIO standard configuration
-- 2023-05 - Add ZIO LMDB for local storage cache (in progress) 
-
-## Acknowledgements
-
-- A lot of thanks to [Li Haoyi][lihaoyi] for his wonderful work on [ammonite][amm] which is
-  probably the best solution for code examples and scripting in [scala][scala].
-- Of course a lot of thanks to the ZIO team, and the wonderful content they've made available
-  on [ZIO site](zio), and on YouTube.
-  
+- 2023-05 - Add ZIO LMDB for local storage cache AND data sharing with external applications 
 
 [CodeExamplesManager]:    https://github.com/dacr/code-examples-manager
 [CodeExamplesManagerImg]: https://img.shields.io/maven-central/v/fr.janalyse/code-examples-manager_3.svg
