@@ -17,7 +17,7 @@ mainClass := Some("fr.janalyse.cem.Main")
 
 lazy val versions = new {
   val sttp        = "3.8.15"
-  val zio         = "2.0.13"
+  val zio         = "2.0.14"
   val zionio      = "2.0.1"
   val zioproc     = "0.7.2"
   val zioconfig   = "4.0.0-RC16"
@@ -25,7 +25,8 @@ lazy val versions = new {
   val ziolmdb     = "1.1.0"
   val naturalsort = "1.0.2"
   val jgit        = "6.5.0.202303070854-r"
-  val logback     = "1.4.7"
+  // val logback     = "1.4.7"
+  val log4j2      = "2.20.0"
 }
 
 libraryDependencies ++= Seq(
@@ -38,7 +39,7 @@ libraryDependencies ++= Seq(
   "dev.zio"                       %% "zio-nio"                       % versions.zionio,
   "dev.zio"                       %% "zio-process"                   % versions.zioproc,
   "dev.zio"                       %% "zio-logging"                   % versions.ziologging,
-  "dev.zio"                       %% "zio-logging-slf4j"             % versions.ziologging,
+  "dev.zio"                       %% "zio-logging-slf4j-bridge"      % versions.ziologging,
   "dev.zio"                       %% "zio-config"                    % versions.zioconfig,
   "dev.zio"                       %% "zio-config-typesafe"           % versions.zioconfig,
   "dev.zio"                       %% "zio-config-magnolia"           % versions.zioconfig,
@@ -46,8 +47,7 @@ libraryDependencies ++= Seq(
   "com.softwaremill.sttp.client3" %% "async-http-client-backend-zio" % versions.sttp,
   "com.softwaremill.sttp.client3" %% "zio-json"                      % versions.sttp,
   "fr.janalyse"                   %% "naturalsort"                   % versions.naturalsort,
-  "org.eclipse.jgit"               % "org.eclipse.jgit"              % versions.jgit,
-  "ch.qos.logback"                 % "logback-classic"               % versions.logback
+  "org.eclipse.jgit"               % "org.eclipse.jgit"              % versions.jgit
 )
 
 //excludeDependencies += "org.scala-lang.modules" % "scala-collection-compat_2.13"

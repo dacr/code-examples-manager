@@ -66,7 +66,7 @@ object Synchronize {
       validExamples        = foundExamples.collect { case Right(example) => example }
       invalidExamples      = foundExamples.collect { case Left(example) => example }
       _                   <- ZIO.foreach(invalidExamples)(issue => ZIO.logWarning(issue.toString))
-      _                     <- examplesCheckCoherency(foundExamples)
+      _                   <- examplesCheckCoherency(foundExamples)
     } yield validExamples
   }
 
@@ -99,17 +99,19 @@ object Synchronize {
       _ <- ZIO.logInfo(s"found ${testable.size} testable and executable examples using run-with directive")
       _ <- ZIO.logInfo(s"found ${missingRunWith.size} testable examples without run-with instruction")
       _ <- ZIO.logInfo(s"add runWith to those examples${missingRunWith.mkString("\n -", "\n -", "")}")
-      _ <- ZIO.cond(duplicatedUUIDs.size == 0, (), RuntimeException(s"Duplicated UUIDs ${duplicatedUUIDs.keys.mkString(",")}")) // TODO enhance error management
+      _ <- ZIO.cond(duplicatedUUIDs.size == 0, (), RuntimeException(s"Duplicated UUIDs ${duplicatedUUIDs.keys.mkString(",")}"))             // TODO enhance error management
       _ <- ZIO.cond(duplicatedSummaries.size == 0, (), RuntimeException(s"Duplicated summaries ${duplicatedSummaries.keys.mkString(",")}")) // TODO enhance error management
     } yield ()
   }
 
-  val examplesCollect: ZIO[FileSystemService & LMDB, ExampleIssue | Throwable, List[CodeExample]] = for {
-    searchRootDirectories <- ZIO.config(ApplicationConfig.config).map(_.codeExamplesManagerConfig.examples.searchRootDirectories)
-    searchRoots           <- examplesValidSearchRoots(searchRootDirectories)
-    _                     <- ZIO.log(s"Searching examples in ${searchRoots.mkString(",")}")
-    localExamples         <- examplesCollectFor(searchRoots)
-  } yield localExamples
+  val examplesCollect: ZIO[FileSystemService & LMDB, ExampleIssue | Throwable, List[CodeExample]] = ZIO.logSpan("/collect") {
+    for {
+      searchRootDirectories <- ZIO.config(ApplicationConfig.config).map(_.codeExamplesManagerConfig.examples.searchRootDirectories)
+      searchRoots           <- examplesValidSearchRoots(searchRootDirectories)
+      _                     <- ZIO.log(s"Searching examples in ${searchRoots.mkString(",")}")
+      localExamples         <- examplesCollectFor(searchRoots)
+    } yield localExamples
+  }
 
   def computeWorkToDo(examples: Iterable[CodeExample], states: Iterable[RemoteExampleState]): List[WhatToDo] = {
     val statesByUUID   = states.map(state => state.uuid -> state).toMap
@@ -171,7 +173,7 @@ object Synchronize {
     }
   }
 
-  def examplesPublish(examples: Iterable[CodeExample]): RIO[SttpClient, Unit] = {
+  def examplesPublish(examples: Iterable[CodeExample]): RIO[SttpClient, Unit] = ZIO.logSpan("/publish") {
     for {
       adapters <- ZIO.config(ApplicationConfig.config).map(_.codeExamplesManagerConfig.publishAdapters)
       _        <- ZIO.foreachPar(adapters.toList) { case (adapterName, adapterConfig) =>
@@ -187,7 +189,7 @@ object Synchronize {
       .map { case (key, examples) => key -> examples.size }
   }
 
-  def statsEffect(examples: List[CodeExample]) =
+  def statsEffect(examples: List[CodeExample]) = ZIO.logSpan("stats") {
     for {
       metaInfo     <- ZIO.config(ApplicationConfig.config).map(_.codeExamplesManagerConfig.metaInfo)
       version       = metaInfo.version
@@ -208,6 +210,7 @@ object Synchronize {
            |Defined keywords : ${examples.flatMap(_.keywords).distinct.sorted.mkString(",")}
            |""".stripMargin
     } yield message
+  }
 
   val versionEffect =
     for {
@@ -226,18 +229,19 @@ object Synchronize {
            |""".stripMargin
     } yield message
 
-  def synchronizeEffect: ZIO[SttpClient & FileSystemService & LMDB, ExampleIssue | Throwable, Unit] = for {
-    startTime <- Clock.nanoTime
-    metaInfo  <- ZIO.config(ApplicationConfig.config).map(_.codeExamplesManagerConfig.metaInfo)
-    appName    = metaInfo.name
-    version   <- versionEffect
-    _         <- ZIO.log(s"\n$version")
-    examples  <- examplesCollect
-    stats     <- statsEffect(examples)
-    _         <- ZIO.log(s"\n$stats")
-    _         <- examplesPublish(examples)
-    endTime   <- Clock.nanoTime
-    _         <- ZIO.log(s"$appName publishing operations took ${(endTime - startTime) / 1000000}ms")
-  } yield ()
+  def synchronizeEffect: ZIO[SttpClient & FileSystemService & LMDB, ExampleIssue | Throwable, Unit] = {
+    ZIO.logSpan("/synchronize") {
+      for {
+        metaInfo <- ZIO.config(ApplicationConfig.config).map(_.codeExamplesManagerConfig.metaInfo)
+        appName   = metaInfo.name
+        version  <- versionEffect
+        _        <- ZIO.log(s"\n$version")
+        examples <- examplesCollect
+        stats    <- statsEffect(examples)
+        _        <- ZIO.log(s"\n$stats")
+        _        <- examplesPublish(examples)
+      } yield ()
+    }
+  }
 
 }

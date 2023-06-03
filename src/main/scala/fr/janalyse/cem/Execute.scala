@@ -64,7 +64,7 @@ object Execute {
                                 .map(_.split("\\s+").toList)
                             )
                             .orElseFail(RunFailure(s"Example ${example.uuid} as no run-with directive"))
-      results          <- makeCommandProcess(command, workingDir) @@ annotated("example-run-command" -> command.mkString(" "))
+      results          <- makeCommandProcess(command, workingDir) @@ annotated("/run-command" -> command.mkString(" "))
     } yield results
   }
 
@@ -73,7 +73,7 @@ object Execute {
       exampleFilePath <- ZIO.fromOption(example.filepath).orElseFail(RunFailure("Example has no path for its content"))
       workingDir      <- ZIO.fromOption(exampleFilePath.parent).orElseFail(RunFailure("Example file path content has no parent directory"))
       command         <- ZIO.succeed(example.testWith.getOrElse(s"sleep ${timeoutDuration.getSeconds()}").trim.split("\\s+").toList)
-      results         <- makeCommandProcess(command, workingDir) @@ annotated("example-test-command" -> command.mkString(" "))
+      results         <- makeCommandProcess(command, workingDir) @@ annotated("/test-command" -> command.mkString(" "))
     } yield results
   }
 
@@ -122,7 +122,8 @@ object Execute {
         _              <- upsertRunStatus(runStatus)
       } yield runStatus
 
-    ZIO.logAnnotate("file", example.filename)(result)
+    // ZIO.logAnnotate("/file", example.filename)(result)
+    result
   }
 
   def runTestableExamples(runnableExamples: List[CodeExample], parallelism: Int) = {
@@ -133,8 +134,10 @@ object Execute {
       runSessionUUID  = UUID.randomUUID()
       // runStatuses    <- ZIO.foreachExec(runnableExamples)(execStrategy)(example => runExample(example, runSessionDate, runSessionUUID))
       runStatuses    <- ZIO.foreachExec(runnableExamples)(execStrategy) { example =>
-                          runExample(example, runSessionDate, runSessionUUID)
-                            @@ annotated("example-uuid" -> example.uuid.toString, "example-filename" -> example.filename)
+                          ZIO.logSpan("/run") {
+                            runExample(example, runSessionDate, runSessionUUID)
+                              @@ annotated("/uuid" -> example.uuid.toString, "/file" -> example.filename)
+                          }
                         }
       successes       = runStatuses.filter(_.success)
       failures        = runStatuses.filterNot(_.success)
@@ -178,7 +181,7 @@ object Execute {
     } yield ()
   }
 
-  def executeEffect(keywords: Set[String] = Set.empty): ZIO[FileSystemService & LMDB, Throwable | ExampleIssue, List[RunStatus]] = {
+  def executeEffect(keywords: Set[String] = Set.empty): ZIO[FileSystemService & LMDB, Throwable | ExampleIssue, List[RunStatus]] = ZIO.logSpan("/runs") {
     for {
       _                                            <- ZIO.log("Searching examples...")
       examples                                     <- Synchronize.examplesCollect

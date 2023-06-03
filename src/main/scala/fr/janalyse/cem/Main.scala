@@ -5,8 +5,8 @@ import zio.config.*
 import zio.config.typesafe.*
 import zio.config.magnolia.*
 
-import zio.logging.{LogFormat, removeDefaultLoggers}
-import zio.logging.backend.SLF4J
+import zio.logging.{LogFormat, removeDefaultLoggers, consoleLogger}
+import zio.logging.slf4j.bridge.Slf4jBridge
 import sttp.client3.asynchttpclient.zio.AsyncHttpClientZioBackend
 import zio.lmdb.{LMDB, LMDBConfig}
 
@@ -35,8 +35,12 @@ object Main extends ZIOAppDefault {
     configProvider
   }
 
+  val configLayer = ZLayer.fromZIO(configProviderLogic.map(provider => Runtime.setConfigProvider(provider))).flatten
+
   override val bootstrap =
-    removeDefaultLoggers ++ SLF4J.slf4j(format = LogFormat.colored) ++ ZLayer.fromZIO(configProviderLogic.map(provider => Runtime.setConfigProvider(provider))).flatten
+    //removeDefaultLoggers ++ SLF4J.slf4j(format = LogFormat.colored) ++ ZLayer.fromZIO(configProviderLogic.map(provider => Runtime.setConfigProvider(provider))).flatten
+    configLayer ++ (removeDefaultLoggers >>> configLayer >>> consoleLogger(configPath = "logger") >>> Slf4jBridge.initialize)
+
 
   val httpClientLayer = AsyncHttpClientZioBackend.layer()
 
