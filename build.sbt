@@ -17,14 +17,14 @@ mainClass := Some("fr.janalyse.cem.Main")
 
 lazy val versions = new {
   val sttp        = "3.8.15"
-  val zio         = "2.0.14"
+  val zio         = "2.0.15"
   val zionio      = "2.0.1"
   val zioproc     = "0.7.2"
   val zioconfig   = "4.0.0-RC16"
   val ziologging  = "2.1.13"
   val ziolmdb     = "1.1.0"
   val naturalsort = "1.0.2"
-  val jgit        = "6.5.0.202303070854-r"
+  val jgit        = "6.6.0.202305301015-r"
   // val logback     = "1.4.7"
   val log4j2      = "2.20.0"
 }
