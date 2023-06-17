@@ -30,7 +30,7 @@ is the main issue addressed by this software.
 
 - My open-source examples evolution trend :  
   ![](images/created-examples-trend.png)
-- And for those who are executable/testable :  
+- and the execution status trend for executable/testable ones :  
   ![](images/testable-examples-status.png)
 
 As you can see through the previous charts, once you have industrialized your notes and code
