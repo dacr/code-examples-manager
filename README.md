@@ -3,17 +3,17 @@
 Code example manager (CEM) is a software managing your notes, scripts and code examples.
 It provides publish mechanisms to [github.com][githubcom] (as [gists][gists]) or
 [gitlab.com][gitlabcom] (as [snippets][snippets]). It also automates execution for
-testable examples this is a quite useful when you have to deal with many examples.
+testable examples, this is a quite useful to manage a high number of examples.
 
 All my notes, scripts and code examples (my programming knowledge base) are now managed using this tool,
 you can take a look to **[my public gists overview on github][mygists]** to illustrate the 
 publishing work achieved by CEM.
 
-![](images/cloudtags.png)
-
 Current [Code example manager (CEM)][cem] implementation is just a command line tool
 which compare locally available examples with already published ones in order to find
 what it should do (add, update, do nothing).
+
+![](images/cloudtags.png)
 
 ## Why ?
 
@@ -28,7 +28,10 @@ Managing hundreds of published code example files as gists (github) and/or snipp
 is really not easy and time-consuming, in particular if you want to keep them up to date. This
 is the main issue addressed by this software. 
 
-![](images/created-examples-trend.png)
+- My open-source examples evolution trend :  
+  ![](images/created-examples-trend.png)
+- And for those who are executable/testable :  
+  ![](images/testable-examples-status.png)
 
 As you can see through the previous charts, once you have industrialized your notes and code
 examples, analytics on your examples become quite easy, and a lot of advanced features become
@@ -62,7 +65,7 @@ Instructions example with github.com publishing configuration :
   ```
 - Run the following command from your terminal (`cs` is the [coursier][cs] CLI command):
   ```
-  cs launch fr.janalyse:code-examples-manager_3:2.2.0
+  cs launch fr.janalyse:code-examples-manager_3:2.4.0
   ```
   - you can even use `cs launch fr.janalyse:code-examples-manager_3:latest.release` to always use the latest release
   - current release is : [![][CodeExamplesManagerImg]][CodeExamplesManagerLnk]
