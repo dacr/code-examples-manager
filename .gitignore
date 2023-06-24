@@ -1,17 +1,16 @@
+# temporary files
 *~
-.~*
-*.swp
-*.iml
-*.tmp
-
-test.log
+*.log
 nohup.out
-.lmdb/
+*.swp
+.attach_pid*
 
+# build related
 target/
 project/target
 metals.sbt
 
+# IDE related
 .metals/
 .bloop/
 .bsp/
@@ -21,4 +20,6 @@ metals.sbt
 tmp-*.gif
 tmp-*.png
 
+# application related
 private-application*.conf
+.lmdb/
