@@ -17,7 +17,7 @@ mainClass := Some("fr.janalyse.cem.Main")
 
 lazy val versions = new {
   val sttp        = "3.9.1"
-  val zio         = "2.0.20"
+  val zio         = "2.0.21"
   val zionio      = "2.0.2"
   val zioproc     = "0.7.2"
   val zioconfig   = "4.0.0"
