@@ -11,22 +11,22 @@ scmInfo := Some(
   )
 )
 
-scalaVersion := "3.3.1"
+scalaVersion := "3.4.2"
+
+scalacOptions += "-Ykind-projector:underscores"
 
 mainClass := Some("fr.janalyse.cem.Main")
 
 lazy val versions = new {
-  val sttp        = "3.9.1"
-  val zio         = "2.0.21"
+  val sttp        = "3.9.7"
+  val zio         = "2.1.3"
   val zionio      = "2.0.2"
   val zioproc     = "0.7.2"
-  val zioconfig   = "4.0.0"
-  val ziologging  = "2.1.16"
-  val ziolmdb     = "1.7.1"
+  val zioconfig   = "4.0.2"
+  val ziologging  = "2.3.0"
+  val ziolmdb     = "1.8.0"
   val naturalsort = "1.0.4"
-  val jgit        = "6.8.0.202311291450-r"
-  // val logback     = "1.4.7"
-  val log4j2      = "2.20.0"
+  val jgit        = "6.10.0.202406032230-r"
 }
 
 libraryDependencies ++= Seq(
@@ -49,8 +49,6 @@ libraryDependencies ++= Seq(
   "fr.janalyse"                   %% "naturalsort"                   % versions.naturalsort,
   "org.eclipse.jgit"               % "org.eclipse.jgit"              % versions.jgit
 )
-
-//excludeDependencies += "org.scala-lang.modules" % "scala-collection-compat_2.13"
 
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 

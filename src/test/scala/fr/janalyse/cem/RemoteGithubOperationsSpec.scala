@@ -24,6 +24,9 @@ import fr.janalyse.cem.model.WhatToDo.*
 import fr.janalyse.cem.tools.DescriptionTools.*
 import org.junit.runner.RunWith
 import sttp.client3.asynchttpclient.zio.AsyncHttpClientZioBackend
+import sttp.capabilities.zio.ZioStreams
+import sttp.capabilities.WebSockets
+import sttp.client3.testing.SttpBackendStub
 import zio.nio.file.Path
 import zio.lmdb.LMDB
 
@@ -85,13 +88,13 @@ class RemoteGithubOperationsSpec extends ZIOSpecDefault {
       results  <- githubRemoteExamplesChangesApply(config, todos)
     } yield results
 
-    val stubbedLayer = ZLayer.succeed(
-      AsyncHttpClientZioBackend.stub
-        .whenRequestMatches(_.uri.toString() == "https://api.github.com/gists/6e40f8239fa6828ab45a064b8131fdfc")
-        .thenRespond("""{"id":"aa-bb", "html_url":"https://truc/aa-bb"}""")
-    )
+    val stub: SttpBackendStub[Task, Any] = AsyncHttpClientZioBackend.stub
+      .whenRequestMatches(_.uri.toString() == "https://api.github.com/gists/6e40f8239fa6828ab45a064b8131fdfc")
+      .thenRespond("""{"id":"aa-bb", "html_url":"https://truc/aa-bb"}""")
 
-    logic.provide(stubbedLayer).map(result => assertTrue(true))
+    val stubLayer = ZLayer.succeed(stub)
+
+    logic.provide(stubLayer).map(result => assertTrue(true))
   }
 
   // ----------------------------------------------------------------------------------------------

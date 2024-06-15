@@ -170,7 +170,7 @@ object RemoteGithubOperations {
     Obj(
       "description" -> Str(description),
       "public"      -> Bool(publicBool),
-      "files"       -> Obj(files: _*)
+      "files"       -> Obj(files*)
     )
   }
 
@@ -221,7 +221,7 @@ object RemoteGithubOperations {
 
     Obj(
       "description" -> Str(description),
-      "files"       -> Obj(files: _*)
+      "files"       -> Obj(files*)
     )
   }
 

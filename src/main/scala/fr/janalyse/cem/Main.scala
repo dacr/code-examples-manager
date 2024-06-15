@@ -4,10 +4,10 @@ import zio.*
 import zio.config.*
 import zio.config.typesafe.*
 import zio.config.magnolia.*
-
-import zio.logging.{LogFormat, removeDefaultLoggers, consoleLogger}
+import zio.logging.{ConsoleLoggerConfig, LogFormat, consoleLogger}
 import zio.logging.slf4j.bridge.Slf4jBridge
 import sttp.client3.asynchttpclient.zio.AsyncHttpClientZioBackend
+import zio.Runtime.removeDefaultLoggers
 import zio.lmdb.{LMDB, LMDBConfig}
 
 object Main extends ZIOAppDefault {
@@ -37,10 +37,7 @@ object Main extends ZIOAppDefault {
 
   val configLayer = ZLayer.fromZIO(configProviderLogic.map(provider => Runtime.setConfigProvider(provider))).flatten
 
-  override val bootstrap =
-    //removeDefaultLoggers ++ SLF4J.slf4j(format = LogFormat.colored) ++ ZLayer.fromZIO(configProviderLogic.map(provider => Runtime.setConfigProvider(provider))).flatten
-    configLayer ++ (removeDefaultLoggers >>> configLayer >>> consoleLogger(configPath = "logger") >>> Slf4jBridge.initialize)
-
+  override val bootstrap = configLayer ++ ( removeDefaultLoggers >>> configLayer >>> consoleLogger() >>> Slf4jBridge.initialize)
 
   val httpClientLayer = AsyncHttpClientZioBackend.layer()
 
