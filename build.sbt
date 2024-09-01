@@ -11,20 +11,20 @@ scmInfo := Some(
   )
 )
 
-scalaVersion := "3.4.2"
+scalaVersion := "3.5.0"
 
-scalacOptions += "-Ykind-projector:underscores"
+scalacOptions += "-Xkind-projector:underscores"
 
 mainClass := Some("fr.janalyse.cem.Main")
 
 lazy val versions = new {
-  val sttp        = "3.9.7"
-  val zio         = "2.1.5"
+  val sttp        = "3.9.8"
+  val zio         = "2.1.9"
   val zionio      = "2.0.2"
   val zioproc     = "0.7.2"
   val zioconfig   = "4.0.2"
-  val ziologging  = "2.3.0"
-  val ziolmdb     = "1.8.0"
+  val ziologging  = "2.3.1"
+  val ziolmdb     = "1.8.1"
   val naturalsort = "1.0.4"
   val jgit        = "6.10.0.202406032230-r"
 }
