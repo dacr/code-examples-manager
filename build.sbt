@@ -11,7 +11,7 @@ scmInfo := Some(
   )
 )
 
-scalaVersion := "3.5.0"
+scalaVersion := "3.5.1"
 
 scalacOptions += "-Xkind-projector:underscores"
 
@@ -26,7 +26,7 @@ lazy val versions = new {
   val ziologging  = "2.3.1"
   val ziolmdb     = "1.8.1"
   val naturalsort = "1.0.4"
-  val jgit        = "6.10.0.202406032230-r"
+  val jgit        = "7.0.0.202409031743-r"
 }
 
 libraryDependencies ++= Seq(
@@ -55,10 +55,10 @@ testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 enablePlugins(SbtTwirl)
 
 // TODO - to remove when twirl will be available for scala3
-libraryDependencies := libraryDependencies.value.map {
-  case module if module.name == "twirl-api" => module.cross(CrossVersion.for3Use2_13)
-  case module                               => module
-}
+//libraryDependencies := libraryDependencies.value.map {
+//  case module if module.name == "twirl-api" => module.cross(CrossVersion.for3Use2_13)
+//  case module                               => module
+//}
 
 TwirlKeys.templateImports += "fr.janalyse.cem.model._"
 
