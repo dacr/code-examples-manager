@@ -1,21 +1,12 @@
-organization := "fr.janalyse"
 name         := "code-examples-manager"
-homepage     := Some(new URL("https://github.com/dacr/code-examples-manager"))
+organization := "fr.janalyse"
+description  := "Tool to manage set of code examples : synchronize and publish, automated execution, ..."
 
 licenses += "NON-AI-APACHE2" -> url(s"https://github.com/non-ai-licenses/non-ai-licenses/blob/main/NON-AI-APACHE2")
-
-scmInfo := Some(
-  ScmInfo(
-    url(s"https://github.com/dacr/code-examples-manager.git"),
-    s"git@github.com:dacr/code-examples-manager.git"
-  )
-)
 
 scalaVersion := "3.5.1"
 
 scalacOptions += "-Xkind-projector:underscores"
-
-mainClass := Some("fr.janalyse.cem.Main")
 
 lazy val versions = new {
   val sttp        = "3.9.8"
@@ -52,16 +43,23 @@ libraryDependencies ++= Seq(
 
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
-enablePlugins(SbtTwirl)
-
-// TODO - to remove when twirl will be available for scala3
-//libraryDependencies := libraryDependencies.value.map {
-//  case module if module.name == "twirl-api" => module.cross(CrossVersion.for3Use2_13)
-//  case module                               => module
-//}
-
 TwirlKeys.templateImports += "fr.janalyse.cem.model._"
+
+mainClass := Some("fr.janalyse.cem.Main")
 
 // ZIO-LMDB requires special authorization at JVM level
 ThisBuild / fork := true
 ThisBuild / javaOptions ++= Seq("--add-opens", "java.base/java.nio=ALL-UNNAMED", "--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED")
+
+enablePlugins(SbtTwirl)
+
+homepage   := Some(url("https://github.com/dacr/code-examples-manager"))
+scmInfo    := Some(ScmInfo(url(s"https://github.com/dacr/code-examples-manager.git"), s"git@github.com:dacr/code-examples-manager.git"))
+developers := List(
+  Developer(
+    id = "dacr",
+    name = "David Crosson",
+    email = "crosson.david@gmail.com",
+    url = url("https://github.com/dacr")
+  )
+)
