@@ -4,19 +4,19 @@ description  := "Tool to manage set of code examples : synchronize and publish, 
 
 licenses += "NON-AI-APACHE2" -> url(s"https://github.com/non-ai-licenses/non-ai-licenses/blob/main/NON-AI-APACHE2")
 
-scalaVersion := "3.5.1"
+scalaVersion := "3.5.2"
 
 scalacOptions += "-Xkind-projector:underscores"
 
 lazy val versions = new {
-  val sttp        = "3.9.8"
-  val zio         = "2.1.9"
+  val sttp        = "3.10.1"
+  val zio         = "2.1.12"
   val zionio      = "2.0.2"
   val zioproc     = "0.7.2"
   val zioconfig   = "4.0.2"
-  val ziologging  = "2.3.1"
-  val ziolmdb     = "1.8.1"
-  val naturalsort = "1.0.4"
+  val ziologging  = "2.4.0"
+  val ziolmdb     = "1.8.2"
+  val naturalsort = "1.0.5"
   val jgit        = "7.0.0.202409031743-r"
 }
 
