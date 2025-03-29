@@ -1,3 +1,6 @@
+# Security purposes
+.envrc
+
 # temporary files
 *~
 *.log
