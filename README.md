@@ -205,7 +205,7 @@ Get an access token from gitlab :
 
 ### Github authentication token configuration
 
-Get an access token from gitlab.com :
+Get an access token from github.com :
 - Got to your user **settings**
   - Select **Developer settings**
     - Select **Personal access tokens**
