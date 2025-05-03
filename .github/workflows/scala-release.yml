@@ -36,7 +36,7 @@ jobs:
       run: cp target/universal/*.tgz code-examples-manager-${{steps.get_version.outputs.VERSION}}.tgz
 
     - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: code-examples-manager-${{steps.get_version.outputs.VERSION}}.tgz
         path: code-examples-manager-${{steps.get_version.outputs.VERSION}}.tgz
