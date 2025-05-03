@@ -9,13 +9,13 @@ scalaVersion := "3.6.4"
 scalacOptions += "-Xkind-projector:underscores"
 
 lazy val versions = new {
-  val sttp        = "3.10.3"
-  val zio         = "2.1.16"
+  val sttp        = "3.11.0"
+  val zio         = "2.1.17"
   val zionio      = "2.0.2"
   val zioproc     = "0.7.2"
   val zioconfig   = "4.0.4"
   val ziologging  = "2.5.0"
-  val ziolmdb     = "1.8.4"
+  val ziolmdb     = "2.0.1"
   val naturalsort = "1.0.7"
   val jgit        = "7.2.0.202503040940-r"
 }

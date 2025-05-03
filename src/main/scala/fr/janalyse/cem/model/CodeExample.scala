@@ -19,7 +19,7 @@ import fr.janalyse.cem.FileSystemService
 import fr.janalyse.cem.tools.*
 import fr.janalyse.cem.tools.Hashes.sha1
 import zio.*
-import zio.lmdb.*
+import zio.lmdb.*, zio.lmdb.json.*
 import zio.nio.charset.Charset
 import zio.nio.file.*
 import zio.json.*
@@ -63,20 +63,20 @@ case class CodeExample(
   updatedCount: Option[Int] = None,             // computed from GIT history
   attachments: Map[String, String] = Map.empty, // embedded
   lastSeen: Option[OffsetDateTime] = None       // last seen/used date, useful for database garbage collection purposes
-) {
+) derives LMDBCodecJson {
   def fileExtension: String     = filename.split("[.]", 2).drop(1).headOption.getOrElse("")
   def isTestable: Boolean       = keywords.contains("@testable")
   def isExclusive: Boolean      = keywords.contains("@exclusive") // exclusive examples are executed sequentially
   def shouldFail: Boolean       = keywords.contains("@fail")
-  def isPublishable: Boolean    = !publish.isEmpty
+  def isPublishable: Boolean    = publish.nonEmpty
   override def toString: String = s"$category $filename $uuid $summary"
 }
 
 object CodeExample {
   given JsonEncoder[Path]        = JsonEncoder[String].contramap(p => p.toString)
   given JsonDecoder[Path]        = JsonDecoder[String].map(p => Path(p))
-  given JsonDecoder[CodeExample] = DeriveJsonDecoder.gen
-  given JsonEncoder[CodeExample] = DeriveJsonEncoder.gen
+  //given JsonDecoder[CodeExample] = DeriveJsonDecoder.gen
+  //given JsonEncoder[CodeExample] = DeriveJsonEncoder.gen
 
   def exampleContentExtractValue(from: String, key: String): Option[String] = {
     val RE = ("""(?m)(?i)^(?:(?:// )|(?:## )|(?:- )|(?:-- )) *""" + key + """ *: *(.*)$""").r

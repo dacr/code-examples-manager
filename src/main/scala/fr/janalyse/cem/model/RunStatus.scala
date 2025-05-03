@@ -1,6 +1,8 @@
 package fr.janalyse.cem.model
 
 import zio.json.*
+import zio.lmdb.json.LMDBCodecJson
+
 import java.util.UUID
 import java.time.OffsetDateTime
 
@@ -15,5 +17,5 @@ case class RunStatus(
   success: Boolean,
   timeout: Boolean,
   runState: String
-) derives JsonCodec
+) derives LMDBCodecJson
 
