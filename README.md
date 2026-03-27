@@ -113,16 +113,14 @@ Supported keys in description header are the following :
 - **`authors`** : code example authors list (comma separated).
 - **`license`** : the example license.
 - **`id`** : UUID for this code example. Generated using such commands :
-  - with linux command : `uuidgen`
+  - with linux command : `uuidgen -t`
   - with [scala-cli][scl] : `scala-cli https://gist.github.com/dacr/87c9636a6d25787d7c274b036d2a8aad`
-  - with [ammonite][amm] : `amm -c 'println(java.util.UUID.randomUUID.toString)'`
 - **`attachments`** : List of secondary files (comma separated) which must be published with the current one
   - must be placed in the same directory in your local storage
   - secondary files do not require any headers
 - **`created-on`** : The ISO8601 date when this example has been created. Generated using such commands :
   - with linux command : `date -u +"%Y-%m-%dT%H:%M:%S.%3NZ"`
   - with [scala-cli][scl] : `scala-cli https://gist.github.com/dacr/4298fce08e12ba76ab91e9766be52acb`
-  - with [ammonite][amm] : `amm -c 'println(java.time.Instant.now.toString)'`
 - **`run-with`** : command used to execute this example
   - Only examples with `@testable` keywords are eligible for automated execution
   - on execution the exit code is used to compute execution success or failure
